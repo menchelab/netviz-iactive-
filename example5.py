@@ -14,6 +14,8 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 import collections
+from scipy.spatial.distance import squareform
+from scipy.cluster import hierarchy
 
 def setup_logging():
     logging.basicConfig(
@@ -205,28 +207,59 @@ class NetworkStatsPanel(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         
-        # Create matplotlib figure
-        self.figure = Figure(figsize=(4, 10), dpi=100)  # Increased height for additional charts
-        self.canvas = FigureCanvas(self.figure)
-        layout.addWidget(self.canvas)
+        # Create a horizontal layout for two columns of charts
+        charts_layout = QHBoxLayout()
+        charts_layout.setContentsMargins(0, 0, 0, 0)
+        charts_layout.setSpacing(2)
+        layout.addLayout(charts_layout)
         
-        # Initialize subplots
-        self.layer_connectivity_ax = self.figure.add_subplot(411)  # Now 4 subplots
-        self.intralayer_nodes_ax = self.figure.add_subplot(412)  # New subplot for intralayer connections
-        self.interlayer_nodes_ax = self.figure.add_subplot(413)  # New subplot for interlayer connections
-        self.cluster_distribution_ax = self.figure.add_subplot(414)
+        # Create two matplotlib figures for left and right columns
+        self.left_figure = Figure(figsize=(4, 10), dpi=100)
+        self.left_canvas = FigureCanvas(self.left_figure)
+        charts_layout.addWidget(self.left_canvas)
         
-        self.figure.tight_layout()
+        self.right_figure = Figure(figsize=(4, 10), dpi=100)
+        self.right_canvas = FigureCanvas(self.right_figure)
+        charts_layout.addWidget(self.right_canvas)
+        
+        # Initialize left column subplots
+        
+        self.layer_connectivity_ax = self.left_figure.add_subplot(411)
+        self.intralayer_nodes_ax = self.left_figure.add_subplot(412)
+        self.interlayer_nodes_ax = self.left_figure.add_subplot(413)
+        self.cluster_distribution_ax = self.left_figure.add_subplot(414)
+        
+        # Initialize right column subplots
+        self.conn_distribution_ax = self.right_figure.add_subplot(411)
+        self.interlayer_graph_ax = self.right_figure.add_subplot(412)
+        self.layer_activity_ax = self.right_figure.add_subplot(413)
+        self.custom_chart_ax = self.right_figure.add_subplot(414)
+        
+        # Set tight layout with minimal padding for both figures
+        self.left_figure.tight_layout(pad=0.5, h_pad=0.5, w_pad=0.5)
+        self.right_figure.tight_layout(pad=0.5, h_pad=0.5, w_pad=0.5)
     
     def update_stats(self, node_positions, link_pairs, node_ids, layers, node_clusters, node_mask, edge_mask):
         """Update statistics based on currently visible network elements"""
-        self.figure.clear()
+        # Clear both figures
+        self.left_figure.clear()
+        self.right_figure.clear()
         
-        # Re-create subplots
-        self.layer_connectivity_ax = self.figure.add_subplot(411)
-        self.intralayer_nodes_ax = self.figure.add_subplot(412)
-        self.interlayer_nodes_ax = self.figure.add_subplot(413)
-        self.cluster_distribution_ax = self.figure.add_subplot(414)
+        # Re-create left column subplots
+        self.layer_connectivity_ax = self.left_figure.add_subplot(411)
+        self.intralayer_nodes_ax = self.left_figure.add_subplot(412)
+        self.interlayer_nodes_ax = self.left_figure.add_subplot(413)
+        self.cluster_distribution_ax = self.left_figure.add_subplot(414)
+        
+        # Re-create right column subplots
+        self.conn_distribution_ax = self.right_figure.add_subplot(411)
+        self.interlayer_graph_ax = self.right_figure.add_subplot(412)
+        self.layer_activity_ax = self.right_figure.add_subplot(413)
+        self.custom_chart_ax = self.right_figure.add_subplot(414)
+        
+        # Set smaller font sizes for all text elements
+        small_font = {'fontsize': 6}
+        medium_font = {'fontsize': 7}
         
         # Get visible nodes and edges
         visible_nodes = [i for i, mask in enumerate(node_mask) if mask]
@@ -235,6 +268,8 @@ class NetworkStatsPanel(QWidget):
         
         # Calculate nodes per layer
         nodes_per_layer = len(node_positions) // len(layers)
+        
+        # --- LEFT COLUMN CHARTS ---
         
         # 1. Layer connectivity matrix
         layer_connections = np.zeros((len(layers), len(layers)))
@@ -249,12 +284,13 @@ class NetworkStatsPanel(QWidget):
         
         # Plot layer connectivity heatmap
         im = self.layer_connectivity_ax.imshow(layer_connections, cmap='viridis')
-        self.layer_connectivity_ax.set_title('Layer Connectivity')
+        self.layer_connectivity_ax.set_title('Layer Connectivity', **medium_font)
         self.layer_connectivity_ax.set_xticks(range(len(layers)))
         self.layer_connectivity_ax.set_yticks(range(len(layers)))
-        self.layer_connectivity_ax.set_xticklabels(layers, rotation=90)
-        self.layer_connectivity_ax.set_yticklabels(layers)
-        self.figure.colorbar(im, ax=self.layer_connectivity_ax, fraction=0.046, pad=0.04)
+        self.layer_connectivity_ax.set_xticklabels(layers, rotation=90, **small_font)
+        self.layer_connectivity_ax.set_yticklabels(layers, **small_font)
+        cbar = self.left_figure.colorbar(im, ax=self.layer_connectivity_ax, fraction=0.046, pad=0.02)
+        cbar.ax.tick_params(labelsize=6)  # Smaller colorbar ticks
         
         # 2. Count intralayer and interlayer connections for each node
         intralayer_connections = collections.Counter()
@@ -291,13 +327,14 @@ class NetworkStatsPanel(QWidget):
             
             self.intralayer_nodes_ax.barh(y_pos, counts, align='center')
             self.intralayer_nodes_ax.set_yticks(y_pos)
-            self.intralayer_nodes_ax.set_yticklabels(nodes)
+            self.intralayer_nodes_ax.set_yticklabels(nodes, **small_font)
             self.intralayer_nodes_ax.invert_yaxis()  # Labels read top-to-bottom
-            self.intralayer_nodes_ax.set_xlabel('Connection Count')
-            self.intralayer_nodes_ax.set_title('Top Intra conn')
+            self.intralayer_nodes_ax.set_xlabel('Connection Count', **small_font)
+            self.intralayer_nodes_ax.set_title('Top Intra conn', **medium_font)
+            self.intralayer_nodes_ax.tick_params(axis='x', labelsize=6)
         else:
             self.intralayer_nodes_ax.text(0.5, 0.5, 'No intralayer connections to display', 
-                                        horizontalalignment='center', verticalalignment='center')
+                                        horizontalalignment='center', verticalalignment='center', **small_font)
         
         # 2b. Plot top 20 nodes by interlayer connections
         top_interlayer = interlayer_connections.most_common(20)
@@ -308,13 +345,14 @@ class NetworkStatsPanel(QWidget):
             
             self.interlayer_nodes_ax.barh(y_pos, counts, align='center')
             self.interlayer_nodes_ax.set_yticks(y_pos)
-            self.interlayer_nodes_ax.set_yticklabels(nodes)
+            self.interlayer_nodes_ax.set_yticklabels(nodes, **small_font)
             self.interlayer_nodes_ax.invert_yaxis()  # Labels read top-to-bottom
-            self.interlayer_nodes_ax.set_xlabel('Connection Count')
-            self.interlayer_nodes_ax.set_title('Top Inter Conn')
+            self.interlayer_nodes_ax.set_xlabel('Connection Count', **small_font)
+            self.interlayer_nodes_ax.set_title('Top Inter Conn', **medium_font)
+            self.interlayer_nodes_ax.tick_params(axis='x', labelsize=6)
         else:
             self.interlayer_nodes_ax.text(0.5, 0.5, 'No interlayer connections to display', 
-                                        horizontalalignment='center', verticalalignment='center')
+                                        horizontalalignment='center', verticalalignment='center', **small_font)
         
         # 3. Cluster distribution
         visible_node_ids = [node_ids[i] for i in visible_nodes]
@@ -323,15 +361,165 @@ class NetworkStatsPanel(QWidget):
         if cluster_counts:
             clusters, counts = zip(*cluster_counts.most_common())
             self.cluster_distribution_ax.pie(counts, labels=clusters, autopct='%1.1f%%', 
-                                           startangle=90)
+                                           startangle=90, textprops=small_font)
             self.cluster_distribution_ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle
-            self.cluster_distribution_ax.set_title('Cluster Distribution')
+            self.cluster_distribution_ax.set_title('Cluster Distribution', **medium_font)
         else:
             self.cluster_distribution_ax.text(0.5, 0.5, 'No clusters to display', 
-                                            horizontalalignment='center', verticalalignment='center')
+                                            horizontalalignment='center', verticalalignment='center', **small_font)
         
-        self.figure.tight_layout()
-        self.canvas.draw()
+        # --- RIGHT COLUMN CHARTS ---
+        
+        # 1. Connection count distribution
+        if intralayer_connections:
+            # Count how many nodes have X connections
+            conn_dist = collections.Counter(intralayer_connections.values())
+            # Sort by connection count
+            conn_counts = sorted(conn_dist.items())
+            x, y = zip(*conn_counts) if conn_counts else ([], [])
+            
+            self.conn_distribution_ax.bar(x, y, width=0.7)
+            self.conn_distribution_ax.set_xlabel('Number of Connections', **small_font)
+            self.conn_distribution_ax.set_ylabel('Number of Nodes', **small_font)
+            self.conn_distribution_ax.set_title('Intra-Connection Distribution', **medium_font)
+            self.conn_distribution_ax.tick_params(axis='both', labelsize=6)
+        else:
+            self.conn_distribution_ax.text(0.5, 0.5, 'No connection data to display', 
+                                         horizontalalignment='center', verticalalignment='center', **small_font)
+        
+        # 2. Interlayer graph visualization
+        # Create a simplified graph showing layer connections
+        if np.sum(layer_connections) > 0:
+            # Create a graph where nodes are layers and edges represent connections
+            G = nx.Graph()
+            
+            # Add nodes (layers)
+            for i, layer in enumerate(layers):
+                G.add_node(i, name=layer)
+            
+            # Add edges with weights based on connection counts
+            for i in range(len(layers)):
+                for j in range(i+1, len(layers)):
+                    if layer_connections[i, j] > 0:
+                        G.add_edge(i, j, weight=layer_connections[i, j])
+            
+            # Position nodes using spring layout instead of circular
+            pos = nx.spring_layout(G, seed=42)  # Using seed for consistency
+            
+            # Draw the graph
+            node_sizes = [300 for _ in range(len(layers))]
+            nx.draw_networkx_nodes(G, pos, node_size=node_sizes, node_color='skyblue', 
+                                  ax=self.interlayer_graph_ax)
+            
+            # Draw edges with width proportional to weight and increased transparency
+            edge_widths = [G[u][v]['weight']/5 for u, v in G.edges()]
+            nx.draw_networkx_edges(G, pos, width=edge_widths, alpha=0.4,  # Reduced alpha from 0.7 to 0.4
+                                  ax=self.interlayer_graph_ax)
+            
+            # Draw labels
+            nx.draw_networkx_labels(G, pos, labels={i: layer for i, layer in enumerate(layers)}, 
+                                   font_size=6, ax=self.interlayer_graph_ax)
+            
+            self.interlayer_graph_ax.set_title('Layer Connection Graph', **medium_font)
+            self.interlayer_graph_ax.axis('off')  # Turn off axis
+        else:
+            self.interlayer_graph_ax.text(0.5, 0.5, 'No interlayer connections to display', 
+                                        horizontalalignment='center', verticalalignment='center', **small_font)
+            self.interlayer_graph_ax.axis('off')
+        
+        # 3. Layer activity chart - shows edge counts and interlayer connections per layer
+        edges_per_layer_count = [0] * len(layers)
+        interlayer_connections_per_layer = [0] * len(layers)
+
+        # Count edges per layer (intralayer only)
+        for start_idx, end_idx in visible_links:
+            start_layer = start_idx // nodes_per_layer
+            end_layer = end_idx // nodes_per_layer
+            if start_layer == end_layer:
+                edges_per_layer_count[start_layer] += 1
+            else:
+                # Count interlayer connections for both layers involved
+                interlayer_connections_per_layer[start_layer] += 1
+                interlayer_connections_per_layer[end_layer] += 1
+
+        # Create bar chart with two y-axes
+        x = np.arange(len(layers))
+        width = 0.7  # Make bars wider since we only have one set on primary axis
+
+        # Primary axis for intralayer edges
+        ax1 = self.layer_activity_ax
+        bars1 = ax1.bar(x, edges_per_layer_count, width, label='Intralayer Edges', color='skyblue')
+        ax1.set_xlabel('Layers', **small_font)
+        ax1.set_ylabel('Intralayer Edge Count', **small_font)
+        ax1.set_xticks(x)
+        ax1.set_xticklabels(layers, rotation=90, **small_font)
+        ax1.tick_params(axis='y', labelsize=6)
+
+        # Secondary axis for interlayer connections
+        ax2 = ax1.twinx()
+        bars2 = ax2.bar(x, interlayer_connections_per_layer, width*0.7, label='Interlayer Connections', 
+                       color='red', alpha=0.6)  # Slightly narrower and transparent
+        ax2.set_ylabel('Interlayer Connection Count', color='red', **small_font)
+        ax2.tick_params(axis='y', labelcolor='red', labelsize=6)
+
+        # Add legend with both datasets
+        lines1, labels1 = ax1.get_legend_handles_labels()
+        lines2, labels2 = ax2.get_legend_handles_labels()
+        ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper right', prop={'size': 6})
+
+        self.layer_activity_ax.set_title('Layer Activity', **medium_font)
+        
+        # 4. Custom chart: Layer Similarity Dendrogram
+        # Replace the degree distribution with a hierarchical clustering of layers
+        if len(layers) > 1 and np.sum(layer_connections) > 0:
+            # Create a similarity matrix between layers based on their connections
+            # We'll use the layer_connections matrix as a measure of similarity
+            similarity_matrix = layer_connections.copy()
+            
+            # Ensure diagonal is zero (no self-connections for distance calculation)
+            np.fill_diagonal(similarity_matrix, 0)
+            
+            # Convert to a distance matrix (higher similarity = lower distance)
+            # Add a small epsilon to avoid division by zero
+            max_connections = np.max(similarity_matrix)
+            if max_connections > 0:
+                # Normalize and invert to get distances (1 - normalized similarity)
+                distance_matrix = 1 - (similarity_matrix / max_connections)
+                
+                # Ensure diagonal is exactly zero to satisfy scipy's requirements
+                np.fill_diagonal(distance_matrix, 0)
+                
+                # Perform hierarchical clustering
+                linkage_matrix = hierarchy.linkage(
+                    squareform(distance_matrix), 
+                    method='average'  # Use average linkage
+                )
+                
+                # Plot dendrogram
+                hierarchy.dendrogram(
+                    linkage_matrix,
+                    labels=layers,
+                    orientation='right',
+                    leaf_font_size=6,
+                    ax=self.custom_chart_ax
+                )
+                
+                self.custom_chart_ax.set_title('Layer Similarity', **medium_font)
+                self.custom_chart_ax.tick_params(axis='both', labelsize=6)
+            else:
+                self.custom_chart_ax.text(0.5, 0.5, 'No layer connections to analyze', 
+                                        horizontalalignment='center', verticalalignment='center', **small_font)
+        else:
+            self.custom_chart_ax.text(0.5, 0.5, 'Not enough layers for similarity analysis', 
+                                    horizontalalignment='center', verticalalignment='center', **small_font)
+        
+        # Apply tight layout with minimal padding for both figures
+        self.left_figure.tight_layout(pad=0.5, h_pad=0.5, w_pad=0.5)
+        self.right_figure.tight_layout(pad=0.5, h_pad=0.5, w_pad=0.5)
+        
+        # Draw both canvases
+        self.left_canvas.draw()
+        self.right_canvas.draw()
 
 class MultilayerNetworkViz(QWidget):
     def __init__(self, node_positions=None, link_pairs=None, link_colors=None, node_ids=None, 
@@ -386,7 +574,7 @@ class MultilayerNetworkViz(QWidget):
         
         # Create stats panel
         self.stats_panel = NetworkStatsPanel()
-        self.stats_panel.setFixedWidth(300)  # Set width for stats panel
+        self.stats_panel.setFixedWidth(600)  # Double the width from 300 to 600
         content_layout.addWidget(self.stats_panel)
         
         # Create view
@@ -482,6 +670,8 @@ class MultilayerNetworkViz(QWidget):
         edge_list_path = os.path.join(self.data_dir, f"{disease_name}_Multiplex_Network.tsv")
         node_metadata_path = os.path.join(self.data_dir, f"{disease_name}_Multiplex_Metadata.tsv")
         
+        print(edge_list_path)
+
         if not os.path.exists(edge_list_path) or not os.path.exists(node_metadata_path):
             logger.error(f"Data files for {disease_name} not found")
             return
