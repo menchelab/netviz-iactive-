@@ -111,7 +111,7 @@ class NetworkCanvas:
             if is_horizontal:
                 # Intra-layer edge: use lower opacity
                 edge_color = visible_colors[i].copy()
-                edge_color[3] = 0.2  # Set opacity to 20% for horizontal edges
+                edge_color[3] = 0.3  # Set opacity to 20% for horizontal edges
                 
                 intralayer_pos.append(self.node_positions[start_idx])
                 intralayer_pos.append(self.node_positions[end_idx])
@@ -120,7 +120,7 @@ class NetworkCanvas:
             else:
                 # Inter-layer edge: use the color of the starting layer with higher opacity
                 edge_color = visible_colors[i].copy()
-                edge_color[3] = 0.9  # Higher opacity for interlayer edges
+                edge_color[3] = 0.8  # Higher opacity for interlayer edges
                 
                 # Store the edge for later processing
                 interlayer_edges.append((
@@ -159,7 +159,7 @@ class NetworkCanvas:
                 # Apply different offsets to each edge in the group
                 for i, (start_pos, end_pos, color) in enumerate(edges):
                     # Calculate offset direction based on index
-                    offset_scale = 0.005  # Increased scale for more visible offset
+                    offset_scale = 0.002  # Increased scale for more visible offset
                     
                     # Calculate offset direction in a circular pattern
                     angle = 2 * np.pi * i / len(edges)
