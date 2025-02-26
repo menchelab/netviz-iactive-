@@ -5,9 +5,8 @@ import numpy as np
 import logging
 
 from charts.layer_connectivity import create_layer_connectivity_chart
-from charts.node_connections import create_node_connections_charts
 from charts.cluster_distribution import create_cluster_distribution_chart
-from charts.connection_distribution import create_connection_distribution_chart
+from charts.betweenness_centrality import create_betweenness_centrality_chart
 from charts.interlayer_graph import create_interlayer_graph
 from charts.layer_activity import create_layer_activity_chart
 from charts.layer_similarity import create_layer_similarity_chart
@@ -36,17 +35,15 @@ class NetworkStatsPanel(QWidget):
         self.right_canvas = FigureCanvas(self.right_figure)
         charts_layout.addWidget(self.right_canvas)
         
-        # Initialize left column subplots
-        self.layer_connectivity_ax = self.left_figure.add_subplot(411)
-        self.intralayer_nodes_ax = self.left_figure.add_subplot(412)
-        self.interlayer_nodes_ax = self.left_figure.add_subplot(413)
-        self.cluster_distribution_ax = self.left_figure.add_subplot(414)
+        # Initialize left column subplots - now with 3 charts instead of 4
+        self.layer_connectivity_ax = self.left_figure.add_subplot(311)
+        self.cluster_distribution_ax = self.left_figure.add_subplot(312)
+        self.layer_activity_ax = self.left_figure.add_subplot(313)
         
-        # Initialize right column subplots
-        self.conn_distribution_ax = self.right_figure.add_subplot(411)
-        self.interlayer_graph_ax = self.right_figure.add_subplot(412)
-        self.layer_activity_ax = self.right_figure.add_subplot(413)
-        self.custom_chart_ax = self.right_figure.add_subplot(414)
+        # Initialize right column subplots - now with 3 charts instead of 4
+        self.betweenness_centrality_ax = self.right_figure.add_subplot(311)
+        self.interlayer_graph_ax = self.right_figure.add_subplot(312)
+        self.layer_similarity_ax = self.right_figure.add_subplot(313)
         
         # Set tight layout with minimal padding for both figures
         self.left_figure.tight_layout(pad=0.5, h_pad=0.5, w_pad=0.5)
@@ -60,17 +57,15 @@ class NetworkStatsPanel(QWidget):
         self.left_figure.clear()
         self.right_figure.clear()
         
-        # Re-create left column subplots
-        self.layer_connectivity_ax = self.left_figure.add_subplot(411)
-        self.intralayer_nodes_ax = self.left_figure.add_subplot(412)
-        self.interlayer_nodes_ax = self.left_figure.add_subplot(413)
-        self.cluster_distribution_ax = self.left_figure.add_subplot(414)
+        # Re-create left column subplots - now with 3 charts instead of 4
+        self.layer_connectivity_ax = self.left_figure.add_subplot(311)
+        self.cluster_distribution_ax = self.left_figure.add_subplot(312)
+        self.layer_activity_ax = self.left_figure.add_subplot(313)
         
-        # Re-create right column subplots
-        self.conn_distribution_ax = self.right_figure.add_subplot(411)
-        self.interlayer_graph_ax = self.right_figure.add_subplot(412)
-        self.layer_activity_ax = self.right_figure.add_subplot(413)
-        self.custom_chart_ax = self.right_figure.add_subplot(414)
+        # Re-create right column subplots - now with 3 charts instead of 4
+        self.betweenness_centrality_ax = self.right_figure.add_subplot(311)
+        self.interlayer_graph_ax = self.right_figure.add_subplot(312)
+        self.layer_similarity_ax = self.right_figure.add_subplot(313)
         
         # Set smaller font sizes for all text elements
         small_font = {'fontsize': 6}
@@ -93,30 +88,10 @@ class NetworkStatsPanel(QWidget):
         cbar = self.left_figure.colorbar(im, ax=self.layer_connectivity_ax, fraction=0.046, pad=0.02)
         cbar.ax.tick_params(labelsize=6)  # Smaller colorbar ticks
         
-        # 2. Node connections charts
-        intralayer_connections, interlayer_connections = create_node_connections_charts(
-            self.intralayer_nodes_ax, self.interlayer_nodes_ax, visible_links, 
-            node_ids, nodes_per_layer, small_font, medium_font
-        )
-        
-        # 3. Cluster distribution
+        # 2. Cluster distribution
         visible_node_ids = [node_ids[i] for i in visible_nodes]
         create_cluster_distribution_chart(
             self.cluster_distribution_ax, visible_node_ids, node_clusters, small_font, medium_font
-        )
-        
-        # --- RIGHT COLUMN CHARTS ---
-        
-        # 1. Connection count distribution
-        create_connection_distribution_chart(
-            self.conn_distribution_ax, intralayer_connections, small_font, medium_font
-        )
-        
-        # 2. Interlayer graph visualization - use visible_layer_indices directly from checkboxes
-        self.interlayer_graph_ax.clear()
-        create_interlayer_graph(
-            self.interlayer_graph_ax, layer_connections, layers, 
-            small_font, medium_font, visible_layer_indices, layer_colors
         )
         
         # 3. Layer activity chart
@@ -124,9 +99,23 @@ class NetworkStatsPanel(QWidget):
             self.layer_activity_ax, visible_links, nodes_per_layer, layers, small_font, medium_font
         )
         
-        # 4. Layer similarity dendrogram
+        # --- RIGHT COLUMN CHARTS ---
+        
+        # 1. Betweenness centrality analysis
+        create_betweenness_centrality_chart(
+            self.betweenness_centrality_ax, layer_connections, layers, 
+            visible_layer_indices, small_font, medium_font
+        )
+        
+        # 2. Interlayer graph visualization
+        create_interlayer_graph(
+            self.interlayer_graph_ax, layer_connections, layers, 
+            small_font, medium_font, visible_layer_indices, layer_colors
+        )
+        
+        # 3. Layer similarity dendrogram
         create_layer_similarity_chart(
-            self.custom_chart_ax, layer_connections, layers, small_font, medium_font
+            self.layer_similarity_ax, layer_connections, layers, small_font, medium_font
         )
         
         # Apply tight layout with minimal padding for both figures
