@@ -159,4 +159,4 @@ def build_multilayer_network(edge_list_path, node_metadata_path, add_interlayer_
     logger.info(f"Found {len(unique_clusters)} clusters: {unique_clusters}")
     logger.info(f"Found {len(unique_origins)} origins: {unique_origins}")
     
-    return node_positions, link_pairs, link_colors, node_ids, layers, node_clusters, unique_clusters, node_colors, node_origins, unique_origins
+    return node_positions, link_pairs, link_colors, node_ids, layers, node_clusters, unique_clusters, node_colors, node_origins, unique_origins, layer_colors

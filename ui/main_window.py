@@ -109,14 +109,15 @@ class MultilayerNetworkViz(QWidget):
         data = load_disease_data(self.data_dir, disease_name)
         
         if data:
-            # Unpack the data
-            node_positions, link_pairs, link_colors, node_ids, layers, node_clusters, unique_clusters, node_colors, node_origins, unique_origins = data
+            # Unpack the data including layer_colors
+            node_positions, link_pairs, link_colors, node_ids, layers, node_clusters, unique_clusters, node_colors, node_origins, unique_origins, layer_colors = data
             
             # Load the data into the visualization
-            self.load_data(node_positions, link_pairs, link_colors, node_ids, layers, node_clusters, unique_clusters, node_colors, node_origins, unique_origins)
+            self.load_data(node_positions, link_pairs, link_colors, node_ids, layers, node_clusters, unique_clusters, 
+                          node_colors, node_origins, unique_origins, layer_colors)
     
     def load_data(self, node_positions, link_pairs, link_colors, node_ids, layers, node_clusters, unique_clusters, 
-                 node_colors=None, node_origins=None, unique_origins=None):
+                 node_colors=None, node_origins=None, unique_origins=None, layer_colors=None):
         """Load network data into the visualization"""
         logger = logging.getLogger(__name__)
         
@@ -130,13 +131,15 @@ class MultilayerNetworkViz(QWidget):
         self.unique_clusters = unique_clusters
         self.node_origins = node_origins or {}
         self.unique_origins = unique_origins or []
+        self.layer_colors = layer_colors or {}
         
         # Load data into the network canvas
         self.network_canvas.load_data(node_positions, link_pairs, link_colors, node_colors)
         
-        # Update the controls
+        # Update the controls with layer colors
         self.control_panel.update_controls(
-            self.layers, self.unique_clusters, self.unique_origins, self.update_visibility
+            self.layers, self.unique_clusters, self.unique_origins, 
+            self.update_visibility, self.layer_colors
         )
         
         # Update the visualization
@@ -191,9 +194,9 @@ class MultilayerNetworkViz(QWidget):
         # Update network canvas
         self.network_canvas.update_visibility(node_mask, edge_mask)
         
-        # Update statistics panel with visible layer indices
+        # Update statistics panel with visible layer indices and layer colors
         self.stats_panel.update_stats(
             self.node_positions, self.link_pairs, self.node_ids, 
             self.layers, self.node_clusters, node_mask, edge_mask,
-            visible_layers  # Pass visible layer indices from control panel
+            visible_layers, self.layer_colors
         ) 

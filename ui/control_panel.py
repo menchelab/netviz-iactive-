@@ -1,4 +1,5 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QCheckBox, QGroupBox
+from PyQt5.QtGui import QColor
 import logging
 
 class ControlPanel(QWidget):
@@ -50,7 +51,7 @@ class ControlPanel(QWidget):
         self.cluster_layout = cluster_layout
         self.origin_layout = origin_layout
     
-    def update_controls(self, layers, unique_clusters, unique_origins, visibility_callback):
+    def update_controls(self, layers, unique_clusters, unique_origins, visibility_callback, layer_colors=None):
         """Update the layer, cluster, and origin controls based on loaded data"""
         logger = logging.getLogger(__name__)
         logger.info("Updating controls...")
@@ -63,13 +64,42 @@ class ControlPanel(QWidget):
         self.cluster_checkboxes = {}
         self.origin_checkboxes = {}
         
-        # Create layer controls
-        for i, layer in enumerate(layers):
+        # Create layer controls (in reversed order)
+        for i, layer in enumerate(reversed(layers)):
             cb = QCheckBox(f"{layer}")
             cb.setChecked(True)
             cb.stateChanged.connect(visibility_callback)
+            
+            # Set checkbox text color if layer_colors are provided
+            if layer_colors and layer in layer_colors:
+                color = layer_colors[layer]
+                
+                # Convert to QColor
+                qcolor = None
+                if isinstance(color, str) and color.startswith('#'):
+                    qcolor = QColor(color)
+                elif isinstance(color, (list, tuple)) and len(color) >= 3:
+                    r, g, b = color[:3]
+                    if isinstance(r, float) and 0 <= r <= 1:
+                        qcolor = QColor(int(r*255), int(g*255), int(b*255))
+                    else:
+                        qcolor = QColor(r, g, b)
+                
+                if qcolor:
+                    # Set text color using stylesheet
+                    color_hex = qcolor.name()
+                    cb.setStyleSheet(f"QCheckBox {{ color: {color_hex}; }}")
+                    logger.info(f"Set layer {layer} color to {color_hex}")
+            
+            # Add to layout
             self.layer_layout.addWidget(cb)
-            self.layer_checkboxes.append(cb)
+            
+            # Store in original order for get_visible_layers()
+            original_index = len(layers) - i - 1
+            # Ensure the list has enough slots
+            while len(self.layer_checkboxes) <= original_index:
+                self.layer_checkboxes.append(None)
+            self.layer_checkboxes[original_index] = cb
         
         # Create cluster controls
         for cluster in unique_clusters:

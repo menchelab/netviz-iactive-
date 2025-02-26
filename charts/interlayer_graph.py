@@ -1,7 +1,7 @@
 import networkx as nx
 import numpy as np
 
-def create_interlayer_graph(ax, layer_connections, layers, small_font, medium_font, visible_layers=None):
+def create_interlayer_graph(ax, layer_connections, layers, small_font, medium_font, visible_layers=None, layer_colors=None):
     """Create graph visualization of layer connections"""
     # If visible_layers is None, show all layers
     if visible_layers is None:
@@ -33,9 +33,20 @@ def create_interlayer_graph(ax, layer_connections, layers, small_font, medium_fo
         # Position nodes using spring layout instead of circular
         pos = nx.spring_layout(G, seed=42)  # Using seed for consistency
         
+        # Prepare node colors if layer_colors is provided
+        node_colors = []
+        if layer_colors:
+            for layer in filtered_layers:
+                if layer in layer_colors:
+                    node_colors.append(layer_colors[layer])
+                else:
+                    node_colors.append('skyblue')  # Default color
+        else:
+            node_colors = ['skyblue' for _ in range(len(filtered_layers))]
+        
         # Draw the graph
         node_sizes = [300 for _ in range(len(filtered_layers))]
-        nx.draw_networkx_nodes(G, pos, node_size=node_sizes, node_color='skyblue', 
+        nx.draw_networkx_nodes(G, pos, node_size=node_sizes, node_color=node_colors, 
                               ax=ax)
         
         # Draw edges with width proportional to weight and increased transparency
