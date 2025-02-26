@@ -95,6 +95,11 @@ class ControlPanel(QWidget):
         self.show_nodes_checkbox.setChecked(True)  # On by default
         display_layout.addWidget(self.show_nodes_checkbox)
         
+        # Add show node labels checkbox
+        self.show_labels_checkbox = QCheckBox("Show Node Labels")
+        self.show_labels_checkbox.setChecked(True)  # On by default
+        display_layout.addWidget(self.show_labels_checkbox)
+        
         self.display_group.setLayout(display_layout)
         layout.addWidget(self.display_group)
         
@@ -220,6 +225,9 @@ class ControlPanel(QWidget):
         
         # Connect show nodes checkbox
         self.show_nodes_checkbox.stateChanged.connect(visibility_callback)
+        
+        # Connect show labels checkbox
+        self.show_labels_checkbox.stateChanged.connect(visibility_callback)
     
     def clear_layout(self, layout):
         """Clear all widgets from a layout"""
@@ -248,3 +256,7 @@ class ControlPanel(QWidget):
     def show_nodes(self):
         """Check if nodes should be shown"""
         return self.show_nodes_checkbox.isChecked()
+    
+    def show_labels(self):
+        """Check if node labels should be shown"""
+        return self.show_labels_checkbox.isChecked()

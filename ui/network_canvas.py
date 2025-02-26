@@ -1,6 +1,6 @@
 import numpy as np
 from vispy import scene
-from vispy.scene.visuals import Markers, Line
+from vispy.scene.visuals import Markers, Line, Text
 import logging
 from utils.color_utils import hex_to_rgba
 
@@ -27,6 +27,11 @@ class NetworkCanvas:
         self.interlayer_lines = Line(pos=np.zeros((0, 3)), color=np.zeros((0, 4)),
                                    connect='segments', width=2)  # Thicker width
         self.view.add(self.interlayer_lines)
+        
+        # Create text labels for nodes - initialize with a dummy position that will be invisible
+        self.node_labels = Text(pos=np.array([[0, 0, 0]]), text=[''], color='white', font_size=8)
+        self.node_labels.visible = False  # Start with labels invisible
+        self.view.add(self.node_labels)
 
         self.node_positions = None
         self.link_pairs = None
@@ -34,10 +39,16 @@ class NetworkCanvas:
         self.node_colors_rgba = None
         self.node_sizes = None
         self.active_nodes = None
+        self.node_ids = None
+        self.visible_layers = None
+        self.layer_names = None
+        self.nodes_per_layer = None
+        self.node_mask = None
 
-    def load_data(self, node_positions, link_pairs, link_colors, node_colors=None):
+    def load_data(self, node_positions, link_pairs, link_colors, node_colors=None, node_ids=None):
         self.node_positions = node_positions
         self.link_pairs = link_pairs
+        self.node_ids = node_ids
 
         # Convert link colors from hex to RGBA with enhanced saturation
         self.link_colors_rgba = []
@@ -72,12 +83,15 @@ class NetworkCanvas:
             self.active_nodes[end_idx] = True
         
         # Set larger size for active nodes
-        self.node_sizes[self.active_nodes] = 5
+        self.node_sizes[self.active_nodes] = 9  # 3x larger
 
-    def update_visibility(self, node_mask, edge_mask, show_intralayer=True, show_nodes=True):
+    def update_visibility(self, node_mask, edge_mask, show_intralayer=True, show_nodes=True, show_labels=True):
         """Update the visibility of nodes and edges based on masks"""
         logger = logging.getLogger(__name__)
-        logger.info(f"Updating visibility with show_intralayer={show_intralayer}, show_nodes={show_nodes}")
+        logger.info(f"Updating visibility with show_intralayer={show_intralayer}, show_nodes={show_nodes}, show_labels={show_labels}")
+
+        # Store the node mask for later use
+        self.node_mask = node_mask
 
         # Handle case when no nodes are visible
         if not np.any(node_mask):
@@ -87,6 +101,8 @@ class NetworkCanvas:
                                         color=np.zeros((0, 4)))
             self.interlayer_lines.set_data(pos=np.zeros((0, 3)),
                                         color=np.zeros((0, 4)))
+            # Don't modify the position, just hide the labels
+            self.node_labels.visible = False
             return
 
         # Update scatter plot
@@ -101,6 +117,50 @@ class NetworkCanvas:
             # Make nodes invisible but keep their positions
             self.scatter.set_data(visible_nodes, edge_color='black',
                                 face_color=np.zeros_like(visible_colors), size=0)
+
+        # Update node labels
+        if show_labels and self.node_ids is not None and self.visible_layers is not None:
+            # Find the top and bottom visible layers
+            if len(self.visible_layers) > 0:
+                top_layer = min(self.visible_layers)
+                bottom_layer = max(self.visible_layers)
+                
+                # Get nodes in top and bottom layers
+                label_positions = []
+                label_texts = []
+                
+                # Process visible nodes
+                visible_indices = np.where(node_mask)[0]
+                for idx in visible_indices:
+                    layer_idx = idx // self.nodes_per_layer
+                    if layer_idx == top_layer or layer_idx == bottom_layer:
+                        # Only show labels for active nodes
+                        if self.active_nodes[idx]:
+                            node_id = self.node_ids[idx]
+                            # Add a small offset to position labels better
+                            pos = self.node_positions[idx].copy()
+                            # Offset in y direction
+                            pos[1] += 0.05
+                            label_positions.append(pos)
+                            label_texts.append(str(node_id))
+                
+                # Update the labels
+                if label_positions:
+                    self.node_labels.pos = np.array(label_positions)
+                    self.node_labels.text = label_texts
+                    self.node_labels.color = 'white'  # Make labels visible
+                    self.node_labels.visible = True
+                    # Bring labels to front
+                    self.node_labels.order = 1  # Higher order means drawn later (on top)
+                else:
+                    # Use a dummy position but hide the labels
+                    self.node_labels.visible = False
+            else:
+                # Use a dummy position but hide the labels
+                self.node_labels.visible = False
+        else:
+            # Hide the labels without changing position
+            self.node_labels.visible = False
 
         # Get visible edges
         visible_edges = self.link_pairs[edge_mask]

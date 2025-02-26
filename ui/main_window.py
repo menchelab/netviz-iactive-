@@ -125,7 +125,7 @@ class MultilayerNetworkViz(QWidget):
         self.unique_origins = unique_origins or []
         self.layer_colors = layer_colors or {}
 
-        self.network_canvas.load_data(node_positions, link_pairs, link_colors, node_colors)
+        self.network_canvas.load_data(node_positions, link_pairs, link_colors, node_colors, node_ids)
 
         # Update the controls with layer colors
         self.control_panel.update_controls(
@@ -145,6 +145,7 @@ class MultilayerNetworkViz(QWidget):
         visible_origins = self.control_panel.get_visible_origins()
         show_intralayer = self.control_panel.show_intralayer_edges()
         show_nodes = self.control_panel.show_nodes()  # Get the show_nodes setting
+        show_labels = self.control_panel.show_labels()  # Get the show_labels setting
 
         # Calculate nodes per layer
         nodes_per_layer = len(self.node_positions) // len(self.layers)
@@ -184,7 +185,7 @@ class MultilayerNetworkViz(QWidget):
         self.network_canvas.node_mask = node_mask
 
         # Update network canvas with visibility settings
-        self.network_canvas.update_visibility(node_mask, edge_mask, show_intralayer, show_nodes)
+        self.network_canvas.update_visibility(node_mask, edge_mask, show_intralayer, show_nodes, show_labels)
 
         # Update statistics panel with visible layer indices and layer colors
         self.stats_panel.update_stats(
