@@ -31,7 +31,9 @@ def create_interlayer_graph(ax, layer_connections, layers, small_font, medium_fo
                     G.add_edge(i, j, weight=filtered_connections[i, j])
         
         # Position nodes using spring layout instead of circular
-        pos = nx.spring_layout(G, seed=42)  # Using seed for consistency
+        #pos = nx.spring_layout(G, seed=42)  # Using seed for consistency
+        pos = nx.spring_layout(G, seed=42, weight='weight', k=0.3)
+
         
         # Prepare node colors if layer_colors is provided
         node_colors = []
