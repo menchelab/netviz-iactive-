@@ -123,7 +123,7 @@ def netviz(node_positions, link_pairs, link_colors, node_ids):
         np.full(num_nodes, 255, dtype=float),
         normalized_G,
         normalized_B,
-        np.full(num_nodes, 255, dtype=float),
+        np.full(num_nodes, 100, dtype=float),
     ]) / 255.0
 
     # Create node markers
@@ -138,7 +138,7 @@ def netviz(node_positions, link_pairs, link_colors, node_ids):
     def hex_to_rgba(hex_color):
         hex_color = hex_color.lstrip('#')
         rgb = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
-        return (*[x/255.0 for x in rgb], 0.8)
+        return (*[x/255.0 for x in rgb], 0.4)
 
     # should be using rgb tuple from the start actually
     linkcol = np.array([hex_to_rgba(color) for color in link_colors])

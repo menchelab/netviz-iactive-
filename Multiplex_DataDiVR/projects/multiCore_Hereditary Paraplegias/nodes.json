@@ -1,0 +1,1479 @@
+{
+    "nodes": [
+        {
+            "id": 0,
+            "n": "MTPAP_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 1,
+            "n": "SPAST_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 2,
+            "n": "RTN2_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 3,
+            "n": "NIPA1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 4,
+            "n": "CPT1C_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 5,
+            "n": "C19orf12_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 6,
+            "n": "KIF1C_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 7,
+            "n": "MARS2_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 8,
+            "n": "AP5Z1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 9,
+            "n": "AP4E1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 10,
+            "n": "VAMP1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 11,
+            "n": "HSPD1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 12,
+            "n": "REEP2_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 13,
+            "n": "DDHD1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 14,
+            "n": "CYP2U1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 15,
+            "n": "VPS37A_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 16,
+            "n": "SACS_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 17,
+            "n": "NT5C2_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 18,
+            "n": "C12orf65_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 19,
+            "n": "AFG3L2_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 20,
+            "n": "ATP13A2_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 21,
+            "n": "KIF5A_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 22,
+            "n": "CYP7B1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 23,
+            "n": "UCHL1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 24,
+            "n": "KLC2_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 25,
+            "n": "SPG7_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 26,
+            "n": "MAG_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 27,
+            "n": "KIF1A_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 28,
+            "n": "ZFYVE27_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 29,
+            "n": "ATL1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 30,
+            "n": "SLC33A1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 31,
+            "n": "AMPD2_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 32,
+            "n": "TECPR2_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 33,
+            "n": "ENTPD1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 34,
+            "n": "ARL6IP1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 35,
+            "n": "AP4S1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 36,
+            "n": "PLP1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 37,
+            "n": "SPG21_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 38,
+            "n": "IBA57_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 39,
+            "n": "RNF170_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 40,
+            "n": "ALS2_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 41,
+            "n": "ERLIN2_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 42,
+            "n": "DDHD2_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 43,
+            "n": "L1CAM_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 44,
+            "n": "PNPLA6_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 45,
+            "n": "TFG_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 46,
+            "n": "REEP1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 47,
+            "n": "ZFYVE26_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 48,
+            "n": "FA2H_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 49,
+            "n": "AP4M1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 50,
+            "n": "SPG11_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 51,
+            "n": "BSCL2_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 52,
+            "n": "GJC2_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 53,
+            "n": "GBA2_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 54,
+            "n": "AP4B1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 55,
+            "n": "ALDH18A1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 56,
+            "n": "B4GALNT1_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 57,
+            "n": "ABHD16A_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 58,
+            "n": "KIDINS220_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 59,
+            "n": "SELENOI_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 60,
+            "n": "SPAST_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 61,
+            "n": "KPNA3_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 62,
+            "n": "VPS37A_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 63,
+            "n": "REEP2_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 64,
+            "n": "PCYT2_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 65,
+            "n": "CAPN1_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 66,
+            "n": "NT5C2_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 67,
+            "n": "HACE1_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 68,
+            "n": "ATP13A2_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 69,
+            "n": "AP5Z1_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 70,
+            "n": "KLC2_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 71,
+            "n": "MAG_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 72,
+            "n": "NKX6-2_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 73,
+            "n": "KIF1A_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 74,
+            "n": "AMPD2_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 75,
+            "n": "PLP1_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 76,
+            "n": "DDHD2_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 77,
+            "n": "AFG3L2_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 78,
+            "n": "L1CAM_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 79,
+            "n": "CPT1C_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 80,
+            "n": "PNPLA6_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 81,
+            "n": "RTN2_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 82,
+            "n": "FA2H_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 83,
+            "n": "AP4M1_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 84,
+            "n": "SPG11_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 85,
+            "n": "MTPAP_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 86,
+            "n": "DDHD1_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 87,
+            "n": "GBA2_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 88,
+            "n": "CPT1C_coex_BRB",
+            "attrlist": {}
+        },
+        {
+            "id": 89,
+            "n": "B4GALNT1_coex_BRB",
+            "attrlist": {}
+        },
+        {
+            "id": 90,
+            "n": "KIF1C_coex_BRB",
+            "attrlist": {}
+        },
+        {
+            "id": 91,
+            "n": "NKX6-2_coex_BRB",
+            "attrlist": {}
+        },
+        {
+            "id": 92,
+            "n": "MAG_coex_BRB",
+            "attrlist": {}
+        },
+        {
+            "id": 93,
+            "n": "PLP1_coex_BRB",
+            "attrlist": {}
+        },
+        {
+            "id": 94,
+            "n": "NIPA1_coex_BRB",
+            "attrlist": {}
+        },
+        {
+            "id": 95,
+            "n": "L1CAM_coex_BRB",
+            "attrlist": {}
+        },
+        {
+            "id": 96,
+            "n": "UCHL1_coex_BRB",
+            "attrlist": {}
+        },
+        {
+            "id": 97,
+            "n": "FA2H_coex_BRB",
+            "attrlist": {}
+        },
+        {
+            "id": 98,
+            "n": "GJC2_coex_BRB",
+            "attrlist": {}
+        },
+        {
+            "id": 99,
+            "n": "CAPN1_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 100,
+            "n": "PI4KA_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 101,
+            "n": "MARS2_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 102,
+            "n": "MARS1_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 103,
+            "n": "KIF1C_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 104,
+            "n": "HSPD1_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 105,
+            "n": "TECPR2_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 106,
+            "n": "KIDINS220_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 107,
+            "n": "DDHD1_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 108,
+            "n": "HACE1_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 109,
+            "n": "SACS_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 110,
+            "n": "NT5C2_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 111,
+            "n": "C12orf65_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 112,
+            "n": "SPAST_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 113,
+            "n": "ATP13A2_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 114,
+            "n": "NIPA1_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 115,
+            "n": "KLC2_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 116,
+            "n": "AP5Z1_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 117,
+            "n": "ENTPD1_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 118,
+            "n": "CPT1C_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 119,
+            "n": "RNF170_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 120,
+            "n": "ALDH3A2_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 121,
+            "n": "ALS2_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 122,
+            "n": "ERLIN2_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 123,
+            "n": "PNPLA6_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 124,
+            "n": "ZFYVE26_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 125,
+            "n": "AP4M1_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 126,
+            "n": "FARS2_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 127,
+            "n": "CHP1_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 128,
+            "n": "SPAST_coex_BRO",
+            "attrlist": {}
+        },
+        {
+            "id": 129,
+            "n": "KIDINS220_coex_BRO",
+            "attrlist": {}
+        },
+        {
+            "id": 130,
+            "n": "RTN2_coex_BRO",
+            "attrlist": {}
+        },
+        {
+            "id": 131,
+            "n": "B4GALNT1_coex_BRO",
+            "attrlist": {}
+        },
+        {
+            "id": 132,
+            "n": "KIF1C_coex_BRO",
+            "attrlist": {}
+        },
+        {
+            "id": 133,
+            "n": "NKX6-2_coex_BRO",
+            "attrlist": {}
+        },
+        {
+            "id": 134,
+            "n": "AP4E1_coex_BRO",
+            "attrlist": {}
+        },
+        {
+            "id": 135,
+            "n": "REEP2_coex_BRO",
+            "attrlist": {}
+        },
+        {
+            "id": 136,
+            "n": "TMEM63C_coex_BRO",
+            "attrlist": {}
+        },
+        {
+            "id": 137,
+            "n": "SACS_coex_BRO",
+            "attrlist": {}
+        },
+        {
+            "id": 138,
+            "n": "SELENOI_coex_BRO",
+            "attrlist": {}
+        },
+        {
+            "id": 139,
+            "n": "ATP13A2_coex_BRO",
+            "attrlist": {}
+        },
+        {
+            "id": 140,
+            "n": "CAPN1_coex_BRO",
+            "attrlist": {}
+        },
+        {
+            "id": 141,
+            "n": "CPT1C_coex_BRO",
+            "attrlist": {}
+        },
+        {
+            "id": 142,
+            "n": "UCHL1_coex_BRO",
+            "attrlist": {}
+        },
+        {
+            "id": 143,
+            "n": "KLC2_coex_BRO",
+            "attrlist": {}
+        },
+        {
+            "id": 144,
+            "n": "MAG_coex_BRO",
+            "attrlist": {}
+        },
+        {
+            "id": 145,
+            "n": "AMPD2_coex_BRO",
+            "attrlist": {}
+        },
+        {
+            "id": 146,
+            "n": "PLP1_coex_BRO",
+            "attrlist": {}
+        },
+        {
+            "id": 147,
+            "n": "NIPA1_coex_BRO",
+            "attrlist": {}
+        },
+        {
+            "id": 148,
+            "n": "DDHD2_coex_BRO",
+            "attrlist": {}
+        },
+        {
+            "id": 149,
+            "n": "L1CAM_coex_BRO",
+            "attrlist": {}
+        },
+        {
+            "id": 150,
+            "n": "REEP1_coex_BRO",
+            "attrlist": {}
+        },
+        {
+            "id": 151,
+            "n": "FA2H_coex_BRO",
+            "attrlist": {}
+        },
+        {
+            "id": 152,
+            "n": "BSCL2_coex_BRO",
+            "attrlist": {}
+        },
+        {
+            "id": 153,
+            "n": "GJC2_coex_BRO",
+            "attrlist": {}
+        },
+        {
+            "id": 154,
+            "n": "GBA2_coex_BRO",
+            "attrlist": {}
+        },
+        {
+            "id": 155,
+            "n": "MARS1_coex_BRO",
+            "attrlist": {}
+        },
+        {
+            "id": 156,
+            "n": "KIDINS220_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 157,
+            "n": "UBAP1_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 158,
+            "n": "ERLIN1_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 159,
+            "n": "CHP1_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 160,
+            "n": "CAPN1_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 161,
+            "n": "PCYT2_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 162,
+            "n": "VPS37A_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 163,
+            "n": "CPT1C_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 164,
+            "n": "B4GALNT1_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 165,
+            "n": "MARS2_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 166,
+            "n": "SELENOI_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 167,
+            "n": "AP4E1_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 168,
+            "n": "PI4KA_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 169,
+            "n": "TECPR2_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 170,
+            "n": "KPNA3_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 171,
+            "n": "RTN2_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 172,
+            "n": "REEP2_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 173,
+            "n": "CYP2U1_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 174,
+            "n": "HACE1_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 175,
+            "n": "AFG3L2_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 176,
+            "n": "ATP13A2_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 177,
+            "n": "KIF5A_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 178,
+            "n": "UCHL1_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 179,
+            "n": "KLC2_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 180,
+            "n": "KIF1A_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 181,
+            "n": "ZFYVE27_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 182,
+            "n": "ARL6IP1_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 183,
+            "n": "PLP1_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 184,
+            "n": "ALS2_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 185,
+            "n": "ERLIN2_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 186,
+            "n": "MTPAP_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 187,
+            "n": "L1CAM_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 188,
+            "n": "TFG_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 189,
+            "n": "REEP1_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 190,
+            "n": "FA2H_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 191,
+            "n": "HPDL_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 192,
+            "n": "SPG11_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 193,
+            "n": "NT5C2_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 194,
+            "n": "GJC2_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 195,
+            "n": "GBA2_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 196,
+            "n": "ALDH18A1_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 197,
+            "n": "CAPN1_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 198,
+            "n": "ERLIN1_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 199,
+            "n": "ALDH3A2_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 200,
+            "n": "VPS37A_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 201,
+            "n": "KIDINS220_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 202,
+            "n": "CPT1C_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 203,
+            "n": "B4GALNT1_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 204,
+            "n": "KIF1C_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 205,
+            "n": "KPNA3_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 206,
+            "n": "TECPR2_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 207,
+            "n": "REEP2_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 208,
+            "n": "CYP2U1_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 209,
+            "n": "HACE1_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 210,
+            "n": "ATP13A2_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 211,
+            "n": "KIF5A_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 212,
+            "n": "UCHL1_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 213,
+            "n": "ZFYVE27_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 214,
+            "n": "ATL1_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 215,
+            "n": "AMPD2_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 216,
+            "n": "ABHD16A_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 217,
+            "n": "ENTPD1_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 218,
+            "n": "ARL6IP1_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 219,
+            "n": "AP4S1_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 220,
+            "n": "PLP1_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 221,
+            "n": "ALS2_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 222,
+            "n": "SPAST_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 223,
+            "n": "L1CAM_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 224,
+            "n": "PNPLA6_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 225,
+            "n": "ZFYVE26_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 226,
+            "n": "AP4M1_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 227,
+            "n": "C12orf65_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 228,
+            "n": "SPG11_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 229,
+            "n": "GJC2_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 230,
+            "n": "FARS2_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 231,
+            "n": "ERLIN2_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 232,
+            "n": "ALDH18A1_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 233,
+            "n": "PCYT2_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 234,
+            "n": "CHP1_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 235,
+            "n": "SELENOI_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 236,
+            "n": "KIDINS220_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 237,
+            "n": "UBAP1_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 238,
+            "n": "KPNA3_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 239,
+            "n": "CAPN1_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 240,
+            "n": "ERLIN1_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 241,
+            "n": "ALDH3A2_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 242,
+            "n": "VPS37A_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 243,
+            "n": "CPT1C_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 244,
+            "n": "B4GALNT1_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 245,
+            "n": "AP4E1_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 246,
+            "n": "PI4KA_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 247,
+            "n": "TECPR2_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 248,
+            "n": "REEP2_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 249,
+            "n": "RTN2_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 250,
+            "n": "DDHD1_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 251,
+            "n": "VAMP1_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 252,
+            "n": "SACS_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 253,
+            "n": "AFG3L2_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 254,
+            "n": "ATP13A2_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 255,
+            "n": "AP5Z1_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 256,
+            "n": "KIF5A_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 257,
+            "n": "UCHL1_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 258,
+            "n": "KLC2_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 259,
+            "n": "KIF1A_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 260,
+            "n": "AMPD2_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 261,
+            "n": "ENTPD1_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 262,
+            "n": "C12orf65_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 263,
+            "n": "ARL6IP1_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 264,
+            "n": "AP4S1_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 265,
+            "n": "PLP1_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 266,
+            "n": "L1CAM_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 267,
+            "n": "TFG_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 268,
+            "n": "REEP1_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 269,
+            "n": "ZFYVE26_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 270,
+            "n": "GJC2_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 271,
+            "n": "GBA2_coex_ITI",
+            "attrlist": {}
+        },
+        {
+            "id": 272,
+            "n": "SELENOI_co-essential",
+            "attrlist": {}
+        },
+        {
+            "id": 273,
+            "n": "PCYT2_co-essential",
+            "attrlist": {}
+        },
+        {
+            "id": 274,
+            "n": "VPS37A_co-essential",
+            "attrlist": {}
+        },
+        {
+            "id": 275,
+            "n": "UBAP1_co-essential",
+            "attrlist": {}
+        },
+        {
+            "id": 276,
+            "n": "MARS2_co-essential",
+            "attrlist": {}
+        },
+        {
+            "id": 277,
+            "n": "MTPAP_co-essential",
+            "attrlist": {}
+        },
+        {
+            "id": 278,
+            "n": "C12orf65_co-essential",
+            "attrlist": {}
+        },
+        {
+            "id": 279,
+            "n": "IBA57_co-essential",
+            "attrlist": {}
+        },
+        {
+            "id": 280,
+            "n": "TFG_co-essential",
+            "attrlist": {}
+        },
+        {
+            "id": 281,
+            "n": "FARS2_co-essential",
+            "attrlist": {}
+        },
+        {
+            "id": 282,
+            "n": "CPT1C_metabolism_RECON3D",
+            "attrlist": {}
+        },
+        {
+            "id": 283,
+            "n": "PCYT2_metabolism_RECON3D",
+            "attrlist": {}
+        },
+        {
+            "id": 284,
+            "n": "CYP2U1_metabolism_RECON3D",
+            "attrlist": {}
+        },
+        {
+            "id": 285,
+            "n": "NT5C2_metabolism_RECON3D",
+            "attrlist": {}
+        },
+        {
+            "id": 286,
+            "n": "ALDH3A2_metabolism_RECON3D",
+            "attrlist": {}
+        },
+        {
+            "id": 287,
+            "n": "CYP7B1_metabolism_RECON3D",
+            "attrlist": {}
+        },
+        {
+            "id": 288,
+            "n": "SLC33A1_metabolism_RECON3D",
+            "attrlist": {}
+        },
+        {
+            "id": 289,
+            "n": "B4GALNT1_metabolism_RECON3D",
+            "attrlist": {}
+        },
+        {
+            "id": 290,
+            "n": "AMPD2_metabolism_RECON3D",
+            "attrlist": {}
+        },
+        {
+            "id": 291,
+            "n": "ENTPD1_metabolism_RECON3D",
+            "attrlist": {}
+        },
+        {
+            "id": 292,
+            "n": "GBA2_metabolism_RECON3D",
+            "attrlist": {}
+        },
+        {
+            "id": 293,
+            "n": "ALDH18A1_metabolism_RECON3D",
+            "attrlist": {}
+        },
+        {
+            "id": 294,
+            "n": "PI4KA_metabolism_RECON3D",
+            "attrlist": {}
+        }
+    ]
+}

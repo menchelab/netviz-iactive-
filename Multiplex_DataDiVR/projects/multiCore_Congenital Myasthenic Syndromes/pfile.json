@@ -1,0 +1,63 @@
+{
+    "name": "multiCore_Congenital Myasthenic Syndromes",
+    "layouts": [
+        "Endotypes Multilayer Network",
+        "Endotype 1",
+        "Endotype 2",
+        "Endotype 3",
+        "Endotype 4",
+        "Endotype 5",
+        "Endotype 6",
+        "Endotype 7"
+    ],
+    "layoutsRGB": [
+        "Endotypes Multilayer Network",
+        "Endotype 1",
+        "Endotype 2",
+        "Endotype 3",
+        "Endotype 4",
+        "Endotype 5",
+        "Endotype 6",
+        "Endotype 7"
+    ],
+    "links": [
+        "Endotypes Multilayer Network",
+        "Endotype 1",
+        "Endotype 2",
+        "Endotype 3",
+        "Endotype 4",
+        "Endotype 5",
+        "Endotype 6",
+        "Endotype 7"
+    ],
+    "linksRGB": [
+        "Endotypes Multilayer Network",
+        "Endotype 1",
+        "Endotype 2",
+        "Endotype 3",
+        "Endotype 4",
+        "Endotype 5",
+        "Endotype 6",
+        "Endotype 7"
+    ],
+    "selections": [],
+    "scenes": [
+        "Endotypes Multilayer Network",
+        "Endotype 1",
+        "Endotype 2",
+        "Endotype 3",
+        "Endotype 4",
+        "Endotype 5",
+        "Endotype 6",
+        "Endotype 7"
+    ],
+    "info": "Congenital Myasthenic SyndromesmultiCore definition",
+    "linkcount": 1357,
+    "labelcount": 0,
+    "nodecount": 223,
+    "labels": [
+        223,
+        0
+    ],
+    "annotationTypes": true
+}

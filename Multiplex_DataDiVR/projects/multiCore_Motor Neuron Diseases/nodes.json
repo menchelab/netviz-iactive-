@@ -1,0 +1,3969 @@
+{
+    "nodes": [
+        {
+            "id": 0,
+            "n": "CHCHD10_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 1,
+            "n": "COQ7_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 2,
+            "n": "SIGMAR1_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 3,
+            "n": "ALS2_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 4,
+            "n": "SETX_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 5,
+            "n": "DYNC1H1_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 6,
+            "n": "MATR3_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 7,
+            "n": "CHMP2B_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 8,
+            "n": "MYH14_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 9,
+            "n": "FUS_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 10,
+            "n": "C9orf72_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 11,
+            "n": "UBA1_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 12,
+            "n": "WARS_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 13,
+            "n": "GLE1_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 14,
+            "n": "VWA1_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 15,
+            "n": "TARDBP_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 16,
+            "n": "HNRNPA1_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 17,
+            "n": "RBM7_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 18,
+            "n": "ASAH1_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 19,
+            "n": "NEFH_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 20,
+            "n": "EMILIN1_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 21,
+            "n": "AARS_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 22,
+            "n": "HEXB_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 23,
+            "n": "HINT1_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 24,
+            "n": "DNAJB2_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 25,
+            "n": "ATP7A_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 26,
+            "n": "SORD_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 27,
+            "n": "PRUNE1_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 28,
+            "n": "EXOSC3_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 29,
+            "n": "ATXN2_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 30,
+            "n": "HSPB8_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 31,
+            "n": "MAPT_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 32,
+            "n": "EXOSC9_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 33,
+            "n": "HSPB3_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 34,
+            "n": "SOD1_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 35,
+            "n": "ASCC1_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 36,
+            "n": "PRPH_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 37,
+            "n": "KIF5A_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 38,
+            "n": "NEK9_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 39,
+            "n": "TBK1_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 40,
+            "n": "VCP_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 41,
+            "n": "SLC25A46_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 42,
+            "n": "GBF1_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 43,
+            "n": "VRK1_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 44,
+            "n": "ZBTB42_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 45,
+            "n": "NEK1_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 46,
+            "n": "EXOSC8_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 47,
+            "n": "HSPB1_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 48,
+            "n": "ADPRHL2_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 49,
+            "n": "VAPB_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 50,
+            "n": "SMN1_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 51,
+            "n": "UBQLN2_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 52,
+            "n": "BICD2_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 53,
+            "n": "ANG_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 54,
+            "n": "SQSTM1_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 55,
+            "n": "LRP12_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 56,
+            "n": "SPTAN1_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 57,
+            "n": "CAPN1_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 58,
+            "n": "DCTN1_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 59,
+            "n": "TUBA4A_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 60,
+            "n": "DNM2_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 61,
+            "n": "ERBB3_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 62,
+            "n": "PFN1_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 63,
+            "n": "TTN_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 64,
+            "n": "MYBPC1_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 65,
+            "n": "TRIP4_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 66,
+            "n": "AR_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 67,
+            "n": "OPTN_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 68,
+            "n": "TRPV4_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 69,
+            "n": "ERBB4_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 70,
+            "n": "SPG11_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 71,
+            "n": "SLC52A3_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 72,
+            "n": "SLC52A2_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 73,
+            "n": "REEP1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 74,
+            "n": "ZBTB42_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 75,
+            "n": "ADGRG6_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 76,
+            "n": "IGHMBP2_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 77,
+            "n": "CHCHD10_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 78,
+            "n": "NEFH_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 79,
+            "n": "PLEKHG5_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 80,
+            "n": "MYH14_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 81,
+            "n": "SYT2_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 82,
+            "n": "SIGMAR1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 83,
+            "n": "C9orf72_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 84,
+            "n": "ALS2_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 85,
+            "n": "SETX_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 86,
+            "n": "SLC25A46_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 87,
+            "n": "DYNC1H1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 88,
+            "n": "MATR3_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 89,
+            "n": "FIG4_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 90,
+            "n": "LAS1L_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 91,
+            "n": "PRPH_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 92,
+            "n": "CHMP2B_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 93,
+            "n": "FUS_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 94,
+            "n": "SPTLC1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 95,
+            "n": "GLE1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 96,
+            "n": "TARDBP_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 97,
+            "n": "HNRNPA1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 98,
+            "n": "ASAH1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 99,
+            "n": "AARS_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 100,
+            "n": "DNAJB2_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 101,
+            "n": "HINT1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 102,
+            "n": "EXOSC3_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 103,
+            "n": "ATXN2_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 104,
+            "n": "SLC5A7_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 105,
+            "n": "FBXO38_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 106,
+            "n": "HSPB8_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 107,
+            "n": "MAPT_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 108,
+            "n": "HSPB3_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 109,
+            "n": "SOD1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 110,
+            "n": "KIF5A_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 111,
+            "n": "TBK1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 112,
+            "n": "PIP5K1C_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 113,
+            "n": "ADCY6_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 114,
+            "n": "VCP_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 115,
+            "n": "VRK1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 116,
+            "n": "EXOSC8_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 117,
+            "n": "HSPB1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 118,
+            "n": "VAPB_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 119,
+            "n": "SMN1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 120,
+            "n": "UBQLN2_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 121,
+            "n": "BICD2_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 122,
+            "n": "ANG_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 123,
+            "n": "SQSTM1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 124,
+            "n": "SPTAN1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 125,
+            "n": "DCTN1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 126,
+            "n": "TUBA4A_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 127,
+            "n": "DNM2_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 128,
+            "n": "ERBB3_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 129,
+            "n": "PFN1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 130,
+            "n": "TTN_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 131,
+            "n": "CNTNAP1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 132,
+            "n": "OPTN_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 133,
+            "n": "TRPV4_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 134,
+            "n": "ERBB4_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 135,
+            "n": "SIGMAR1_coex_SMU",
+            "attrlist": {}
+        },
+        {
+            "id": 136,
+            "n": "SLC52A2_coex_SMU",
+            "attrlist": {}
+        },
+        {
+            "id": 137,
+            "n": "DYNC1H1_coex_SMU",
+            "attrlist": {}
+        },
+        {
+            "id": 138,
+            "n": "MYH14_coex_SMU",
+            "attrlist": {}
+        },
+        {
+            "id": 139,
+            "n": "GBF1_coex_SMU",
+            "attrlist": {}
+        },
+        {
+            "id": 140,
+            "n": "ALS2_coex_SMU",
+            "attrlist": {}
+        },
+        {
+            "id": 141,
+            "n": "ASCC1_coex_SMU",
+            "attrlist": {}
+        },
+        {
+            "id": 142,
+            "n": "UBA1_coex_SMU",
+            "attrlist": {}
+        },
+        {
+            "id": 143,
+            "n": "GLE1_coex_SMU",
+            "attrlist": {}
+        },
+        {
+            "id": 144,
+            "n": "ATP7A_coex_SMU",
+            "attrlist": {}
+        },
+        {
+            "id": 145,
+            "n": "SETX_coex_SMU",
+            "attrlist": {}
+        },
+        {
+            "id": 146,
+            "n": "EXOSC3_coex_SMU",
+            "attrlist": {}
+        },
+        {
+            "id": 147,
+            "n": "ATXN2_coex_SMU",
+            "attrlist": {}
+        },
+        {
+            "id": 148,
+            "n": "SPG11_coex_SMU",
+            "attrlist": {}
+        },
+        {
+            "id": 149,
+            "n": "FBXO38_coex_SMU",
+            "attrlist": {}
+        },
+        {
+            "id": 150,
+            "n": "CHMP2B_coex_SMU",
+            "attrlist": {}
+        },
+        {
+            "id": 151,
+            "n": "NEK9_coex_SMU",
+            "attrlist": {}
+        },
+        {
+            "id": 152,
+            "n": "VCP_coex_SMU",
+            "attrlist": {}
+        },
+        {
+            "id": 153,
+            "n": "SOD1_coex_SMU",
+            "attrlist": {}
+        },
+        {
+            "id": 154,
+            "n": "UBQLN2_coex_SMU",
+            "attrlist": {}
+        },
+        {
+            "id": 155,
+            "n": "BICD2_coex_SMU",
+            "attrlist": {}
+        },
+        {
+            "id": 156,
+            "n": "TBK1_coex_SMU",
+            "attrlist": {}
+        },
+        {
+            "id": 157,
+            "n": "MCM3AP_coex_SMU",
+            "attrlist": {}
+        },
+        {
+            "id": 158,
+            "n": "SQSTM1_coex_SMU",
+            "attrlist": {}
+        },
+        {
+            "id": 159,
+            "n": "SPTAN1_coex_SMU",
+            "attrlist": {}
+        },
+        {
+            "id": 160,
+            "n": "ADCY6_coex_SMU",
+            "attrlist": {}
+        },
+        {
+            "id": 161,
+            "n": "DCTN1_coex_SMU",
+            "attrlist": {}
+        },
+        {
+            "id": 162,
+            "n": "TTN_coex_SMU",
+            "attrlist": {}
+        },
+        {
+            "id": 163,
+            "n": "MYBPC1_coex_SMU",
+            "attrlist": {}
+        },
+        {
+            "id": 164,
+            "n": "TRIP4_coex_SMU",
+            "attrlist": {}
+        },
+        {
+            "id": 165,
+            "n": "EXOSC9_coex_SMU",
+            "attrlist": {}
+        },
+        {
+            "id": 166,
+            "n": "VRK1_coex_SMU",
+            "attrlist": {}
+        },
+        {
+            "id": 167,
+            "n": "FIG4_coex_EMS",
+            "attrlist": {}
+        },
+        {
+            "id": 168,
+            "n": "DYNC1H1_coex_EMS",
+            "attrlist": {}
+        },
+        {
+            "id": 169,
+            "n": "PRPH_coex_EMS",
+            "attrlist": {}
+        },
+        {
+            "id": 170,
+            "n": "NEFH_coex_EMS",
+            "attrlist": {}
+        },
+        {
+            "id": 171,
+            "n": "GLE1_coex_EMS",
+            "attrlist": {}
+        },
+        {
+            "id": 172,
+            "n": "SIGMAR1_coex_EMS",
+            "attrlist": {}
+        },
+        {
+            "id": 173,
+            "n": "HINT1_coex_EMS",
+            "attrlist": {}
+        },
+        {
+            "id": 174,
+            "n": "ASCC1_coex_EMS",
+            "attrlist": {}
+        },
+        {
+            "id": 175,
+            "n": "CHMP2B_coex_EMS",
+            "attrlist": {}
+        },
+        {
+            "id": 176,
+            "n": "PRUNE1_coex_EMS",
+            "attrlist": {}
+        },
+        {
+            "id": 177,
+            "n": "EXOSC3_coex_EMS",
+            "attrlist": {}
+        },
+        {
+            "id": 178,
+            "n": "SPG11_coex_EMS",
+            "attrlist": {}
+        },
+        {
+            "id": 179,
+            "n": "FBXO38_coex_EMS",
+            "attrlist": {}
+        },
+        {
+            "id": 180,
+            "n": "GBF1_coex_EMS",
+            "attrlist": {}
+        },
+        {
+            "id": 181,
+            "n": "SOD1_coex_EMS",
+            "attrlist": {}
+        },
+        {
+            "id": 182,
+            "n": "NEK9_coex_EMS",
+            "attrlist": {}
+        },
+        {
+            "id": 183,
+            "n": "SETX_coex_EMS",
+            "attrlist": {}
+        },
+        {
+            "id": 184,
+            "n": "VAPB_coex_EMS",
+            "attrlist": {}
+        },
+        {
+            "id": 185,
+            "n": "UBQLN2_coex_EMS",
+            "attrlist": {}
+        },
+        {
+            "id": 186,
+            "n": "UBA1_coex_EMS",
+            "attrlist": {}
+        },
+        {
+            "id": 187,
+            "n": "VCP_coex_EMS",
+            "attrlist": {}
+        },
+        {
+            "id": 188,
+            "n": "SQSTM1_coex_EMS",
+            "attrlist": {}
+        },
+        {
+            "id": 189,
+            "n": "LRP10_coex_EMS",
+            "attrlist": {}
+        },
+        {
+            "id": 190,
+            "n": "DCTN1_coex_EMS",
+            "attrlist": {}
+        },
+        {
+            "id": 191,
+            "n": "ERBB3_coex_EMS",
+            "attrlist": {}
+        },
+        {
+            "id": 192,
+            "n": "ADGRG6_coex_EMS",
+            "attrlist": {}
+        },
+        {
+            "id": 193,
+            "n": "DYNC1H1_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 194,
+            "n": "SETX_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 195,
+            "n": "FUS_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 196,
+            "n": "GBF1_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 197,
+            "n": "UBA1_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 198,
+            "n": "LRP10_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 199,
+            "n": "HNRNPA1_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 200,
+            "n": "ATP7A_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 201,
+            "n": "SPG11_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 202,
+            "n": "SORD_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 203,
+            "n": "MYH14_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 204,
+            "n": "EXOSC3_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 205,
+            "n": "ADPRHL2_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 206,
+            "n": "GLE1_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 207,
+            "n": "FBXO38_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 208,
+            "n": "HSPB8_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 209,
+            "n": "EMILIN1_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 210,
+            "n": "MAPT_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 211,
+            "n": "REEP1_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 212,
+            "n": "PRPH_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 213,
+            "n": "EXOSC9_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 214,
+            "n": "SPTLC1_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 215,
+            "n": "HEXB_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 216,
+            "n": "SOD1_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 217,
+            "n": "FIG4_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 218,
+            "n": "CAPN1_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 219,
+            "n": "SLC52A2_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 220,
+            "n": "NEK9_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 221,
+            "n": "COX20_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 222,
+            "n": "TBK1_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 223,
+            "n": "PIP5K1C_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 224,
+            "n": "VCP_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 225,
+            "n": "VAPB_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 226,
+            "n": "SIGMAR1_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 227,
+            "n": "ASCC1_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 228,
+            "n": "UBQLN2_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 229,
+            "n": "BICD2_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 230,
+            "n": "MCM3AP_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 231,
+            "n": "SPTAN1_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 232,
+            "n": "DCTN1_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 233,
+            "n": "TUBA4A_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 234,
+            "n": "DNM2_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 235,
+            "n": "SLC52A3_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 236,
+            "n": "ANG_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 237,
+            "n": "ERBB3_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 238,
+            "n": "TRIP4_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 239,
+            "n": "ALS2_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 240,
+            "n": "OPTN_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 241,
+            "n": "CHMP2B_coex_STM",
+            "attrlist": {}
+        },
+        {
+            "id": 242,
+            "n": "LRP10_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 243,
+            "n": "GARS1_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 244,
+            "n": "SLC25A46_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 245,
+            "n": "SPG11_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 246,
+            "n": "LAS1L_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 247,
+            "n": "SETX_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 248,
+            "n": "SLC52A2_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 249,
+            "n": "DYNC1H1_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 250,
+            "n": "FIG4_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 251,
+            "n": "COQ7_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 252,
+            "n": "UBA1_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 253,
+            "n": "SPTLC1_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 254,
+            "n": "GLE1_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 255,
+            "n": "HNRNPA1_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 256,
+            "n": "FUS_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 257,
+            "n": "ASAH1_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 258,
+            "n": "EMILIN1_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 259,
+            "n": "PLEKHG5_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 260,
+            "n": "HEXB_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 261,
+            "n": "HINT1_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 262,
+            "n": "FBXO38_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 263,
+            "n": "ALS2_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 264,
+            "n": "CAPN1_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 265,
+            "n": "NEK9_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 266,
+            "n": "TARDBP_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 267,
+            "n": "TBK1_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 268,
+            "n": "ADPRHL2_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 269,
+            "n": "VCP_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 270,
+            "n": "NEK1_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 271,
+            "n": "ATXN2_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 272,
+            "n": "VAPB_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 273,
+            "n": "ASCC1_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 274,
+            "n": "UBQLN2_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 275,
+            "n": "RBM7_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 276,
+            "n": "BICD2_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 277,
+            "n": "PIP5K1C_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 278,
+            "n": "MCM3AP_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 279,
+            "n": "SQSTM1_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 280,
+            "n": "SPTAN1_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 281,
+            "n": "ANXA11_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 282,
+            "n": "DCTN1_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 283,
+            "n": "ERBB3_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 284,
+            "n": "PRUNE1_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 285,
+            "n": "PFN1_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 286,
+            "n": "DNM2_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 287,
+            "n": "CNTNAP1_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 288,
+            "n": "TRIP4_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 289,
+            "n": "AR_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 290,
+            "n": "SORD_coex_LVR",
+            "attrlist": {}
+        },
+        {
+            "id": 291,
+            "n": "SETX_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 292,
+            "n": "SLC25A46_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 293,
+            "n": "DYNC1H1_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 294,
+            "n": "GBF1_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 295,
+            "n": "LAS1L_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 296,
+            "n": "FIG4_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 297,
+            "n": "COQ7_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 298,
+            "n": "FUS_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 299,
+            "n": "UBA1_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 300,
+            "n": "LRP10_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 301,
+            "n": "GLE1_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 302,
+            "n": "RBM7_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 303,
+            "n": "CHMP2B_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 304,
+            "n": "TARDBP_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 305,
+            "n": "SORD_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 306,
+            "n": "MYBPC1_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 307,
+            "n": "EXOSC3_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 308,
+            "n": "PRUNE1_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 309,
+            "n": "FBXO38_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 310,
+            "n": "ALS2_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 311,
+            "n": "EXOSC9_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 312,
+            "n": "CAPN1_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 313,
+            "n": "NEK9_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 314,
+            "n": "VCP_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 315,
+            "n": "SOD1_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 316,
+            "n": "VRK1_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 317,
+            "n": "ANXA11_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 318,
+            "n": "UBQLN2_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 319,
+            "n": "SPTLC1_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 320,
+            "n": "MCM3AP_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 321,
+            "n": "LRP12_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 322,
+            "n": "ATXN2_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 323,
+            "n": "DCTN1_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 324,
+            "n": "DNM2_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 325,
+            "n": "PIP5K1C_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 326,
+            "n": "ERBB3_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 327,
+            "n": "TRIP4_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 328,
+            "n": "TRPV4_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 329,
+            "n": "KIF5A_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 330,
+            "n": "ERBB4_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 331,
+            "n": "LAS1L_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 332,
+            "n": "IGHMBP2_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 333,
+            "n": "GBF1_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 334,
+            "n": "COQ7_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 335,
+            "n": "ASCC1_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 336,
+            "n": "SIGMAR1_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 337,
+            "n": "SPTLC1_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 338,
+            "n": "SPG11_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 339,
+            "n": "UBA1_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 340,
+            "n": "LRP10_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 341,
+            "n": "GLE1_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 342,
+            "n": "HNRNPA1_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 343,
+            "n": "FUS_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 344,
+            "n": "ADCY6_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 345,
+            "n": "PLEKHG5_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 346,
+            "n": "EMILIN1_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 347,
+            "n": "REEP1_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 348,
+            "n": "ATP7A_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 349,
+            "n": "SLC25A46_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 350,
+            "n": "HINT1_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 351,
+            "n": "CHMP2B_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 352,
+            "n": "PRUNE1_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 353,
+            "n": "DYNC1H1_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 354,
+            "n": "FIG4_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 355,
+            "n": "ATXN2_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 356,
+            "n": "FBXO38_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 357,
+            "n": "HSPB8_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 358,
+            "n": "CAPN1_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 359,
+            "n": "NEK9_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 360,
+            "n": "SETX_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 361,
+            "n": "PIP5K1C_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 362,
+            "n": "VCP_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 363,
+            "n": "VAPB_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 364,
+            "n": "ANXA11_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 365,
+            "n": "UBQLN2_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 366,
+            "n": "BICD2_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 367,
+            "n": "MCM3AP_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 368,
+            "n": "SQSTM1_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 369,
+            "n": "SPTAN1_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 370,
+            "n": "ALS2_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 371,
+            "n": "DCTN1_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 372,
+            "n": "DNM2_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 373,
+            "n": "SLC52A2_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 374,
+            "n": "MYH14_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 375,
+            "n": "TRIP4_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 376,
+            "n": "EXOSC3_coex_CLS",
+            "attrlist": {}
+        },
+        {
+            "id": 377,
+            "n": "REEP1_coex_OVR",
+            "attrlist": {}
+        },
+        {
+            "id": 378,
+            "n": "GLDN_coex_OVR",
+            "attrlist": {}
+        },
+        {
+            "id": 379,
+            "n": "LAS1L_coex_OVR",
+            "attrlist": {}
+        },
+        {
+            "id": 380,
+            "n": "COX20_coex_OVR",
+            "attrlist": {}
+        },
+        {
+            "id": 381,
+            "n": "DYNC1H1_coex_OVR",
+            "attrlist": {}
+        },
+        {
+            "id": 382,
+            "n": "SPG11_coex_OVR",
+            "attrlist": {}
+        },
+        {
+            "id": 383,
+            "n": "FUS_coex_OVR",
+            "attrlist": {}
+        },
+        {
+            "id": 384,
+            "n": "COQ7_coex_OVR",
+            "attrlist": {}
+        },
+        {
+            "id": 385,
+            "n": "TARDBP_coex_OVR",
+            "attrlist": {}
+        },
+        {
+            "id": 386,
+            "n": "ATP7A_coex_OVR",
+            "attrlist": {}
+        },
+        {
+            "id": 387,
+            "n": "CHMP2B_coex_OVR",
+            "attrlist": {}
+        },
+        {
+            "id": 388,
+            "n": "SPTLC1_coex_OVR",
+            "attrlist": {}
+        },
+        {
+            "id": 389,
+            "n": "PRUNE1_coex_OVR",
+            "attrlist": {}
+        },
+        {
+            "id": 390,
+            "n": "BSCL2_coex_OVR",
+            "attrlist": {}
+        },
+        {
+            "id": 391,
+            "n": "EXOSC3_coex_OVR",
+            "attrlist": {}
+        },
+        {
+            "id": 392,
+            "n": "EXOSC9_coex_OVR",
+            "attrlist": {}
+        },
+        {
+            "id": 393,
+            "n": "GLE1_coex_OVR",
+            "attrlist": {}
+        },
+        {
+            "id": 394,
+            "n": "FBXO38_coex_OVR",
+            "attrlist": {}
+        },
+        {
+            "id": 395,
+            "n": "NEK9_coex_OVR",
+            "attrlist": {}
+        },
+        {
+            "id": 396,
+            "n": "VCP_coex_OVR",
+            "attrlist": {}
+        },
+        {
+            "id": 397,
+            "n": "SETX_coex_OVR",
+            "attrlist": {}
+        },
+        {
+            "id": 398,
+            "n": "ASAH1_coex_OVR",
+            "attrlist": {}
+        },
+        {
+            "id": 399,
+            "n": "TBK1_coex_OVR",
+            "attrlist": {}
+        },
+        {
+            "id": 400,
+            "n": "EXOSC8_coex_OVR",
+            "attrlist": {}
+        },
+        {
+            "id": 401,
+            "n": "VAPB_coex_OVR",
+            "attrlist": {}
+        },
+        {
+            "id": 402,
+            "n": "UBQLN2_coex_OVR",
+            "attrlist": {}
+        },
+        {
+            "id": 403,
+            "n": "MCM3AP_coex_OVR",
+            "attrlist": {}
+        },
+        {
+            "id": 404,
+            "n": "ALS2_coex_OVR",
+            "attrlist": {}
+        },
+        {
+            "id": 405,
+            "n": "SQSTM1_coex_OVR",
+            "attrlist": {}
+        },
+        {
+            "id": 406,
+            "n": "HEXB_coex_OVR",
+            "attrlist": {}
+        },
+        {
+            "id": 407,
+            "n": "LRP12_coex_OVR",
+            "attrlist": {}
+        },
+        {
+            "id": 408,
+            "n": "SPTAN1_coex_OVR",
+            "attrlist": {}
+        },
+        {
+            "id": 409,
+            "n": "GBF1_coex_OVR",
+            "attrlist": {}
+        },
+        {
+            "id": 410,
+            "n": "DCTN1_coex_OVR",
+            "attrlist": {}
+        },
+        {
+            "id": 411,
+            "n": "ZBTB42_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 412,
+            "n": "SLC52A2_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 413,
+            "n": "DYNC1H1_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 414,
+            "n": "LRP10_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 415,
+            "n": "SPTLC1_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 416,
+            "n": "SETX_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 417,
+            "n": "UBA1_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 418,
+            "n": "SIGMAR1_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 419,
+            "n": "ADPRHL2_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 420,
+            "n": "PRUNE1_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 421,
+            "n": "ATXN2_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 422,
+            "n": "LAS1L_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 423,
+            "n": "EXOSC9_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 424,
+            "n": "FBXO38_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 425,
+            "n": "SOD1_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 426,
+            "n": "CAPN1_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 427,
+            "n": "FIG4_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 428,
+            "n": "GLE1_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 429,
+            "n": "NEK9_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 430,
+            "n": "ADCY6_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 431,
+            "n": "TBK1_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 432,
+            "n": "PIP5K1C_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 433,
+            "n": "VCP_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 434,
+            "n": "VAPB_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 435,
+            "n": "ANXA11_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 436,
+            "n": "UBQLN2_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 437,
+            "n": "BICD2_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 438,
+            "n": "GBF1_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 439,
+            "n": "SQSTM1_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 440,
+            "n": "ANG_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 441,
+            "n": "LRP12_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 442,
+            "n": "SPTAN1_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 443,
+            "n": "NEK1_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 444,
+            "n": "DCTN1_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 445,
+            "n": "ERBB3_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 446,
+            "n": "VWA1_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 447,
+            "n": "TRIP4_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 448,
+            "n": "EXOSC3_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 449,
+            "n": "OPTN_coex_ATC",
+            "attrlist": {}
+        },
+        {
+            "id": 450,
+            "n": "DYNC1H1_coex_GEJ",
+            "attrlist": {}
+        },
+        {
+            "id": 451,
+            "n": "COX20_coex_GEJ",
+            "attrlist": {}
+        },
+        {
+            "id": 452,
+            "n": "ASCC1_coex_GEJ",
+            "attrlist": {}
+        },
+        {
+            "id": 453,
+            "n": "SIGMAR1_coex_GEJ",
+            "attrlist": {}
+        },
+        {
+            "id": 454,
+            "n": "PRPH_coex_GEJ",
+            "attrlist": {}
+        },
+        {
+            "id": 455,
+            "n": "NEFH_coex_GEJ",
+            "attrlist": {}
+        },
+        {
+            "id": 456,
+            "n": "SPTLC1_coex_GEJ",
+            "attrlist": {}
+        },
+        {
+            "id": 457,
+            "n": "SPG11_coex_GEJ",
+            "attrlist": {}
+        },
+        {
+            "id": 458,
+            "n": "UBA1_coex_GEJ",
+            "attrlist": {}
+        },
+        {
+            "id": 459,
+            "n": "LRP10_coex_GEJ",
+            "attrlist": {}
+        },
+        {
+            "id": 460,
+            "n": "HINT1_coex_GEJ",
+            "attrlist": {}
+        },
+        {
+            "id": 461,
+            "n": "PRUNE1_coex_GEJ",
+            "attrlist": {}
+        },
+        {
+            "id": 462,
+            "n": "EXOSC3_coex_GEJ",
+            "attrlist": {}
+        },
+        {
+            "id": 463,
+            "n": "ATXN2_coex_GEJ",
+            "attrlist": {}
+        },
+        {
+            "id": 464,
+            "n": "LAS1L_coex_GEJ",
+            "attrlist": {}
+        },
+        {
+            "id": 465,
+            "n": "FBXO38_coex_GEJ",
+            "attrlist": {}
+        },
+        {
+            "id": 466,
+            "n": "GBF1_coex_GEJ",
+            "attrlist": {}
+        },
+        {
+            "id": 467,
+            "n": "EXOSC9_coex_GEJ",
+            "attrlist": {}
+        },
+        {
+            "id": 468,
+            "n": "NEK9_coex_GEJ",
+            "attrlist": {}
+        },
+        {
+            "id": 469,
+            "n": "SETX_coex_GEJ",
+            "attrlist": {}
+        },
+        {
+            "id": 470,
+            "n": "TBK1_coex_GEJ",
+            "attrlist": {}
+        },
+        {
+            "id": 471,
+            "n": "GARS1_coex_GEJ",
+            "attrlist": {}
+        },
+        {
+            "id": 472,
+            "n": "HNRNPA1_coex_GEJ",
+            "attrlist": {}
+        },
+        {
+            "id": 473,
+            "n": "PIP5K1C_coex_GEJ",
+            "attrlist": {}
+        },
+        {
+            "id": 474,
+            "n": "REEP1_coex_GEJ",
+            "attrlist": {}
+        },
+        {
+            "id": 475,
+            "n": "EXOSC8_coex_GEJ",
+            "attrlist": {}
+        },
+        {
+            "id": 476,
+            "n": "ALS2_coex_GEJ",
+            "attrlist": {}
+        },
+        {
+            "id": 477,
+            "n": "TARDBP_coex_GEJ",
+            "attrlist": {}
+        },
+        {
+            "id": 478,
+            "n": "VAPB_coex_GEJ",
+            "attrlist": {}
+        },
+        {
+            "id": 479,
+            "n": "UBQLN2_coex_GEJ",
+            "attrlist": {}
+        },
+        {
+            "id": 480,
+            "n": "SQSTM1_coex_GEJ",
+            "attrlist": {}
+        },
+        {
+            "id": 481,
+            "n": "SPTAN1_coex_GEJ",
+            "attrlist": {}
+        },
+        {
+            "id": 482,
+            "n": "DCTN1_coex_GEJ",
+            "attrlist": {}
+        },
+        {
+            "id": 483,
+            "n": "DNM2_coex_GEJ",
+            "attrlist": {}
+        },
+        {
+            "id": 484,
+            "n": "TRIP4_coex_GEJ",
+            "attrlist": {}
+        },
+        {
+            "id": 485,
+            "n": "DYNC1H1_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 486,
+            "n": "SPG11_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 487,
+            "n": "COQ7_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 488,
+            "n": "ALS2_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 489,
+            "n": "ASCC1_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 490,
+            "n": "SLC25A46_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 491,
+            "n": "SPTLC1_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 492,
+            "n": "SETX_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 493,
+            "n": "ADPRHL2_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 494,
+            "n": "IGHMBP2_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 495,
+            "n": "UBA1_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 496,
+            "n": "LRP10_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 497,
+            "n": "GLE1_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 498,
+            "n": "ASAH1_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 499,
+            "n": "MYH14_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 500,
+            "n": "PRUNE1_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 501,
+            "n": "ATXN2_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 502,
+            "n": "FBXO38_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 503,
+            "n": "HSPB8_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 504,
+            "n": "HSPB3_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 505,
+            "n": "SOD1_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 506,
+            "n": "CAPN1_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 507,
+            "n": "GBF1_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 508,
+            "n": "NEK9_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 509,
+            "n": "VCP_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 510,
+            "n": "ZBTB42_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 511,
+            "n": "EXOSC8_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 512,
+            "n": "LAS1L_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 513,
+            "n": "VAPB_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 514,
+            "n": "ANXA11_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 515,
+            "n": "HINT1_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 516,
+            "n": "UBQLN2_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 517,
+            "n": "BICD2_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 518,
+            "n": "MCM3AP_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 519,
+            "n": "DCTN1_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 520,
+            "n": "DNM2_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 521,
+            "n": "PFN1_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 522,
+            "n": "GARS1_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 523,
+            "n": "TTN_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 524,
+            "n": "AR_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 525,
+            "n": "OPTN_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 526,
+            "n": "SQSTM1_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 527,
+            "n": "ERBB4_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 528,
+            "n": "REEP1_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 529,
+            "n": "SLC52A2_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 530,
+            "n": "SLC52A3_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 531,
+            "n": "CHCHD10_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 532,
+            "n": "MYH14_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 533,
+            "n": "KIF26B_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 534,
+            "n": "REEP1_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 535,
+            "n": "DYNC1H1_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 536,
+            "n": "SETX_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 537,
+            "n": "PRPH_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 538,
+            "n": "NEFH_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 539,
+            "n": "SPTLC1_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 540,
+            "n": "SPG11_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 541,
+            "n": "GBF1_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 542,
+            "n": "UBA1_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 543,
+            "n": "SIGMAR1_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 544,
+            "n": "GLE1_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 545,
+            "n": "TARDBP_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 546,
+            "n": "FIG4_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 547,
+            "n": "ASAH1_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 548,
+            "n": "EMILIN1_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 549,
+            "n": "HEXB_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 550,
+            "n": "HINT1_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 551,
+            "n": "PRUNE1_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 552,
+            "n": "EXOSC3_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 553,
+            "n": "ADPRHL2_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 554,
+            "n": "HSPB8_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 555,
+            "n": "MAPT_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 556,
+            "n": "SOD1_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 557,
+            "n": "CAPN1_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 558,
+            "n": "KIF5A_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 559,
+            "n": "PIP5K1C_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 560,
+            "n": "NEK9_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 561,
+            "n": "VCP_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 562,
+            "n": "VRK1_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 563,
+            "n": "HSPB1_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 564,
+            "n": "VWA1_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 565,
+            "n": "VAPB_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 566,
+            "n": "FBXO38_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 567,
+            "n": "ANXA11_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 568,
+            "n": "UBQLN2_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 569,
+            "n": "BICD2_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 570,
+            "n": "MCM3AP_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 571,
+            "n": "SLC25A46_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 572,
+            "n": "LRP12_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 573,
+            "n": "DCTN1_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 574,
+            "n": "ASCC1_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 575,
+            "n": "DNM2_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 576,
+            "n": "ERBB3_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 577,
+            "n": "ADCY6_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 578,
+            "n": "CNTNAP1_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 579,
+            "n": "TRIP4_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 580,
+            "n": "AR_coex_CLT",
+            "attrlist": {}
+        },
+        {
+            "id": 581,
+            "n": "LAS1L_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 582,
+            "n": "ALS2_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 583,
+            "n": "UBA1_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 584,
+            "n": "SIGMAR1_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 585,
+            "n": "DYNC1H1_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 586,
+            "n": "ADPRHL2_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 587,
+            "n": "GLE1_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 588,
+            "n": "RBM7_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 589,
+            "n": "HNRNPA1_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 590,
+            "n": "ADCY6_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 591,
+            "n": "IGHMBP2_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 592,
+            "n": "PRUNE1_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 593,
+            "n": "SPG11_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 594,
+            "n": "DNAJB2_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 595,
+            "n": "ATXN2_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 596,
+            "n": "FUS_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 597,
+            "n": "FBXO38_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 598,
+            "n": "ASCC1_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 599,
+            "n": "EXOSC9_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 600,
+            "n": "SOD1_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 601,
+            "n": "TBK1_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 602,
+            "n": "PIP5K1C_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 603,
+            "n": "VWA1_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 604,
+            "n": "VCP_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 605,
+            "n": "VRK1_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 606,
+            "n": "SPTLC1_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 607,
+            "n": "EXOSC8_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 608,
+            "n": "TARDBP_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 609,
+            "n": "HSPB1_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 610,
+            "n": "PLEKHG5_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 611,
+            "n": "HSPB8_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 612,
+            "n": "VAPB_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 613,
+            "n": "ANXA11_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 614,
+            "n": "UBQLN2_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 615,
+            "n": "CHMP2B_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 616,
+            "n": "BICD2_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 617,
+            "n": "MCM3AP_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 618,
+            "n": "ANG_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 619,
+            "n": "HEXB_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 620,
+            "n": "SQSTM1_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 621,
+            "n": "SPTAN1_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 622,
+            "n": "DCTN1_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 623,
+            "n": "ZBTB42_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 624,
+            "n": "TUBA4A_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 625,
+            "n": "DNM2_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 626,
+            "n": "PFN1_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 627,
+            "n": "TTN_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 628,
+            "n": "MYBPC1_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 629,
+            "n": "HSPB3_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 630,
+            "n": "TRIP4_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 631,
+            "n": "OPTN_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 632,
+            "n": "ERBB4_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 633,
+            "n": "SETX_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 634,
+            "n": "SPG11_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 635,
+            "n": "ALS2_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 636,
+            "n": "GBF1_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 637,
+            "n": "DYNC1H1_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 638,
+            "n": "FIG4_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 639,
+            "n": "CHMP2B_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 640,
+            "n": "SLC25A46_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 641,
+            "n": "FUS_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 642,
+            "n": "LAS1L_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 643,
+            "n": "SPTLC1_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 644,
+            "n": "ADPRHL2_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 645,
+            "n": "SLC52A2_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 646,
+            "n": "UBA1_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 647,
+            "n": "GLE1_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 648,
+            "n": "TARDBP_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 649,
+            "n": "EMILIN1_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 650,
+            "n": "VWA1_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 651,
+            "n": "HEXB_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 652,
+            "n": "ASAH1_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 653,
+            "n": "EXOSC3_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 654,
+            "n": "ATXN2_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 655,
+            "n": "MATR3_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 656,
+            "n": "FBXO38_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 657,
+            "n": "EXOSC9_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 658,
+            "n": "HNRNPA1_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 659,
+            "n": "SOD1_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 660,
+            "n": "HINT1_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 661,
+            "n": "KIF5A_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 662,
+            "n": "PRPH_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 663,
+            "n": "NEK9_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 664,
+            "n": "TBK1_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 665,
+            "n": "RBM7_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 666,
+            "n": "VCP_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 667,
+            "n": "GARS1_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 668,
+            "n": "VRK1_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 669,
+            "n": "NEK1_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 670,
+            "n": "EXOSC8_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 671,
+            "n": "VAPB_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 672,
+            "n": "PRUNE1_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 673,
+            "n": "ANXA11_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 674,
+            "n": "LRP10_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 675,
+            "n": "CAPN1_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 676,
+            "n": "UBQLN2_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 677,
+            "n": "BICD2_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 678,
+            "n": "MCM3AP_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 679,
+            "n": "SPTAN1_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 680,
+            "n": "DCTN1_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 681,
+            "n": "DNM2_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 682,
+            "n": "ERBB3_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 683,
+            "n": "MYH14_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 684,
+            "n": "PFN1_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 685,
+            "n": "SIGMAR1_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 686,
+            "n": "TRIP4_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 687,
+            "n": "COQ7_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 688,
+            "n": "SPG11_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 689,
+            "n": "DYNC1H1_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 690,
+            "n": "NEFH_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 691,
+            "n": "GBF1_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 692,
+            "n": "ALS2_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 693,
+            "n": "PRPH_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 694,
+            "n": "SYT2_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 695,
+            "n": "SPTLC1_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 696,
+            "n": "LRP10_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 697,
+            "n": "UBA1_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 698,
+            "n": "GLE1_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 699,
+            "n": "SLC25A46_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 700,
+            "n": "BSCL2_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 701,
+            "n": "ADCY6_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 702,
+            "n": "FUS_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 703,
+            "n": "ATP7A_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 704,
+            "n": "ASAH1_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 705,
+            "n": "HEXB_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 706,
+            "n": "DNAJB2_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 707,
+            "n": "SLC52A2_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 708,
+            "n": "IGHMBP2_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 709,
+            "n": "CHCHD10_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 710,
+            "n": "PRUNE1_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 711,
+            "n": "FIG4_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 712,
+            "n": "ATXN2_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 713,
+            "n": "MAPT_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 714,
+            "n": "CAPN1_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 715,
+            "n": "KIF5A_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 716,
+            "n": "NEK9_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 717,
+            "n": "VCP_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 718,
+            "n": "ADPRHL2_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 719,
+            "n": "NEK1_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 720,
+            "n": "UBQLN2_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 721,
+            "n": "BICD2_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 722,
+            "n": "TARDBP_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 723,
+            "n": "PIP5K1C_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 724,
+            "n": "MCM3AP_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 725,
+            "n": "SQSTM1_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 726,
+            "n": "SOD1_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 727,
+            "n": "LRP12_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 728,
+            "n": "SPTAN1_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 729,
+            "n": "DCTN1_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 730,
+            "n": "TUBA4A_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 731,
+            "n": "DNM2_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 732,
+            "n": "ERBB3_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 733,
+            "n": "PFN1_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 734,
+            "n": "SORD_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 735,
+            "n": "TRIP4_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 736,
+            "n": "EXOSC8_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 737,
+            "n": "MATR3_coex_LCL",
+            "attrlist": {}
+        },
+        {
+            "id": 738,
+            "n": "C9orf72_coex_LCL",
+            "attrlist": {}
+        },
+        {
+            "id": 739,
+            "n": "GBF1_coex_LCL",
+            "attrlist": {}
+        },
+        {
+            "id": 740,
+            "n": "LRP10_coex_LCL",
+            "attrlist": {}
+        },
+        {
+            "id": 741,
+            "n": "RBM7_coex_LCL",
+            "attrlist": {}
+        },
+        {
+            "id": 742,
+            "n": "CHMP2B_coex_LCL",
+            "attrlist": {}
+        },
+        {
+            "id": 743,
+            "n": "TARDBP_coex_LCL",
+            "attrlist": {}
+        },
+        {
+            "id": 744,
+            "n": "FUS_coex_LCL",
+            "attrlist": {}
+        },
+        {
+            "id": 745,
+            "n": "HNRNPA1_coex_LCL",
+            "attrlist": {}
+        },
+        {
+            "id": 746,
+            "n": "COQ7_coex_LCL",
+            "attrlist": {}
+        },
+        {
+            "id": 747,
+            "n": "HEXB_coex_LCL",
+            "attrlist": {}
+        },
+        {
+            "id": 748,
+            "n": "ATXN2_coex_LCL",
+            "attrlist": {}
+        },
+        {
+            "id": 749,
+            "n": "IGHMBP2_coex_LCL",
+            "attrlist": {}
+        },
+        {
+            "id": 750,
+            "n": "CAPN1_coex_LCL",
+            "attrlist": {}
+        },
+        {
+            "id": 751,
+            "n": "UBA1_coex_LCL",
+            "attrlist": {}
+        },
+        {
+            "id": 752,
+            "n": "VCP_coex_LCL",
+            "attrlist": {}
+        },
+        {
+            "id": 753,
+            "n": "LAS1L_coex_LCL",
+            "attrlist": {}
+        },
+        {
+            "id": 754,
+            "n": "VRK1_coex_LCL",
+            "attrlist": {}
+        },
+        {
+            "id": 755,
+            "n": "EXOSC3_coex_LCL",
+            "attrlist": {}
+        },
+        {
+            "id": 756,
+            "n": "ANXA11_coex_LCL",
+            "attrlist": {}
+        },
+        {
+            "id": 757,
+            "n": "DNAJB2_coex_LCL",
+            "attrlist": {}
+        },
+        {
+            "id": 758,
+            "n": "UBQLN2_coex_LCL",
+            "attrlist": {}
+        },
+        {
+            "id": 759,
+            "n": "MCM3AP_coex_LCL",
+            "attrlist": {}
+        },
+        {
+            "id": 760,
+            "n": "DYNC1H1_coex_LCL",
+            "attrlist": {}
+        },
+        {
+            "id": 761,
+            "n": "BICD2_coex_LCL",
+            "attrlist": {}
+        },
+        {
+            "id": 762,
+            "n": "SQSTM1_coex_LCL",
+            "attrlist": {}
+        },
+        {
+            "id": 763,
+            "n": "SPTAN1_coex_LCL",
+            "attrlist": {}
+        },
+        {
+            "id": 764,
+            "n": "DCTN1_coex_LCL",
+            "attrlist": {}
+        },
+        {
+            "id": 765,
+            "n": "DNM2_coex_LCL",
+            "attrlist": {}
+        },
+        {
+            "id": 766,
+            "n": "OPTN_coex_LCL",
+            "attrlist": {}
+        },
+        {
+            "id": 767,
+            "n": "ASAH1_coex_LCL",
+            "attrlist": {}
+        },
+        {
+            "id": 768,
+            "n": "FIG4_coex_SKN",
+            "attrlist": {}
+        },
+        {
+            "id": 769,
+            "n": "COQ7_coex_SKN",
+            "attrlist": {}
+        },
+        {
+            "id": 770,
+            "n": "HINT1_coex_SKN",
+            "attrlist": {}
+        },
+        {
+            "id": 771,
+            "n": "HNRNPA1_coex_SKN",
+            "attrlist": {}
+        },
+        {
+            "id": 772,
+            "n": "DNAJB2_coex_SKN",
+            "attrlist": {}
+        },
+        {
+            "id": 773,
+            "n": "ADPRHL2_coex_SKN",
+            "attrlist": {}
+        },
+        {
+            "id": 774,
+            "n": "ATXN2_coex_SKN",
+            "attrlist": {}
+        },
+        {
+            "id": 775,
+            "n": "EXOSC3_coex_SKN",
+            "attrlist": {}
+        },
+        {
+            "id": 776,
+            "n": "CAPN1_coex_SKN",
+            "attrlist": {}
+        },
+        {
+            "id": 777,
+            "n": "SIGMAR1_coex_SKN",
+            "attrlist": {}
+        },
+        {
+            "id": 778,
+            "n": "NEK9_coex_SKN",
+            "attrlist": {}
+        },
+        {
+            "id": 779,
+            "n": "VCP_coex_SKN",
+            "attrlist": {}
+        },
+        {
+            "id": 780,
+            "n": "ANXA11_coex_SKN",
+            "attrlist": {}
+        },
+        {
+            "id": 781,
+            "n": "PIP5K1C_coex_SKN",
+            "attrlist": {}
+        },
+        {
+            "id": 782,
+            "n": "BICD2_coex_SKN",
+            "attrlist": {}
+        },
+        {
+            "id": 783,
+            "n": "ATP7A_coex_SKN",
+            "attrlist": {}
+        },
+        {
+            "id": 784,
+            "n": "SQSTM1_coex_SKN",
+            "attrlist": {}
+        },
+        {
+            "id": 785,
+            "n": "SPTAN1_coex_SKN",
+            "attrlist": {}
+        },
+        {
+            "id": 786,
+            "n": "GBF1_coex_SKN",
+            "attrlist": {}
+        },
+        {
+            "id": 787,
+            "n": "TUBA4A_coex_SKN",
+            "attrlist": {}
+        },
+        {
+            "id": 788,
+            "n": "ERBB3_coex_SKN",
+            "attrlist": {}
+        },
+        {
+            "id": 789,
+            "n": "PFN1_coex_SKN",
+            "attrlist": {}
+        },
+        {
+            "id": 790,
+            "n": "VWA1_coex_SKN",
+            "attrlist": {}
+        },
+        {
+            "id": 791,
+            "n": "CNTNAP1_coex_SKN",
+            "attrlist": {}
+        },
+        {
+            "id": 792,
+            "n": "EMILIN1_coex_SKN",
+            "attrlist": {}
+        }
+    ]
+}

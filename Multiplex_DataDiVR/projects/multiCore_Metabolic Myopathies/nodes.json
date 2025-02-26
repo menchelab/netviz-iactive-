@@ -1,0 +1,609 @@
+{
+    "nodes": [
+        {
+            "id": 0,
+            "n": "GYG1_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 1,
+            "n": "ETFDH_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 2,
+            "n": "AGL_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 3,
+            "n": "CPT2_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 4,
+            "n": "PFKM_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 5,
+            "n": "ETFA_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 6,
+            "n": "PGK1_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 7,
+            "n": "SLC16A1_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 8,
+            "n": "PNPLA8_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 9,
+            "n": "PGM1_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 10,
+            "n": "PHKA1_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 11,
+            "n": "PYGM_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 12,
+            "n": "ABHD5_coex_HRA",
+            "attrlist": {}
+        },
+        {
+            "id": 13,
+            "n": "PGAM2_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 14,
+            "n": "LPIN1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 15,
+            "n": "SLC25A20_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 16,
+            "n": "SLC22A5_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 17,
+            "n": "ACAD9_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 18,
+            "n": "CPT2_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 19,
+            "n": "ETFDH_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 20,
+            "n": "ETFA_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 21,
+            "n": "LDHA_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 22,
+            "n": "ENO3_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 23,
+            "n": "PNPLA2_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 24,
+            "n": "RBCK1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 25,
+            "n": "PRKAG2_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 26,
+            "n": "GAA_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 27,
+            "n": "ETFB_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 28,
+            "n": "ACADVL_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 29,
+            "n": "SLC16A1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 30,
+            "n": "PHKA1_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 31,
+            "n": "PYGM_HP",
+            "attrlist": {}
+        },
+        {
+            "id": 32,
+            "n": "AGL_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 33,
+            "n": "GYG1_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 34,
+            "n": "FLAD1_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 35,
+            "n": "ACAD9_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 36,
+            "n": "PFKM_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 37,
+            "n": "ETFA_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 38,
+            "n": "LDHA_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 39,
+            "n": "PNPLA8_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 40,
+            "n": "ENO3_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 41,
+            "n": "GBE1_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 42,
+            "n": "SLC16A1_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 43,
+            "n": "GYS1_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 44,
+            "n": "PGK1_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 45,
+            "n": "PGM1_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 46,
+            "n": "PHKA1_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 47,
+            "n": "PYGM_coex_MSG",
+            "attrlist": {}
+        },
+        {
+            "id": 48,
+            "n": "FLAD1_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 49,
+            "n": "PFKM_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 50,
+            "n": "LDHA_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 51,
+            "n": "GAA_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 52,
+            "n": "ETFA_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 53,
+            "n": "ENO3_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 54,
+            "n": "RBCK1_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 55,
+            "n": "GBE1_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 56,
+            "n": "GYG1_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 57,
+            "n": "PRKAG2_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 58,
+            "n": "ETFB_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 59,
+            "n": "GYS1_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 60,
+            "n": "PGK1_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 61,
+            "n": "ACADVL_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 62,
+            "n": "PGM1_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 63,
+            "n": "PHKA1_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 64,
+            "n": "PYGM_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 65,
+            "n": "ABHD5_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 66,
+            "n": "PNPLA2_ppi",
+            "attrlist": {}
+        },
+        {
+            "id": 67,
+            "n": "ETFDH_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 68,
+            "n": "SLC25A20_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 69,
+            "n": "CPT2_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 70,
+            "n": "ETFA_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 71,
+            "n": "LDHA_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 72,
+            "n": "SLC16A1_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 73,
+            "n": "GBE1_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 74,
+            "n": "ETFB_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 75,
+            "n": "PGK1_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 76,
+            "n": "PGM1_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 77,
+            "n": "GYS1_coex_core",
+            "attrlist": {}
+        },
+        {
+            "id": 78,
+            "n": "ETFDH_coex_ADV",
+            "attrlist": {}
+        },
+        {
+            "id": 79,
+            "n": "PNPLA2_coex_ADV",
+            "attrlist": {}
+        },
+        {
+            "id": 80,
+            "n": "ETFA_coex_ADV",
+            "attrlist": {}
+        },
+        {
+            "id": 81,
+            "n": "ACAD9_coex_ADV",
+            "attrlist": {}
+        },
+        {
+            "id": 82,
+            "n": "ETFB_coex_ADV",
+            "attrlist": {}
+        },
+        {
+            "id": 83,
+            "n": "CPT2_coex_ADV",
+            "attrlist": {}
+        },
+        {
+            "id": 84,
+            "n": "PGM1_coex_ADV",
+            "attrlist": {}
+        },
+        {
+            "id": 85,
+            "n": "GYG1_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 86,
+            "n": "SLC25A20_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 87,
+            "n": "CPT2_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 88,
+            "n": "ETFA_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 89,
+            "n": "RBCK1_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 90,
+            "n": "PNPLA2_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 91,
+            "n": "ETFB_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 92,
+            "n": "PGK1_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 93,
+            "n": "PFKM_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 94,
+            "n": "ACADVL_coex_BRC",
+            "attrlist": {}
+        },
+        {
+            "id": 95,
+            "n": "CPT2_coex_HRV",
+            "attrlist": {}
+        },
+        {
+            "id": 96,
+            "n": "ETFDH_coex_HRV",
+            "attrlist": {}
+        },
+        {
+            "id": 97,
+            "n": "PFKM_coex_HRV",
+            "attrlist": {}
+        },
+        {
+            "id": 98,
+            "n": "ETFB_coex_HRV",
+            "attrlist": {}
+        },
+        {
+            "id": 99,
+            "n": "PNPLA2_coex_HRV",
+            "attrlist": {}
+        },
+        {
+            "id": 100,
+            "n": "ACADVL_coex_HRV",
+            "attrlist": {}
+        },
+        {
+            "id": 101,
+            "n": "SLC25A20_coex_HRV",
+            "attrlist": {}
+        },
+        {
+            "id": 102,
+            "n": "PYGM_coex_HRV",
+            "attrlist": {}
+        },
+        {
+            "id": 103,
+            "n": "ENO3_coex_HRV",
+            "attrlist": {}
+        },
+        {
+            "id": 104,
+            "n": "ABHD5_coex_HRV",
+            "attrlist": {}
+        },
+        {
+            "id": 105,
+            "n": "GBE1_coex_HRV",
+            "attrlist": {}
+        },
+        {
+            "id": 106,
+            "n": "AGL_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 107,
+            "n": "ETFDH_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 108,
+            "n": "CPT2_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 109,
+            "n": "PFKM_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 110,
+            "n": "ETFA_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 111,
+            "n": "RBCK1_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 112,
+            "n": "FLAD1_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 113,
+            "n": "PGK1_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 114,
+            "n": "ETFB_coex_ARG",
+            "attrlist": {}
+        },
+        {
+            "id": 115,
+            "n": "GBE1_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 116,
+            "n": "PNPLA2_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 117,
+            "n": "ETFB_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 118,
+            "n": "PGM1_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 119,
+            "n": "ABHD5_coex_BST",
+            "attrlist": {}
+        },
+        {
+            "id": 120,
+            "n": "ETFA_coex_BST",
+            "attrlist": {}
+        }
+    ]
+}

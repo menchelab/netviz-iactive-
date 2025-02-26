@@ -1,0 +1,48 @@
+{
+    "name": "multiCore_Muscular Dystrophies",
+    "layouts": [
+        "Endotypes Multilayer Network",
+        "Endotype 1",
+        "Endotype 2",
+        "Endotype 3",
+        "Endotype 4"
+    ],
+    "layoutsRGB": [
+        "Endotypes Multilayer Network",
+        "Endotype 1",
+        "Endotype 2",
+        "Endotype 3",
+        "Endotype 4"
+    ],
+    "links": [
+        "Endotypes Multilayer Network",
+        "Endotype 1",
+        "Endotype 2",
+        "Endotype 3",
+        "Endotype 4"
+    ],
+    "linksRGB": [
+        "Endotypes Multilayer Network",
+        "Endotype 1",
+        "Endotype 2",
+        "Endotype 3",
+        "Endotype 4"
+    ],
+    "selections": [],
+    "scenes": [
+        "Endotypes Multilayer Network",
+        "Endotype 1",
+        "Endotype 2",
+        "Endotype 3",
+        "Endotype 4"
+    ],
+    "info": "Muscular DystrophiesmultiCore definition",
+    "linkcount": 2818,
+    "labelcount": 0,
+    "nodecount": 341,
+    "labels": [
+        341,
+        0
+    ],
+    "annotationTypes": true
+}

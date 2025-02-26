@@ -1,0 +1,53 @@
+{
+    "name": "multiCore_Congenital Muscular Dystrophies",
+    "layouts": [
+        "Endotypes Multilayer Network",
+        "Endotype 1",
+        "Endotype 2",
+        "Endotype 3",
+        "Endotype 4",
+        "Endotype 5"
+    ],
+    "layoutsRGB": [
+        "Endotypes Multilayer Network",
+        "Endotype 1",
+        "Endotype 2",
+        "Endotype 3",
+        "Endotype 4",
+        "Endotype 5"
+    ],
+    "links": [
+        "Endotypes Multilayer Network",
+        "Endotype 1",
+        "Endotype 2",
+        "Endotype 3",
+        "Endotype 4",
+        "Endotype 5"
+    ],
+    "linksRGB": [
+        "Endotypes Multilayer Network",
+        "Endotype 1",
+        "Endotype 2",
+        "Endotype 3",
+        "Endotype 4",
+        "Endotype 5"
+    ],
+    "selections": [],
+    "scenes": [
+        "Endotypes Multilayer Network",
+        "Endotype 1",
+        "Endotype 2",
+        "Endotype 3",
+        "Endotype 4",
+        "Endotype 5"
+    ],
+    "info": "Congenital Muscular DystrophiesmultiCore definition",
+    "linkcount": 935,
+    "labelcount": 0,
+    "nodecount": 150,
+    "labels": [
+        150,
+        0
+    ],
+    "annotationTypes": true
+}

@@ -1,0 +1,68 @@
+{
+    "name": "multiCore_Hereditary Cardiomyopathies",
+    "layouts": [
+        "Endotypes Multilayer Network",
+        "Endotype 1",
+        "Endotype 2",
+        "Endotype 3",
+        "Endotype 4",
+        "Endotype 5",
+        "Endotype 6",
+        "Endotype 7",
+        "Endotype 8"
+    ],
+    "layoutsRGB": [
+        "Endotypes Multilayer Network",
+        "Endotype 1",
+        "Endotype 2",
+        "Endotype 3",
+        "Endotype 4",
+        "Endotype 5",
+        "Endotype 6",
+        "Endotype 7",
+        "Endotype 8"
+    ],
+    "links": [
+        "Endotypes Multilayer Network",
+        "Endotype 1",
+        "Endotype 2",
+        "Endotype 3",
+        "Endotype 4",
+        "Endotype 5",
+        "Endotype 6",
+        "Endotype 7",
+        "Endotype 8"
+    ],
+    "linksRGB": [
+        "Endotypes Multilayer Network",
+        "Endotype 1",
+        "Endotype 2",
+        "Endotype 3",
+        "Endotype 4",
+        "Endotype 5",
+        "Endotype 6",
+        "Endotype 7",
+        "Endotype 8"
+    ],
+    "selections": [],
+    "scenes": [
+        "Endotypes Multilayer Network",
+        "Endotype 1",
+        "Endotype 2",
+        "Endotype 3",
+        "Endotype 4",
+        "Endotype 5",
+        "Endotype 6",
+        "Endotype 7",
+        "Endotype 8"
+    ],
+    "info": "Hereditary CardiomyopathiesmultiCore definition",
+    "linkcount": 9161,
+    "labelcount": 0,
+    "nodecount": 829,
+    "labels": [
+        829,
+        0
+    ],
+    "annotationTypes": true
+}
