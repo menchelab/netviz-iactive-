@@ -72,7 +72,6 @@ class NetworkCanvas:
     
     def update_visibility(self, node_mask, edge_mask):
         """Update the visibility of nodes and edges based on masks"""
-        logger = logging.getLogger(__name__)
         
         # Handle case when no nodes are visible
         if not np.any(node_mask):
@@ -160,26 +159,26 @@ class NetworkCanvas:
                 for i, (start_pos, end_pos, color) in enumerate(edges):
                     # Calculate offset direction based on index
                     offset_scale = 0.002  # Increased scale for more visible offset
-                    
+
                     # Calculate offset direction in a circular pattern
                     angle = 2 * np.pi * i / len(edges)
                     offset_x = offset_scale * np.cos(angle)
                     offset_y = offset_scale * np.sin(angle)
-                    
+
                     # Apply offset to both start and end positions
                     start_pos_offset = start_pos.copy()
                     end_pos_offset = end_pos.copy()
-                    
+
                     start_pos_offset[0] += offset_x
                     start_pos_offset[1] += offset_y
                     end_pos_offset[0] += offset_x
                     end_pos_offset[1] += offset_y
-                    
+
                     interlayer_pos.append(start_pos_offset)
                     interlayer_pos.append(end_pos_offset)
                     interlayer_colors.append(color)
                     interlayer_colors.append(color)
-        
+
         # Update intralayer lines
         if intralayer_pos:
             self.intralayer_lines.set_data(
@@ -193,17 +192,17 @@ class NetworkCanvas:
                 color=np.zeros((0, 4)),
                 width=1
             )
-        
+
         # Update interlayer lines
         if interlayer_pos:
             self.interlayer_lines.set_data(
                 pos=np.array(interlayer_pos),
                 color=np.array(interlayer_colors),
-                width=4  # Thicker width for interlayer edges
+                width=2  # Thicker width for interlayer edges
             )
         else:
             self.interlayer_lines.set_data(
                 pos=np.zeros((0, 3)),
                 color=np.zeros((0, 4)),
-                width=4
+                width=1
             ) 

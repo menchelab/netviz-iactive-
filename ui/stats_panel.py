@@ -52,7 +52,7 @@ class NetworkStatsPanel(QWidget):
         self.left_figure.tight_layout(pad=0.5, h_pad=0.5, w_pad=0.5)
         self.right_figure.tight_layout(pad=0.5, h_pad=0.5, w_pad=0.5)
     
-    def update_stats(self, node_positions, link_pairs, node_ids, layers, node_clusters, node_mask, edge_mask):
+    def update_stats(self, node_positions, link_pairs, node_ids, layers, node_clusters, node_mask, edge_mask, visible_layer_indices):
         """Update statistics based on currently visible network elements"""
         logger = logging.getLogger(__name__)
         
@@ -112,10 +112,10 @@ class NetworkStatsPanel(QWidget):
             self.conn_distribution_ax, intralayer_connections, small_font, medium_font
         )
         
-        # 2. Interlayer graph visualization
-        create_interlayer_graph(
-            self.interlayer_graph_ax, layer_connections, layers, small_font, medium_font
-        )
+        # 2. Interlayer graph visualization - use visible_layer_indices directly from checkboxes
+        self.interlayer_graph_ax.clear()
+        create_interlayer_graph(self.interlayer_graph_ax, layer_connections, layers, 
+                               small_font, medium_font, visible_layer_indices)
         
         # 3. Layer activity chart
         create_layer_activity_chart(

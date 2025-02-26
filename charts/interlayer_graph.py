@@ -1,27 +1,40 @@
 import networkx as nx
 import numpy as np
 
-def create_interlayer_graph(ax, layer_connections, layers, small_font, medium_font):
+def create_interlayer_graph(ax, layer_connections, layers, small_font, medium_font, visible_layers=None):
     """Create graph visualization of layer connections"""
-    if np.sum(layer_connections) > 0:
+    # If visible_layers is None, show all layers
+    if visible_layers is None:
+        visible_layers = list(range(len(layers)))
+    
+    # Filter the layer_connections matrix to only include visible layers
+    visible_indices = np.array(visible_layers)
+    if len(visible_indices) > 0:
+        filtered_connections = layer_connections[np.ix_(visible_indices, visible_indices)]
+        filtered_layers = [layers[i] for i in visible_indices]
+    else:
+        filtered_connections = np.zeros((0, 0))
+        filtered_layers = []
+    
+    if len(filtered_layers) > 0 and np.sum(filtered_connections) > 0:
         # Create a graph where nodes are layers and edges represent connections
         G = nx.Graph()
         
         # Add nodes (layers)
-        for i, layer in enumerate(layers):
+        for i, layer in enumerate(filtered_layers):
             G.add_node(i, name=layer)
         
         # Add edges with weights based on connection counts
-        for i in range(len(layers)):
-            for j in range(i+1, len(layers)):
-                if layer_connections[i, j] > 0:
-                    G.add_edge(i, j, weight=layer_connections[i, j])
+        for i in range(len(filtered_layers)):
+            for j in range(i+1, len(filtered_layers)):
+                if filtered_connections[i, j] > 0:
+                    G.add_edge(i, j, weight=filtered_connections[i, j])
         
         # Position nodes using spring layout instead of circular
         pos = nx.spring_layout(G, seed=42)  # Using seed for consistency
         
         # Draw the graph
-        node_sizes = [300 for _ in range(len(layers))]
+        node_sizes = [300 for _ in range(len(filtered_layers))]
         nx.draw_networkx_nodes(G, pos, node_size=node_sizes, node_color='skyblue', 
                               ax=ax)
         
@@ -31,12 +44,17 @@ def create_interlayer_graph(ax, layer_connections, layers, small_font, medium_fo
                               ax=ax)
         
         # Draw labels
-        nx.draw_networkx_labels(G, pos, labels={i: layer for i, layer in enumerate(layers)}, 
+        nx.draw_networkx_labels(G, pos, labels={i: layer for i, layer in enumerate(filtered_layers)}, 
                                font_size=6, ax=ax)
         
         ax.set_title('Layer Connection Graph', **medium_font)
         ax.axis('off')  # Turn off axis
     else:
-        ax.text(0.5, 0.5, 'No interlayer connections to display', 
+        if len(filtered_layers) == 0:
+            message = 'No visible layers to display'
+        else:
+            message = 'No interlayer connections to display'
+            
+        ax.text(0.5, 0.5, message, 
                horizontalalignment='center', verticalalignment='center', **small_font)
         ax.axis('off') 

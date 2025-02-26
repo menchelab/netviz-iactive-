@@ -182,11 +182,18 @@ class MultilayerNetworkViz(QWidget):
             if node_mask[start_idx] and node_mask[end_idx]:
                 edge_mask[i] = True
         
+        # Update network canvas with layer information
+        self.network_canvas.visible_layers = visible_layers
+        self.network_canvas.layer_names = {i: layer for i, layer in enumerate(self.layers)}
+        self.network_canvas.nodes_per_layer = nodes_per_layer
+        self.network_canvas.node_mask = node_mask
+        
         # Update network canvas
         self.network_canvas.update_visibility(node_mask, edge_mask)
         
-        # Update statistics panel
+        # Update statistics panel with visible layer indices
         self.stats_panel.update_stats(
             self.node_positions, self.link_pairs, self.node_ids, 
-            self.layers, self.node_clusters, node_mask, edge_mask
+            self.layers, self.node_clusters, node_mask, edge_mask,
+            visible_layers  # Pass visible layer indices from control panel
         ) 
