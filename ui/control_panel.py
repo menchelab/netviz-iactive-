@@ -1,6 +1,27 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QCheckBox, QGroupBox, QFrame, QLabel
 from PyQt5.QtGui import QColor
+from PyQt5.QtCore import Qt
 import logging
+
+class ShiftClickCheckBox(QCheckBox):
+    """Custom checkbox that can detect shift+click"""
+    def __init__(self, text, parent=None):
+        super().__init__(text, parent)
+        self.parent_control_panel = None
+        self.group_name = None
+        
+    def mousePressEvent(self, event):
+        """Handle mouse press events, detecting shift key"""
+        if event.button() == Qt.LeftButton and event.modifiers() & Qt.ShiftModifier:
+            # Shift+click detected
+            if self.parent_control_panel and self.group_name:
+                self.parent_control_panel.handle_shift_click(self, self.group_name)
+            else:
+                # Fall back to normal behavior if parent or group not set
+                super().mousePressEvent(event)
+        else:
+            # Normal click
+            super().mousePressEvent(event)
 
 class ControlPanel(QWidget):
     def __init__(self, parent=None):
@@ -81,6 +102,42 @@ class ControlPanel(QWidget):
         self.origin_layout = origin_layout
         self.display_layout = display_layout
     
+    def handle_shift_click(self, checkbox, group_name):
+        """Handle shift+click on a checkbox by making it the only checked one in its group"""
+        logger = logging.getLogger(__name__)
+        logger.info(f"Shift+click detected on {checkbox.text()} in group {group_name}")
+        
+        # Determine which group of checkboxes to modify
+        if group_name == "layers":
+            checkboxes = self.layer_checkboxes
+        elif group_name == "clusters":
+            checkboxes = list(self.cluster_checkboxes.values())
+        elif group_name == "origins":
+            checkboxes = list(self.origin_checkboxes.values())
+        else:
+            logger.warning(f"Unknown checkbox group: {group_name}")
+            return
+        
+        # Block signals on all checkboxes
+        for cb in checkboxes:
+            cb.blockSignals(True)
+        
+        # Uncheck all checkboxes in the group
+        for cb in checkboxes:
+            if cb != checkbox:
+                cb.setChecked(False)
+        
+        # Make sure the clicked checkbox is checked
+        checkbox.setChecked(True)
+        
+        # Unblock signals on all checkboxes
+        for cb in checkboxes:
+            cb.blockSignals(False)
+        
+        # Manually trigger one update
+        logger.info(f"Triggering single update after shift-click on {checkbox.text()}")
+        checkbox.stateChanged.emit(checkbox.checkState())
+    
     def update_controls(self, layers, unique_clusters, unique_origins, visibility_callback, layer_colors=None):
         """Update the layer, cluster, and origin controls based on loaded data"""
         logger = logging.getLogger(__name__)
@@ -96,7 +153,9 @@ class ControlPanel(QWidget):
         
         # Create layer controls (in reversed order)
         for i, layer in enumerate(reversed(layers)):
-            cb = QCheckBox(f"{layer}")
+            cb = ShiftClickCheckBox(f"{layer}")
+            cb.parent_control_panel = self
+            cb.group_name = "layers"
             cb.setChecked(True)
             cb.stateChanged.connect(visibility_callback)
             
@@ -133,7 +192,9 @@ class ControlPanel(QWidget):
         
         # Create cluster controls
         for cluster in unique_clusters:
-            cb = QCheckBox(f"{cluster}")
+            cb = ShiftClickCheckBox(f"{cluster}")
+            cb.parent_control_panel = self
+            cb.group_name = "clusters"
             cb.setChecked(True)
             cb.stateChanged.connect(visibility_callback)
             self.cluster_layout.addWidget(cb)
@@ -141,7 +202,9 @@ class ControlPanel(QWidget):
         
         # Create origin controls
         for origin in unique_origins:
-            cb = QCheckBox(f"{origin}")
+            cb = ShiftClickCheckBox(f"{origin}")
+            cb.parent_control_panel = self
+            cb.group_name = "origins"
             cb.setChecked(True)
             cb.stateChanged.connect(visibility_callback)
             self.origin_layout.addWidget(cb)
@@ -172,4 +235,4 @@ class ControlPanel(QWidget):
     
     def show_intralayer_edges(self):
         """Check if intralayer edges should be shown"""
-        return self.intralayer_edges_checkbox.isChecked() 
+        return self.intralayer_edges_checkbox.isChecked()

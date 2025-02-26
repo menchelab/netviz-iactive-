@@ -49,11 +49,10 @@ def build_multilayer_network(edge_list_path, node_metadata_path, add_interlayer_
     
     # Add edges from the first layer for layout purposes
     first_layer = layers[0]
-    for _, row in edgelist_with_att[edgelist_with_att[first_layer] == 0].iterrows():
+    for _, row in edgelist_with_att.iterrows():
         source = row['V1'].split('_')[0]
         target = row['V2'].split('_')[0]
         G_base.add_edge(source, target)
-    
     logger.info("Calculating layout...")
     try:
         layout = nx.kamada_kawai_layout(G_base)
