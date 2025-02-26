@@ -32,6 +32,8 @@ class NetworkCanvas:
         self.link_pairs = None
         self.link_colors_rgba = None
         self.node_colors_rgba = None
+        self.node_sizes = None
+        self.active_nodes = None
 
     def load_data(self, node_positions, link_pairs, link_colors, node_colors=None):
         self.node_positions = node_positions
@@ -44,7 +46,6 @@ class NetworkCanvas:
             max_val = max(rgba[0], rgba[1], rgba[2])
             min_val = min(rgba[0], rgba[1], rgba[2])
 
-
             if max_val - min_val < 0.3:
                 dominant_idx = np.argmax(rgba[:3])
                 for i in range(3):
@@ -55,17 +56,28 @@ class NetworkCanvas:
 
             self.link_colors_rgba.append(rgba)
 
-
         self.node_colors_rgba = np.ones((len(node_positions), 4))
 
         if node_colors:
             for i, color_hex in enumerate(node_colors):
                 self.node_colors_rgba[i] = hex_to_rgba(color_hex)
+        
+        # Initialize node sizes array - default size for all nodes
+        self.node_sizes = np.ones(len(node_positions)) * 3
+        
+        # Determine which nodes actually exist in each layer based on edges
+        self.active_nodes = np.zeros(len(node_positions), dtype=bool)
+        for start_idx, end_idx in self.link_pairs:
+            self.active_nodes[start_idx] = True
+            self.active_nodes[end_idx] = True
+        
+        # Set larger size for active nodes
+        self.node_sizes[self.active_nodes] = 5
 
-    def update_visibility(self, node_mask, edge_mask, show_intralayer=True):
+    def update_visibility(self, node_mask, edge_mask, show_intralayer=True, show_nodes=True):
         """Update the visibility of nodes and edges based on masks"""
         logger = logging.getLogger(__name__)
-        logger.info(f"Updating visibility with show_intralayer={show_intralayer}")
+        logger.info(f"Updating visibility with show_intralayer={show_intralayer}, show_nodes={show_nodes}")
 
         # Handle case when no nodes are visible
         if not np.any(node_mask):
@@ -80,8 +92,15 @@ class NetworkCanvas:
         # Update scatter plot
         visible_nodes = self.node_positions[node_mask]
         visible_colors = self.node_colors_rgba[node_mask]
-        self.scatter.set_data(visible_nodes, edge_color='black', 
-                            face_color=visible_colors, size=3)
+        visible_sizes = self.node_sizes[node_mask]  # Use the node sizes array
+        
+        if show_nodes:
+            self.scatter.set_data(visible_nodes, edge_color='black', 
+                                face_color=visible_colors, size=visible_sizes)
+        else:
+            # Make nodes invisible but keep their positions
+            self.scatter.set_data(visible_nodes, edge_color='black',
+                                face_color=np.zeros_like(visible_colors), size=0)
 
         # Get visible edges
         visible_edges = self.link_pairs[edge_mask]

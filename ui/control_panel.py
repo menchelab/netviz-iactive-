@@ -90,6 +90,11 @@ class ControlPanel(QWidget):
         self.intralayer_edges_checkbox.setChecked(True)  # On by default
         display_layout.addWidget(self.intralayer_edges_checkbox)
         
+        # Add show nodes checkbox
+        self.show_nodes_checkbox = QCheckBox("Show Nodes")
+        self.show_nodes_checkbox.setChecked(True)  # On by default
+        display_layout.addWidget(self.show_nodes_checkbox)
+        
         self.display_group.setLayout(display_layout)
         layout.addWidget(self.display_group)
         
@@ -212,6 +217,9 @@ class ControlPanel(QWidget):
         
         # Connect intralayer edges checkbox
         self.intralayer_edges_checkbox.stateChanged.connect(visibility_callback)
+        
+        # Connect show nodes checkbox
+        self.show_nodes_checkbox.stateChanged.connect(visibility_callback)
     
     def clear_layout(self, layout):
         """Clear all widgets from a layout"""
@@ -236,3 +244,7 @@ class ControlPanel(QWidget):
     def show_intralayer_edges(self):
         """Check if intralayer edges should be shown"""
         return self.intralayer_edges_checkbox.isChecked()
+    
+    def show_nodes(self):
+        """Check if nodes should be shown"""
+        return self.show_nodes_checkbox.isChecked()
