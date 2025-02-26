@@ -1,16 +1,24 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QCheckBox, QGroupBox
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QCheckBox, QGroupBox, QFrame, QLabel
 from PyQt5.QtGui import QColor
 import logging
 
 class ControlPanel(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setup_ui()
         
         # Initialize empty control lists
         self.layer_checkboxes = []
         self.cluster_checkboxes = {}
         self.origin_checkboxes = {}
+        
+        # Setup UI (which will create the intralayer_edges_checkbox)
+        self.setup_ui()
+        
+        # Initialize the checkbox if it wasn't created in setup_ui
+        if not hasattr(self, 'intralayer_edges_checkbox') or self.intralayer_edges_checkbox is None:
+            self.intralayer_edges_checkbox = QCheckBox("Intralayer Edges")
+            self.intralayer_edges_checkbox.setChecked(True)  # On by default
+            self.display_layout.addWidget(self.intralayer_edges_checkbox)
         
     def setup_ui(self):
         # Create layout
@@ -43,6 +51,27 @@ class ControlPanel(QWidget):
         self.origin_group.setLayout(origin_layout)
         layout.addWidget(self.origin_group)
         
+        # Add a separator line
+        separator = QFrame()
+        separator.setFrameShape(QFrame.HLine)
+        separator.setFrameShadow(QFrame.Sunken)
+        layout.addWidget(separator)
+        
+        # Add display options group
+        self.display_group = QGroupBox("Display Options")
+        self.display_group.setFlat(True)
+        display_layout = QVBoxLayout()
+        display_layout.setContentsMargins(5, 5, 5, 5)
+        display_layout.setSpacing(2)
+        
+        # Add intralayer edges checkbox
+        self.intralayer_edges_checkbox = QCheckBox("Intralayer Edges")
+        self.intralayer_edges_checkbox.setChecked(True)  # On by default
+        display_layout.addWidget(self.intralayer_edges_checkbox)
+        
+        self.display_group.setLayout(display_layout)
+        layout.addWidget(self.display_group)
+        
         # Add stretch at the bottom to push controls to the top
         layout.addStretch(1)
         
@@ -50,6 +79,7 @@ class ControlPanel(QWidget):
         self.layer_layout = layer_layout
         self.cluster_layout = cluster_layout
         self.origin_layout = origin_layout
+        self.display_layout = display_layout
     
     def update_controls(self, layers, unique_clusters, unique_origins, visibility_callback, layer_colors=None):
         """Update the layer, cluster, and origin controls based on loaded data"""
@@ -116,6 +146,9 @@ class ControlPanel(QWidget):
             cb.stateChanged.connect(visibility_callback)
             self.origin_layout.addWidget(cb)
             self.origin_checkboxes[origin] = cb
+        
+        # Connect intralayer edges checkbox
+        self.intralayer_edges_checkbox.stateChanged.connect(visibility_callback)
     
     def clear_layout(self, layout):
         """Clear all widgets from a layout"""
@@ -135,4 +168,8 @@ class ControlPanel(QWidget):
     
     def get_visible_origins(self):
         """Get names of visible origins"""
-        return [origin for origin, cb in self.origin_checkboxes.items() if cb.isChecked()] 
+        return [origin for origin, cb in self.origin_checkboxes.items() if cb.isChecked()]
+    
+    def show_intralayer_edges(self):
+        """Check if intralayer edges should be shown"""
+        return self.intralayer_edges_checkbox.isChecked() 

@@ -70,8 +70,10 @@ class NetworkCanvas:
             for i, color_hex in enumerate(node_colors):
                 self.node_colors_rgba[i] = hex_to_rgba(color_hex)
     
-    def update_visibility(self, node_mask, edge_mask):
+    def update_visibility(self, node_mask, edge_mask, show_intralayer=True):
         """Update the visibility of nodes and edges based on masks"""
+        logger = logging.getLogger(__name__)
+        logger.info(f"Updating visibility with show_intralayer={show_intralayer}")
         
         # Handle case when no nodes are visible
         if not np.any(node_mask):
@@ -93,6 +95,10 @@ class NetworkCanvas:
         visible_edges = self.link_pairs[edge_mask]
         visible_colors = [self.link_colors_rgba[i] for i, mask in enumerate(edge_mask) if mask]
         
+        # Count edges by type for debugging
+        intralayer_count = 0
+        interlayer_count = 0
+        
         # Separate intralayer and interlayer edges
         intralayer_pos = []
         intralayer_colors = []
@@ -105,18 +111,24 @@ class NetworkCanvas:
         for i, (start_idx, end_idx) in enumerate(visible_edges):
             # Check if this is a horizontal (intra-layer) edge or interlayer edge
             # If nodes are in the same layer, their z-coordinates will be the same
-            is_horizontal = abs(self.node_positions[start_idx][2] - self.node_positions[end_idx][2]) < 0.001
+            start_z = self.node_positions[start_idx][2]
+            end_z = self.node_positions[end_idx][2]
+            is_horizontal = abs(start_z - end_z) < 0.001
             
             if is_horizontal:
-                # Intra-layer edge: use lower opacity
-                edge_color = visible_colors[i].copy()
-                edge_color[3] = 0.3  # Set opacity to 20% for horizontal edges
-                
-                intralayer_pos.append(self.node_positions[start_idx])
-                intralayer_pos.append(self.node_positions[end_idx])
-                intralayer_colors.append(edge_color)
-                intralayer_colors.append(edge_color)
+                intralayer_count += 1
+                # Only add intralayer edges if they should be shown
+                if show_intralayer:
+                    # Intra-layer edge: use lower opacity
+                    edge_color = visible_colors[i].copy()
+                    edge_color[3] = 0.3  # Set opacity to 30% for horizontal edges
+                    
+                    intralayer_pos.append(self.node_positions[start_idx])
+                    intralayer_pos.append(self.node_positions[end_idx])
+                    intralayer_colors.append(edge_color)
+                    intralayer_colors.append(edge_color)
             else:
+                interlayer_count += 1
                 # Inter-layer edge: use the color of the starting layer with higher opacity
                 edge_color = visible_colors[i].copy()
                 edge_color[3] = 0.8  # Higher opacity for interlayer edges
@@ -127,6 +139,8 @@ class NetworkCanvas:
                     self.node_positions[end_idx].copy(),
                     edge_color
                 ))
+        
+        logger.info(f"Found {intralayer_count} intralayer edges and {interlayer_count} interlayer edges")
         
         # Now process interlayer edges to add offsets
         interlayer_pos = []
@@ -187,9 +201,10 @@ class NetworkCanvas:
                 width=1
             )
         else:
+            # Create a dummy point that's invisible
             self.intralayer_lines.set_data(
-                pos=np.zeros((0, 3)),
-                color=np.zeros((0, 4)),
+                pos=np.array([[0, 0, 0], [0, 0, 0]]),
+                color=np.array([[0, 0, 0, 0], [0, 0, 0, 0]]),
                 width=1
             )
 
@@ -201,8 +216,9 @@ class NetworkCanvas:
                 width=2  # Thicker width for interlayer edges
             )
         else:
+            # Create a dummy point that's invisible
             self.interlayer_lines.set_data(
-                pos=np.zeros((0, 3)),
-                color=np.zeros((0, 4)),
+                pos=np.array([[0, 0, 0], [0, 0, 0]]),
+                color=np.array([[0, 0, 0, 0], [0, 0, 0, 0]]),
                 width=1
             ) 
