@@ -1,4 +1,5 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QComboBox
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QComboBox, QSplitter
+from PyQt5.QtCore import Qt
 import logging
 import numpy as np
 import os
@@ -38,28 +39,27 @@ class MultilayerNetworkViz(QWidget):
             disease_widget.setLayout(disease_layout)
             main_layout.addWidget(disease_widget)
 
-        # Create the main content area (horizontal layout for controls, canvas, and stats)
-        content_layout = QHBoxLayout()
-        content_layout.setContentsMargins(0, 0, 0, 0)
-        content_layout.setSpacing(5)
-        content_widget = QWidget()
-        content_widget.setLayout(content_layout)
-        main_layout.addWidget(content_widget, 1)
+        # Create the main content area with splitters for resizable panels
+        self.splitter = QSplitter(Qt.Horizontal)
+        main_layout.addWidget(self.splitter, 1)
 
         # Create left panel for controls
         self.control_panel = ControlPanel()
-        self.control_panel.setFixedWidth(180)
-        content_layout.addWidget(self.control_panel)
+        self.control_panel.setMinimumWidth(150)  # Set minimum width
+        self.splitter.addWidget(self.control_panel)
 
         # Create canvas
         logger.info("Creating canvas...")
         self.network_canvas = NetworkCanvas()
-        content_layout.addWidget(self.network_canvas.canvas.native, 1)  # Give it stretch factor
+        self.splitter.addWidget(self.network_canvas.canvas.native)
 
         # Create stats panel
         self.stats_panel = NetworkStatsPanel()
-        self.stats_panel.setFixedWidth(600)
-        content_layout.addWidget(self.stats_panel)
+        self.stats_panel.setMinimumWidth(400)  # Set minimum width
+        self.splitter.addWidget(self.stats_panel)
+
+        # Set initial splitter sizes (control:canvas:stats = 1:3:2)
+        self.splitter.setSizes([180, 540, 480])
 
         # Initialize data attributes
         self.node_positions = None

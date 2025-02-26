@@ -97,7 +97,7 @@ class ControlPanel(QWidget):
         
         # Add show node labels checkbox
         self.show_labels_checkbox = QCheckBox("Show Node Labels")
-        self.show_labels_checkbox.setChecked(True)  # On by default
+        self.show_labels_checkbox.setChecked(False)  # Off by default
         display_layout.addWidget(self.show_labels_checkbox)
         
         self.display_group.setLayout(display_layout)
