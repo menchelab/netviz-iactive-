@@ -37,7 +37,7 @@ class MultilayerNetworkViz(QWidget):
             disease_widget = QWidget()
             disease_widget.setLayout(disease_layout)
             main_layout.addWidget(disease_widget)
-        
+
         # Create the main content area (horizontal layout for controls, canvas, and stats)
         content_layout = QHBoxLayout()
         content_layout.setContentsMargins(0, 0, 0, 0)
