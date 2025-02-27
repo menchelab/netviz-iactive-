@@ -4,7 +4,7 @@ suggested to use UV, https://github.com/astral-sh/uv
 
 ```bash
 uv sync
-uv run python example.py
+uv run python main.py
 ```
 
 try to make sure gpu is actually used
