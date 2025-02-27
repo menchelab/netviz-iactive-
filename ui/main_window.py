@@ -164,17 +164,42 @@ class MultilayerNetworkViz(QWidget):
         """Update the visibility of nodes and edges based on control panel settings"""
         logger = logging.getLogger(__name__)
 
-        # Get visible layers, clusters, and origins from control panel
+        # Get visibility settings from control panel
         visible_layers = self.control_panel.get_visible_layers()
         visible_clusters = self.control_panel.get_visible_clusters()
         visible_origins = self.control_panel.get_visible_origins()
         show_intralayer = self.control_panel.show_intralayer_edges()
-        show_nodes = self.control_panel.show_nodes()  # Get the show_nodes setting
-        show_labels = self.control_panel.show_labels()  # Get the show_labels setting
-        show_stats_bars = self.control_panel.show_stats_bars()  # Get the show_stats_bars setting
+        show_nodes = self.control_panel.show_nodes()
+        show_labels = self.control_panel.show_labels()
+        show_stats_bars = self.control_panel.show_stats_bars()
 
         # Calculate nodes per layer
         nodes_per_layer = len(self.node_positions) // len(self.layers)
+
+        # Check if filter settings have changed (layers, clusters, origins)
+        filter_changed = False
+        
+        # Store current filter settings if not already stored
+        if not hasattr(self, '_previous_filters'):
+            self._previous_filters = {
+                'layers': set(visible_layers),
+                'clusters': set(visible_clusters),
+                'origins': set(visible_origins)
+            }
+            filter_changed = True
+        else:
+            # Compare with previous settings
+            if set(visible_layers) != self._previous_filters['layers']:
+                filter_changed = True
+            if set(visible_clusters) != self._previous_filters['clusters']:
+                filter_changed = True
+            if set(visible_origins) != self._previous_filters['origins']:
+                filter_changed = True
+            
+            # Update stored settings
+            self._previous_filters['layers'] = set(visible_layers)
+            self._previous_filters['clusters'] = set(visible_clusters)
+            self._previous_filters['origins'] = set(visible_origins)
 
         # Create node mask based on layers, clusters, and origins
         node_mask = np.zeros(len(self.node_positions), dtype=bool)
@@ -213,9 +238,11 @@ class MultilayerNetworkViz(QWidget):
         # Update network canvas with visibility settings
         self.network_canvas.update_visibility(node_mask, edge_mask, show_intralayer, show_nodes, show_labels, True, show_stats_bars)
 
-        # Update statistics panel with visible layer indices and layer colors
-        self.stats_panel.update_stats(
-            self.node_positions, self.link_pairs, self.node_ids,
-            self.layers, self.node_clusters, node_mask, edge_mask,
-            visible_layers, self.layer_colors
-        )
+        # Only update statistics panel if filter settings have changed
+        if filter_changed:
+            logger.info("Filter settings changed, updating statistics...")
+            self.stats_panel.update_stats(
+                self.node_positions, self.link_pairs, self.node_ids,
+                self.layers, self.node_clusters, node_mask, edge_mask,
+                visible_layers, self.layer_colors
+            )
