@@ -9,6 +9,7 @@ from ui.stats_panel import NetworkStatsPanel
 from ui.control_panel import ControlPanel
 from data.data_loader import get_available_diseases, load_disease_data
 from utils.color_utils import hex_to_rgba
+from data.network_data_manager import NetworkDataManager
 
 class MultilayerNetworkViz(QWidget):
     def __init__(self, node_positions=None, link_pairs=None, link_colors=None, node_ids=None, 
@@ -19,6 +20,9 @@ class MultilayerNetworkViz(QWidget):
 
         # Store the data directory
         self.data_dir = data_dir
+        
+        # Create data manager
+        self.data_manager = NetworkDataManager()
 
         # Create layout
         main_layout = QVBoxLayout()
@@ -48,9 +52,9 @@ class MultilayerNetworkViz(QWidget):
         self.control_panel.setMinimumWidth(150)  # Set minimum width
         self.splitter.addWidget(self.control_panel)
 
-        # Create canvas
+        # Create canvas with data manager
         logger.info("Creating canvas...")
-        self.network_canvas = NetworkCanvas()
+        self.network_canvas = NetworkCanvas(data_manager=self.data_manager)
         self.splitter.addWidget(self.network_canvas.canvas.native)
 
         # Create stats panel
@@ -71,6 +75,9 @@ class MultilayerNetworkViz(QWidget):
         self.unique_clusters = None
         self.node_origins = None
         self.unique_origins = None
+
+        # Add a flag to prevent multiple updates
+        self._updating_visibility = False
 
         # If data is provided, load it
         if node_positions is not None:
@@ -115,47 +122,20 @@ class MultilayerNetworkViz(QWidget):
         """Load network data into the visualization"""
         logger = logging.getLogger(__name__)
         
-        self.node_positions = node_positions
-        self.link_pairs = link_pairs
-        self.link_colors = link_colors
-        self.node_ids = node_ids
-        self.layers = layers
-        self.node_clusters = node_clusters
-        self.unique_clusters = unique_clusters
-        self.node_origins = node_origins or {}
-        self.unique_origins = unique_origins or []
-        self.layer_colors = layer_colors or {}
+        # Load data into the data manager
+        self.data_manager.load_data(
+            node_positions, link_pairs, link_colors, node_ids, layers,
+            node_clusters, unique_clusters, node_colors, node_origins,
+            unique_origins, layer_colors
+        )
         
-        logger.info(f"Loading data with layer colors: {self.layer_colors}")
-
-        # If node_colors is not provided, generate them based on layer colors
-        if node_colors is None and layer_colors:
-            node_colors = []
-            nodes_per_layer = len(node_positions) // len(layers)
-            
-            for i in range(len(node_positions)):
-                layer_idx = i // nodes_per_layer
-                layer_name = layers[layer_idx]
-                node_colors.append(layer_colors.get(layer_name, '#CCCCCC'))
-
         # Load data into the network canvas
-        self.network_canvas.load_data(node_positions, link_pairs, link_colors, node_colors, node_ids)
+        self.network_canvas.load_data()
         
-        # Set layer names and nodes per layer in the network canvas
-        if layers:
-            logger.debug(f"Setting layer names: {layers}")
-            self.network_canvas.layer_names = layers
-            self.network_canvas.nodes_per_layer = len(node_positions) // len(layers)
-        
-        # Set layer colors in the network canvas
-        if layer_colors:
-            logger.debug(f"Setting layer colors in network canvas: {layer_colors}")
-            self.network_canvas.set_layer_colors(layer_colors)
-
         # Update the controls with layer colors
         self.control_panel.update_controls(
-            self.layers, self.unique_clusters, self.unique_origins, 
-            self.update_visibility, self.layer_colors
+            layers, unique_clusters, unique_origins, 
+            self.update_visibility, layer_colors
         )
 
         self.update_visibility()
@@ -163,86 +143,69 @@ class MultilayerNetworkViz(QWidget):
     def update_visibility(self):
         """Update the visibility of nodes and edges based on control panel settings"""
         logger = logging.getLogger(__name__)
-
-        # Get visibility settings from control panel
-        visible_layers = self.control_panel.get_visible_layers()
-        visible_clusters = self.control_panel.get_visible_clusters()
-        visible_origins = self.control_panel.get_visible_origins()
-        show_intralayer = self.control_panel.show_intralayer_edges()
-        show_nodes = self.control_panel.show_nodes()
-        show_labels = self.control_panel.show_labels()
-        show_stats_bars = self.control_panel.show_stats_bars()
-
-        # Calculate nodes per layer
-        nodes_per_layer = len(self.node_positions) // len(self.layers)
-
-        # Check if filter settings have changed (layers, clusters, origins)
-        filter_changed = False
         
-        # Store current filter settings if not already stored
-        if not hasattr(self, '_previous_filters'):
-            self._previous_filters = {
-                'layers': set(visible_layers),
-                'clusters': set(visible_clusters),
-                'origins': set(visible_origins)
-            }
-            filter_changed = True
-        else:
-            # Compare with previous settings
-            if set(visible_layers) != self._previous_filters['layers']:
-                filter_changed = True
-            if set(visible_clusters) != self._previous_filters['clusters']:
-                filter_changed = True
-            if set(visible_origins) != self._previous_filters['origins']:
-                filter_changed = True
+        # Prevent recursive calls
+        if self._updating_visibility:
+            return
+        
+        self._updating_visibility = True
+        
+        try:
+            # Get visibility settings from control panel
+            visible_layers = self.control_panel.get_visible_layers()
+            visible_clusters = self.control_panel.get_visible_clusters()
+            visible_origins = self.control_panel.get_visible_origins()
+            show_intralayer = self.control_panel.show_intralayer_edges()
+            show_nodes = self.control_panel.show_nodes()
+            show_labels = self.control_panel.show_labels()
+            show_stats_bars = self.control_panel.show_stats_bars()
+
+            # Log the current settings for debugging
+            logger.info(f"Visibility settings: show_nodes={show_nodes}, show_labels={show_labels}, show_stats_bars={show_stats_bars}")
+
+            # Check if filter settings have changed (layers, clusters, origins)
+            filter_changed = False
             
-            # Update stored settings
-            self._previous_filters['layers'] = set(visible_layers)
-            self._previous_filters['clusters'] = set(visible_clusters)
-            self._previous_filters['origins'] = set(visible_origins)
+            # Store current filter settings if not already stored
+            if not hasattr(self, '_previous_filters'):
+                self._previous_filters = {
+                    'layers': set(visible_layers),
+                    'clusters': set(visible_clusters),
+                    'origins': set(visible_origins)
+                }
+                filter_changed = True
+            else:
+                # Compare with previous settings
+                if set(visible_layers) != self._previous_filters['layers']:
+                    filter_changed = True
+                if set(visible_clusters) != self._previous_filters['clusters']:
+                    filter_changed = True
+                if set(visible_origins) != self._previous_filters['origins']:
+                    filter_changed = True
+                
+                # Update stored settings
+                self._previous_filters['layers'] = set(visible_layers)
+                self._previous_filters['clusters'] = set(visible_clusters)
+                self._previous_filters['origins'] = set(visible_origins)
 
-        # Create node mask based on layers, clusters, and origins
-        node_mask = np.zeros(len(self.node_positions), dtype=bool)
-
-        for i, node_id in enumerate(self.node_ids):
-            # Check layer visibility
-            layer_idx = i // nodes_per_layer
-            if layer_idx not in visible_layers:
-                continue
-
-            # Check cluster visibility
-            cluster = self.node_clusters[node_id]
-            if cluster not in visible_clusters:
-                continue
-
-            # Check origin visibility
-            origin = self.node_origins.get(node_id, 'Unknown')
-            if origin not in visible_origins:
-                continue
-
-            # Node passes all filters
-            node_mask[i] = True
-
-        # Create edge mask based on node visibility
-        edge_mask = np.zeros(len(self.link_pairs), dtype=bool)
-        for i, (start_idx, end_idx) in enumerate(self.link_pairs):
-            if node_mask[start_idx] and node_mask[end_idx]:
-                edge_mask[i] = True
-
-        # Update network canvas with layer information
-        self.network_canvas.visible_layers = visible_layers
-        self.network_canvas.layer_names = {i: layer for i, layer in enumerate(self.layers)}
-        self.network_canvas.nodes_per_layer = nodes_per_layer
-        self.network_canvas.node_mask = node_mask
-
-        # Update network canvas with visibility settings
-        self.network_canvas.update_visibility(node_mask, edge_mask, show_intralayer, show_nodes, show_labels, True, show_stats_bars)
-
-        # Only update statistics panel if filter settings have changed
-        if filter_changed:
-            logger.info("Filter settings changed, updating statistics...")
-            self.stats_panel.update_stats(
-                self.node_positions, self.link_pairs, self.node_ids,
-                self.layers, self.node_clusters, node_mask, edge_mask,
-                visible_layers, self.layer_colors
+            # Only update data manager if filter settings have changed
+            if filter_changed:
+                # Update visibility in data manager
+                node_mask, edge_mask = self.data_manager.update_visibility(
+                    visible_layers, visible_clusters, visible_origins
+                )
+            
+            # Update network canvas with visibility settings
+            self.network_canvas.update_visibility(
+                show_intralayer=show_intralayer,
+                show_nodes=show_nodes,
+                show_labels=show_labels,
+                show_stats_bars=show_stats_bars
             )
+
+            # Only update statistics panel if filter settings have changed
+            if filter_changed:
+                logger.info("Filter settings changed, updating statistics...")
+                self.stats_panel.update_stats(self.data_manager)
+        finally:
+            self._updating_visibility = False

@@ -183,7 +183,7 @@ class NetworkStatsPanel(QWidget):
             self.layer_conn_figure.tight_layout(pad=1.0)
             self.layer_conn_canvas.draw()
 
-    def update_stats(self, node_positions, link_pairs, node_ids, layers, node_clusters, node_mask, edge_mask, visible_layer_indices, layer_colors=None):
+    def update_stats(self, data_manager):
         """Update statistics based on currently visible network elements"""
         logger = logging.getLogger(__name__)
 
@@ -216,6 +216,20 @@ class NetworkStatsPanel(QWidget):
         small_font = {'fontsize': 6}
         medium_font = {'fontsize': 7}
         large_font = {'fontsize': 9}  # For larger visualizations
+
+        # Get data from manager
+        node_positions = data_manager.node_positions
+        link_pairs = data_manager.link_pairs
+        node_ids = data_manager.node_ids
+        layers = data_manager.layers
+        node_clusters = data_manager.node_clusters
+        node_mask = data_manager.current_node_mask
+        edge_mask = data_manager.current_edge_mask
+        visible_layer_indices = data_manager.visible_layers
+        layer_colors = data_manager.layer_colors
+        
+        # Get layer connections from data manager
+        layer_connections = data_manager.get_layer_connections()
 
         # Get visible nodes and edges
         visible_nodes = [i for i, mask in enumerate(node_mask) if mask]
