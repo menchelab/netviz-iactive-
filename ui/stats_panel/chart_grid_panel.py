@@ -30,7 +30,7 @@ class ChartGridPanel(BaseStatsPanel):
         controls_layout.setSpacing(20)  # Add spacing between control groups
         
         # Chart selection
-        chart_group = QGroupBox("Chart Selection")
+        chart_group = QGroupBox("Multi Dataset compare")
         chart_layout = QVBoxLayout()
         
         # Add chart dropdown
