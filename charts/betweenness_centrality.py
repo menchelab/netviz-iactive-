@@ -67,8 +67,9 @@ def create_betweenness_centrality_chart(ax, layer_connections, layers, visible_l
         # Set labels and title
         ax.set_yticks(y_pos)
         ax.set_yticklabels(layer_names, **small_font)
-        ax.set_xlabel('Betweenness Centrality', **small_font)
         ax.set_title('Layer Betweenness Centrality', **medium_font)
+        
+        ax.set_xticklabels(ax.get_xticks(), **small_font)
 
         # Set x-axis limits
         ax.set_xlim(0, max(centrality_scores) * 1.15)  # Add some padding
