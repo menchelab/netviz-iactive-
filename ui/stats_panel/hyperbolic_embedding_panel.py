@@ -205,45 +205,86 @@ class HyperbolicEmbeddingPanel(BaseStatsPanel):
     def update_visualization(self):
         """Update the hyperbolic embedding visualization"""
         if not self._current_data:
+            self.clear_visualization("No data available")
             return
             
-        self.clear_visualization()
-        
-        # Unpack stored data
-        layer_connections, layers, medium_font, large_font, visible_layer_indices, layer_colors = self._current_data
-        
-        # Filter the layer_connections matrix to only include visible layers
-        if visible_layer_indices and len(visible_layer_indices) > 0:
-            filtered_connections = layer_connections[np.ix_(visible_layer_indices, visible_layer_indices)]
-            filtered_layers = [layers[i] for i in visible_layer_indices]
+        try:
+            self.clear_visualization()
+            
+            # Unpack stored data
+            data_manager, medium_font, large_font = self._current_data
+            
+            # Get filtered data from the data manager
+            layers = data_manager.layers
+            visible_layer_indices = data_manager.visible_layers
+            layer_colors = data_manager.layer_colors
+            
+            # Check if we have valid data
+            if not layers or not visible_layer_indices or len(visible_layer_indices) < 2:
+                self.clear_visualization("Not enough visible layers to analyze (minimum 2 required)")
+                return
+            
+            # Get the filtered layer connections that respect all visibility settings
+            # (layers, clusters, and origins)
+            try:
+                filtered_connections = data_manager.get_layer_connections()
+                if filtered_connections is None or filtered_connections.size == 0:
+                    self.clear_visualization("No connection data available")
+                    return
+            except Exception as e:
+                print(f"Error getting layer connections: {e}")
+                self.clear_visualization("Error retrieving connection data")
+                return
+            
+            # Filter layers based on visibility
+            filtered_layers = [layers[i] for i in visible_layer_indices if i < len(layers)]
             filtered_colors = {layer: layer_colors.get(layer, 'skyblue') for layer in filtered_layers}
-        else:
-            # No visible layers, display a message
-            self.clear_visualization("No visible layers to analyze")
+            
+            if len(filtered_layers) < 2:
+                self.clear_visualization("Not enough visible layers to analyze (minimum 2 required)")
+                return
+            
+            # Create hyperbolic embedding
+            try:
+                embedding, hierarchy_data = self.create_hyperbolic_embedding(
+                    filtered_connections, 
+                    filtered_layers,
+                    method=self.embedding_method_dropdown.currentText(),
+                    curvature=self.curvature_slider.value() / 5.0  # Scale to 0.2-2.0
+                )
+                
+                if not embedding:
+                    self.clear_visualization("Could not create embedding with current data")
+                    return
+            except Exception as e:
+                print(f"Error creating hyperbolic embedding: {e}")
+                self.clear_visualization(f"Error creating embedding: {str(e)}")
+                return
+            
+            # Visualize the embedding
+            try:
+                self.visualize_hyperbolic_embedding(
+                    embedding, 
+                    hierarchy_data,
+                    filtered_layers, 
+                    medium_font, 
+                    large_font,
+                    filtered_colors,
+                    coloring=self.coloring_dropdown.currentText(),
+                    node_size_factor=self.node_size_slider.value() / 5.0 * 300  # Scale to 60-600
+                )
+            except Exception as e:
+                print(f"Error visualizing hyperbolic embedding: {e}")
+                self.clear_visualization(f"Error visualizing embedding: {str(e)}")
+                return
+            
+            self.canvas.draw()
+            
+        except Exception as e:
+            print(f"Error updating Hyperbolic Embedding visualization: {e}")
+            self.clear_visualization(f"Error updating visualization: {str(e)}")
             return
-        
-        # Create hyperbolic embedding
-        embedding, hierarchy_data = self.create_hyperbolic_embedding(
-            filtered_connections, 
-            filtered_layers,
-            method=self.embedding_method_dropdown.currentText(),
-            curvature=self.curvature_slider.value() / 5.0  # Scale to 0.2-2.0
-        )
-        
-        # Visualize the embedding
-        self.visualize_hyperbolic_embedding(
-            embedding, 
-            hierarchy_data,
-            filtered_layers, 
-            medium_font, 
-            large_font,
-            filtered_colors,
-            coloring=self.coloring_dropdown.currentText(),
-            node_size_factor=self.node_size_slider.value() / 5.0 * 300  # Scale to 60-600
-        )
-        
-        self.canvas.draw()
-    
+            
     def create_hyperbolic_embedding(self, layer_connections, layers, method="Hierarchical", curvature=1.0):
         """
         Create a hyperbolic embedding of the layer network
@@ -266,217 +307,207 @@ class HyperbolicEmbeddingPanel(BaseStatsPanel):
             embedding: dict mapping layer indices to (x, y) coordinates
             hierarchy_data: dict containing hierarchical information
         """
-        n_layers = layer_connections.shape[0]
-        embedding = {}
-        hierarchy_data = {"depth": {}, "parent": {}, "children": {}, "communities": {}}
-        
-        # Create a graph from layer connections
-        G = nx.Graph()
-        for i in range(n_layers):
-            G.add_node(i, name=layers[i])
-        
-        for i in range(n_layers):
-            for j in range(i+1, n_layers):
-                if layer_connections[i, j] > 0:
-                    G.add_edge(i, j, weight=layer_connections[i, j])
-        
-        if method == "Hierarchical":
-            # Create hierarchical embedding based on clustering
-            try:
-                # Convert connection matrix to distance matrix
-                # Higher connection = lower distance
-                distance_matrix = np.zeros_like(layer_connections, dtype=float)
-                max_connection = layer_connections.max()
-                if max_connection > 0:
+        # Check if we have valid data
+        if layer_connections is None or layers is None or len(layers) < 2:
+            print("Not enough data for hyperbolic embedding")
+            return {}, {"depth": {}, "parent": {}, "children": {}, "communities": {}}
+            
+        try:
+            n_layers = layer_connections.shape[0]
+            
+            # Ensure dimensions match
+            if n_layers != len(layers):
+                print(f"Warning: Layer connection matrix dimensions ({n_layers}) don't match layer count ({len(layers)})")
+                n_layers = min(n_layers, len(layers))
+                
+            embedding = {}
+            hierarchy_data = {"depth": {}, "parent": {}, "children": {}, "communities": {}}
+            
+            # Create a graph from layer connections
+            G = nx.Graph()
+            for i in range(n_layers):
+                G.add_node(i, name=layers[i])
+            
+            for i in range(n_layers):
+                for j in range(i+1, n_layers):
+                    if layer_connections[i, j] > 0:
+                        G.add_edge(i, j, weight=layer_connections[i, j])
+            
+            # Check if graph has any edges
+            if G.number_of_edges() == 0:
+                print("No connections between layers for hyperbolic embedding")
+                # Create a simple circular layout as fallback
+                for i in range(n_layers):
+                    angle = 2 * np.pi * i / n_layers
+                    r = 0.8  # Fixed radius
+                    embedding[i] = (r * np.cos(angle), r * np.sin(angle))
+                    hierarchy_data["depth"][i] = 1
+                return embedding, hierarchy_data
+            
+            if method == "Hierarchical":
+                # Create hierarchical embedding based on clustering
+                try:
+                    # Convert connection matrix to distance matrix
+                    # Higher connection = lower distance
+                    distance_matrix = np.zeros_like(layer_connections, dtype=float)
+                    max_connection = layer_connections.max()
+                    if max_connection > 0:
+                        for i in range(n_layers):
+                            for j in range(n_layers):
+                                if i == j:
+                                    distance_matrix[i, j] = 0
+                                else:
+                                    # Invert and normalize connections to get distances
+                                    # Use max of connections in both directions for symmetry
+                                    connection_value = max(layer_connections[i, j], layer_connections[j, i])
+                                    distance_matrix[i, j] = 1 - (connection_value / max_connection)
+                    
+                    # Ensure the distance matrix is symmetric
+                    distance_matrix = 0.5 * (distance_matrix + distance_matrix.T)
+                    
+                    # Perform hierarchical clustering
+                    condensed_dist = squareform(distance_matrix)
+                    linkage_matrix = hierarchy.linkage(condensed_dist, method='average')
+                    
+                    # Create a tree from the linkage matrix
+                    tree = hierarchy.to_tree(linkage_matrix, rd=True)
+                    
+                    # Assign coordinates based on the tree structure
+                    # Root at the center, children arranged in a circle
+                    def assign_coordinates(node, radius, angle_range, depth=0):
+                        if node.is_leaf():
+                            # Leaf node (original layer)
+                            idx = node.id
+                            angle = np.mean(angle_range)
+                            
+                            # Convert to Poincaré disk coordinates
+                            r = np.tanh(radius * curvature / 2)  # Scale by curvature
+                            x = r * np.cos(angle)
+                            y = r * np.sin(angle)
+                            
+                            embedding[idx] = (x, y)
+                            hierarchy_data["depth"][idx] = depth
+                            return [idx]
+                        else:
+                            # Internal node
+                            mid_angle = np.mean(angle_range)
+                            left_range = (angle_range[0], mid_angle)
+                            right_range = (mid_angle, angle_range[1])
+                            
+                            # Process left and right subtrees
+                            left_leaves = assign_coordinates(node.left, radius + 1, left_range, depth + 1)
+                            right_leaves = assign_coordinates(node.right, radius + 1, right_range, depth + 1)
+                            
+                            # Store parent-child relationships
+                            for leaf in left_leaves + right_leaves:
+                                hierarchy_data["parent"][leaf] = node.id + n_layers
+                            
+                            hierarchy_data["children"][node.id + n_layers] = left_leaves + right_leaves
+                            
+                            return left_leaves + right_leaves
+                    
+                    # Start from the root with full angle range
+                    assign_coordinates(tree, 1.0, (0, 2*np.pi))
+                    
+                except Exception as e:
+                    print(f"Error in hierarchical embedding: {e}")
+                    # Fallback to circular layout
                     for i in range(n_layers):
-                        for j in range(n_layers):
-                            if i == j:
-                                distance_matrix[i, j] = 0
-                            else:
-                                # Invert and normalize connections to get distances
-                                # Use max of connections in both directions for symmetry
-                                connection_value = max(layer_connections[i, j], layer_connections[j, i])
-                                distance_matrix[i, j] = 1 - (connection_value / max_connection)
-                
-                # Ensure the distance matrix is symmetric
-                distance_matrix = 0.5 * (distance_matrix + distance_matrix.T)
-                
-                # Perform hierarchical clustering
-                condensed_dist = squareform(distance_matrix)
-                linkage_matrix = hierarchy.linkage(condensed_dist, method='average')
-                
-                # Create a tree from the linkage matrix
-                tree = hierarchy.to_tree(linkage_matrix, rd=True)
-                
-                # Assign coordinates based on the tree structure
-                # Root at the center, children arranged in a circle
-                def assign_coordinates(node, radius, angle_range, depth=0):
-                    if node.is_leaf():
-                        # Leaf node (original layer)
-                        idx = node.id
-                        angle = np.mean(angle_range)
+                        angle = 2 * np.pi * i / n_layers
+                        r = 0.8  # Fixed radius
+                        embedding[i] = (r * np.cos(angle), r * np.sin(angle))
+                        hierarchy_data["depth"][i] = 1
+            
+            elif method == "Centrality-based":
+                try:
+                    # Calculate centrality
+                    centrality = nx.eigenvector_centrality(G, weight='weight')
+                    
+                    # Normalize centrality values
+                    max_centrality = max(centrality.values()) if centrality else 1
+                    normalized_centrality = {i: centrality.get(i, 0) / max_centrality for i in range(n_layers)}
+                    
+                    # Assign coordinates based on centrality
+                    # More central nodes closer to the center
+                    for i in range(n_layers):
+                        # Calculate radius based on centrality (inverse relationship)
+                        r = 1 - normalized_centrality[i]
+                        r = np.tanh(r * curvature)  # Apply hyperbolic scaling
                         
-                        # Convert to Poincaré disk coordinates
-                        r = np.tanh(radius * curvature / 2)  # Scale by curvature
+                        # Assign angle based on node index
+                        angle = 2 * np.pi * i / n_layers
+                        
+                        # Convert to Cartesian coordinates
                         x = r * np.cos(angle)
                         y = r * np.sin(angle)
                         
-                        embedding[idx] = (x, y)
-                        hierarchy_data["depth"][idx] = depth
-                        return [idx]
-                    else:
-                        # Internal node
-                        mid_angle = np.mean(angle_range)
-                        left_range = (angle_range[0], mid_angle)
-                        right_range = (mid_angle, angle_range[1])
-                        
-                        # Process left and right subtrees
-                        left_leaves = assign_coordinates(node.left, radius + 1, left_range, depth + 1)
-                        right_leaves = assign_coordinates(node.right, radius + 1, right_range, depth + 1)
-                        
-                        # Store parent-child relationships
-                        for leaf in left_leaves + right_leaves:
-                            hierarchy_data["parent"][leaf] = node.id + n_layers
-                        
-                        hierarchy_data["children"][node.id + n_layers] = left_leaves + right_leaves
-                        
-                        return left_leaves + right_leaves
+                        embedding[i] = (x, y)
+                        hierarchy_data["depth"][i] = int(r * 5) + 1  # Approximate depth from radius
                 
-                # Start from the root with the full angle range
-                assign_coordinates(tree, 1.0, (0, 2 * np.pi))
-                
-            except Exception as e:
-                print(f"Warning: Error creating hierarchical embedding: {e}")
-                # Fallback to a simple circular layout
-                for i in range(n_layers):
-                    angle = 2 * np.pi * i / n_layers
-                    r = 0.8  # Fixed radius
-                    embedding[i] = (r * np.cos(angle), r * np.sin(angle))
-                    hierarchy_data["depth"][i] = 1
-        
-        elif method == "Centrality-based":
-            # Create embedding based on centrality
-            try:
-                # Calculate centrality
-                centrality = nx.eigenvector_centrality(G, weight='weight')
-                
-                # Normalize centrality to [0, 1]
-                max_centrality = max(centrality.values())
-                min_centrality = min(centrality.values())
-                range_centrality = max_centrality - min_centrality
-                
-                if range_centrality > 0:
-                    normalized_centrality = {
-                        i: (centrality[i] - min_centrality) / range_centrality 
-                        for i in centrality
-                    }
-                else:
-                    normalized_centrality = {i: 0.5 for i in centrality}
-                
-                # Assign coordinates based on centrality
-                # More central nodes closer to the center
-                for i in range(n_layers):
-                    if i in normalized_centrality:
-                        # Calculate radius based on centrality (inverse relationship)
-                        r = 0.1 + 0.8 * (1 - normalized_centrality[i])
-                        
-                        # Convert to Poincaré disk coordinates
-                        r = np.tanh(r * curvature / 2)  # Scale by curvature
-                        
-                        # Distribute nodes evenly around the circle
+                except Exception as e:
+                    print(f"Error in centrality-based embedding: {e}")
+                    # Fallback to circular layout
+                    for i in range(n_layers):
                         angle = 2 * np.pi * i / n_layers
-                        
-                        embedding[i] = (r * np.cos(angle), r * np.sin(angle))
-                        hierarchy_data["depth"][i] = 1 - normalized_centrality[i]
-                    else:
-                        # Fallback for nodes without centrality
-                        angle = 2 * np.pi * i / n_layers
-                        r = 0.8
+                        r = 0.8  # Fixed radius
                         embedding[i] = (r * np.cos(angle), r * np.sin(angle))
                         hierarchy_data["depth"][i] = 1
             
-            except Exception as e:
-                print(f"Warning: Error creating centrality-based embedding: {e}")
-                # Fallback to a simple circular layout
-                for i in range(n_layers):
-                    angle = 2 * np.pi * i / n_layers
-                    r = 0.8  # Fixed radius
-                    embedding[i] = (r * np.cos(angle), r * np.sin(angle))
-                    hierarchy_data["depth"][i] = 1
-        
-        else:  # Community-based
-            # Create embedding based on community structure
-            try:
-                # Detect communities
-                communities = nx.algorithms.community.greedy_modularity_communities(G, weight='weight')
+            else:  # Community-based
+                try:
+                    # Detect communities
+                    communities = nx.community.greedy_modularity_communities(G, weight='weight')
+                    
+                    # Assign community IDs
+                    community_mapping = {}
+                    for i, community in enumerate(communities):
+                        for node in community:
+                            community_mapping[node] = i
+                            hierarchy_data["communities"][node] = i
+                    
+                    # Arrange communities in a circle
+                    n_communities = len(communities)
+                    community_angles = {i: 2 * np.pi * i / n_communities for i in range(n_communities)}
+                    
+                    # Position nodes within their communities
+                    for i in range(n_layers):
+                        comm_id = community_mapping.get(i, 0)
+                        comm_size = len(communities[comm_id])
+                        
+                        # Base angle for this community
+                        base_angle = community_angles[comm_id]
+                        
+                        # Position within community
+                        node_idx = list(communities[comm_id]).index(i) if i in communities[comm_id] else 0
+                        angle_offset = 0.2 * np.pi * (node_idx / max(1, comm_size - 1) - 0.5)
+                        angle = base_angle + angle_offset
+                        
+                        # Radius based on community size (larger communities further out)
+                        base_r = 0.5 + 0.3 * (comm_size / n_layers)
+                        r = np.tanh(base_r * curvature)
+                        
+                        # Convert to Cartesian coordinates
+                        x = r * np.cos(angle)
+                        y = r * np.sin(angle)
+                        
+                        embedding[i] = (x, y)
+                        hierarchy_data["depth"][i] = comm_id + 1  # Use community ID as depth
                 
-                # Assign community IDs
-                community_mapping = {}
-                for i, community in enumerate(communities):
-                    for node in community:
-                        community_mapping[node] = i
-                        hierarchy_data["communities"][node] = i
-                
-                # Calculate community centers
-                num_communities = len(communities)
-                community_centers = {}
-                
-                for i in range(num_communities):
-                    # Distribute community centers evenly
-                    angle = 2 * np.pi * i / num_communities
-                    r = 0.5  # Fixed radius for community centers
-                    community_centers[i] = (r * np.cos(angle), r * np.sin(angle))
-                
-                # Assign coordinates based on communities
-                for i in range(n_layers):
-                    if i in community_mapping:
-                        comm_id = community_mapping[i]
-                        center_x, center_y = community_centers[comm_id]
-                        
-                        # Calculate position relative to community center
-                        # Get all nodes in this community
-                        comm_nodes = [n for n in community_mapping if community_mapping[n] == comm_id]
-                        node_idx = comm_nodes.index(i)
-                        num_nodes = len(comm_nodes)
-                        
-                        # Distribute nodes in a small circle around community center
-                        angle = 2 * np.pi * node_idx / max(1, num_nodes)
-                        local_r = 0.2  # Radius within community
-                        
-                        # Convert to Poincaré disk coordinates
-                        # Use Möbius addition to combine community center and local position
-                        local_x = local_r * np.cos(angle)
-                        local_y = local_r * np.sin(angle)
-                        
-                        # Simple approximation of Möbius addition
-                        denom = 1 + 2 * (center_x * local_x + center_y * local_y) + (local_x**2 + local_y**2)
-                        x = (center_x + local_x) / denom
-                        y = (center_y + local_y) / denom
-                        
-                        # Scale by curvature
-                        r = np.sqrt(x**2 + y**2)
-                        angle = np.arctan2(y, x)
-                        r = np.tanh(np.arctanh(r) * curvature)
-                        
-                        embedding[i] = (r * np.cos(angle), r * np.sin(angle))
-                        hierarchy_data["depth"][i] = 1
-                    else:
-                        # Fallback for nodes without community
+                except Exception as e:
+                    print(f"Error in community-based embedding: {e}")
+                    # Fallback to circular layout
+                    for i in range(n_layers):
                         angle = 2 * np.pi * i / n_layers
-                        r = 0.8
+                        r = 0.8  # Fixed radius
                         embedding[i] = (r * np.cos(angle), r * np.sin(angle))
                         hierarchy_data["depth"][i] = 1
             
-            except Exception as e:
-                print(f"Warning: Error creating community-based embedding: {e}")
-                # Fallback to a simple circular layout
-                for i in range(n_layers):
-                    angle = 2 * np.pi * i / n_layers
-                    r = 0.8  # Fixed radius
-                    embedding[i] = (r * np.cos(angle), r * np.sin(angle))
-                    hierarchy_data["depth"][i] = 1
-        
-        return embedding, hierarchy_data
+            return embedding, hierarchy_data
+            
+        except Exception as e:
+            print(f"Error creating hyperbolic embedding: {e}")
+            # Return empty embedding as fallback
+            return {}, {"depth": {}, "parent": {}, "children": {}, "communities": {}}
     
     def visualize_hyperbolic_embedding(self, embedding, hierarchy_data, layers, medium_font, large_font, 
                                      layer_colors, coloring="Layer Colors", node_size_factor=300):
@@ -642,26 +673,29 @@ class HyperbolicEmbeddingPanel(BaseStatsPanel):
     
     def update_stats(self, data_manager):
         """Update the Hyperbolic Embedding with current data"""
-        # Clear figure
-        self.clear_visualization()
-        
-        # Get data from manager
-        layers = data_manager.layers
-        visible_layer_indices = data_manager.visible_layers
-        layer_colors = data_manager.layer_colors
-        
-        # Get layer connections from data manager
-        layer_connections = data_manager.get_layer_connections()
-        
-        # Define font sizes
-        medium_font = {'fontsize': 7}
-        large_font = {'fontsize': 9}
-        
-        # Store current data for later use
-        self._current_data = (layer_connections, layers, medium_font, large_font, visible_layer_indices, layer_colors)
-        
-        # Only create visualization if enabled
-        if self.enable_checkbox.isChecked():
-            self.update_visualization()
-        else:
-            self.clear_visualization("Hyperbolic embedding disabled") 
+        try:
+            # Check if data_manager is valid
+            if data_manager is None:
+                self.clear_visualization("No data manager provided")
+                return
+                
+            # Clear figure
+            self.clear_visualization()
+            
+            # Define font sizes
+            medium_font = {'fontsize': 7}
+            large_font = {'fontsize': 9}
+            
+            # Store data manager and font settings for later use
+            self._current_data = (data_manager, medium_font, large_font)
+            
+            # Only create visualization if enabled
+            if self.enable_checkbox.isChecked():
+                self.update_visualization()
+            else:
+                self.clear_visualization("Hyperbolic embedding disabled")
+                
+        except Exception as e:
+            print(f"Error in update_stats: {e}")
+            self.clear_visualization(f"Error updating stats: {str(e)}")
+            return 

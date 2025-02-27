@@ -230,29 +230,57 @@ class NetworkDataManager:
         self.interlayer_edge_counts = edge_counts
         return edge_counts
     
-    def get_layer_connections(self):
-        """Calculate and cache layer connection matrix"""
-        if self.layer_connections is not None:
-            return self.layer_connections
-            
-        # Initialize connection matrix
-        num_layers = len(self.layers)
-        connections = np.zeros((num_layers, num_layers), dtype=int)
+    def get_layer_connections(self, filter_to_visible=False):
+        """
+        Calculate and cache layer connection matrix
         
-        # Count connections between layers
-        for i, (start_idx, end_idx) in enumerate(self.link_pairs):
-            if not self.current_edge_mask[i]:
-                continue
+        Parameters:
+        -----------
+        filter_to_visible : bool
+            If True, return a matrix containing only visible layers
+            
+        Returns:
+        --------
+        numpy.ndarray
+            Matrix of connection counts between layers
+        """
+        # Calculate the full connection matrix if not cached
+        if self.layer_connections is None:
+            # Initialize connection matrix
+            num_layers = len(self.layers)
+            connections = np.zeros((num_layers, num_layers), dtype=int)
+            
+            # Count connections between layers
+            for i, (start_idx, end_idx) in enumerate(self.link_pairs):
+                if not self.current_edge_mask[i]:
+                    continue
+                    
+                start_layer = start_idx // self.nodes_per_layer
+                end_layer = end_idx // self.nodes_per_layer
                 
-            start_layer = start_idx // self.nodes_per_layer
-            end_layer = end_idx // self.nodes_per_layer
+                connections[start_layer, end_layer] += 1
+                if start_layer != end_layer:
+                    connections[end_layer, start_layer] += 1  # Count both directions
             
-            connections[start_layer, end_layer] += 1
-            if start_layer != end_layer:
-                connections[end_layer, start_layer] += 1  # Count both directions
+            self.layer_connections = connections
         
-        self.layer_connections = connections
-        return connections
+        # If we don't need to filter, return the full matrix
+        if not filter_to_visible:
+            return self.layer_connections
+        
+        # Otherwise, create a filtered matrix with only visible layers
+        if not self.visible_layers:
+            return np.array([])
+        
+        num_visible = len(self.visible_layers)
+        filtered_connections = np.zeros((num_visible, num_visible), dtype=int)
+        
+        # Copy values from the full matrix to the filtered matrix
+        for i, orig_i in enumerate(self.visible_layers):
+            for j, orig_j in enumerate(self.visible_layers):
+                filtered_connections[i, j] = self.layer_connections[orig_i, orig_j]
+        
+        return filtered_connections
     
     def get_networkx_graph(self, visible_only=True):
         """Create and cache a NetworkX graph representation"""

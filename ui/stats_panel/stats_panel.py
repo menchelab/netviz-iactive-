@@ -40,7 +40,7 @@ class NetworkStatsPanel(QWidget):
 #        self.hyperbolic_embedding_panel = HyperbolicEmbeddingPanel()
 
         # Add panels to tabs
-        self.tab_widget.addTab(self.main_stats_panel, "Network Statistics")
+        self.tab_widget.addTab(self.main_stats_panel, "stats")
         self.tab_widget.addTab(self.sankey_panel, "test")
         self.tab_widget.addTab(self.layer_graph_panel, "L Graph")
         self.tab_widget.addTab(self.layer_influence_panel, "L Influence")
