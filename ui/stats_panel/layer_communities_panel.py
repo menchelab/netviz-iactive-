@@ -18,7 +18,7 @@ class LayerCommunitiesPanel(BaseStatsPanel):
         controls_layout = QHBoxLayout()
         
         # Add checkbox to enable/disable visualization
-        self.enable_checkbox = QCheckBox("Enable Community Detection")
+        self.enable_checkbox = QCheckBox("Enable")
         self.enable_checkbox.setChecked(False)  # Disabled by default
         self.enable_checkbox.stateChanged.connect(self.on_state_changed)
         controls_layout.addWidget(self.enable_checkbox)

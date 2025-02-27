@@ -15,7 +15,7 @@ class SankeyPanel(BaseStatsPanel):
 
         # Add checkbox to enable/disable Sankey diagram
         controls_layout = QHBoxLayout()
-        self.enable_checkbox = QCheckBox("Enable Sankey Diagram")
+        self.enable_checkbox = QCheckBox("Enable")
         self.enable_checkbox.setChecked(False)  # Disabled by default
         self.enable_checkbox.stateChanged.connect(self.on_state_changed)
         controls_layout.addWidget(self.enable_checkbox)

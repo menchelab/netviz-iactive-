@@ -7,6 +7,9 @@ from .layer_graph_panel import LayerGraphPanel
 from .layer_influence_panel import LayerInfluencePanel
 from .layer_communities_panel import LayerCommunitiesPanel
 from .information_flow_panel import InformationFlowPanel
+from .layer_coupling_panel import LayerCouplingPanel
+from .critical_structure_panel import CriticalStructurePanel
+from .hyperbolic_embedding_panel import HyperbolicEmbeddingPanel
 
 class NetworkStatsPanel(QWidget):
     def __init__(self, parent=None):
@@ -30,14 +33,24 @@ class NetworkStatsPanel(QWidget):
         self.layer_influence_panel = LayerInfluencePanel()
         self.layer_communities_panel = LayerCommunitiesPanel()
         self.information_flow_panel = InformationFlowPanel()
+        
+        # Create advanced analytics panels
+        self.layer_coupling_panel = LayerCouplingPanel()
+        self.critical_structure_panel = CriticalStructurePanel()
+#        self.hyperbolic_embedding_panel = HyperbolicEmbeddingPanel()
 
         # Add panels to tabs
         self.tab_widget.addTab(self.main_stats_panel, "Network Statistics")
-        self.tab_widget.addTab(self.sankey_panel, "Sankey Diagram")
+        self.tab_widget.addTab(self.sankey_panel, "test")
         self.tab_widget.addTab(self.layer_graph_panel, "L Graph")
         self.tab_widget.addTab(self.layer_influence_panel, "L Influence")
         self.tab_widget.addTab(self.layer_communities_panel, "L Communities")
-        self.tab_widget.addTab(self.information_flow_panel, "Info Flow")
+        self.tab_widget.addTab(self.information_flow_panel, "test InfoFlow")
+        
+        # Add advanced analytics tabs
+        self.tab_widget.addTab(self.layer_coupling_panel, "L Coupling")
+        self.tab_widget.addTab(self.critical_structure_panel, "test critstruct")
+#        self.tab_widget.addTab(self.hyperbolic_embedding_panel, "Hyperbolic View")
 
     def update_stats(self, data_manager):
         """Update statistics in all panels"""
@@ -49,4 +62,9 @@ class NetworkStatsPanel(QWidget):
         self.layer_graph_panel.update_stats(data_manager)
         self.layer_influence_panel.update_stats(data_manager)
         self.layer_communities_panel.update_stats(data_manager)
-        self.information_flow_panel.update_stats(data_manager) 
+        self.information_flow_panel.update_stats(data_manager)
+        
+        # Update advanced analytics panels
+        self.layer_coupling_panel.update_stats(data_manager)
+        self.critical_structure_panel.update_stats(data_manager)
+#        self.hyperbolic_embedding_panel.update_stats(data_manager) 
