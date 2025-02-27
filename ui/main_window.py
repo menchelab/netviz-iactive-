@@ -80,7 +80,7 @@ class MultilayerNetworkViz(QWidget):
             self.load_disease(self.disease_combo.currentText())
 
         logger.info("Visualization setup complete")
-        self.setWindowTitle("Multilayer Network Visualization")
+        self.setWindowTitle("DataDiVR - Multiplex")
         self.resize(1200, 768) 
         self.show()
 

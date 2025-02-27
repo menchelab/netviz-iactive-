@@ -2,7 +2,7 @@ import logging
 import numpy as np
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTabWidget
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTabWidget, QComboBox, QLabel
 
 from charts.layer_connectivity import create_layer_connectivity_chart
 from charts.cluster_distribution import create_cluster_distribution_chart
@@ -37,6 +37,10 @@ class NetworkStatsPanel(QWidget):
         # Create tabs for each cluster visualization
         self.sankey_tab = QWidget()
         self.tab_widget.addTab(self.sankey_tab, "test")
+        
+        # Add new test2 tab for layer connectivity
+        self.layer_connectivity_tab = QWidget()
+        self.tab_widget.addTab(self.layer_connectivity_tab, "test2")
 
         #self.chord_tab = QWidget()
         #self.tab_widget.addTab(self.chord_tab, "Cluster Chord")
@@ -89,6 +93,32 @@ class NetworkStatsPanel(QWidget):
         # Initialize Sankey subplot
         self.cluster_sankey_ax = self.sankey_figure.add_subplot(111)
         
+        # Setup Layer Connectivity tab
+        layer_conn_layout = QVBoxLayout(self.layer_connectivity_tab)
+        layer_conn_layout.setContentsMargins(5, 5, 5, 5)
+        
+        # Add layout algorithm dropdown
+        layout_selector_container = QHBoxLayout()
+        layout_selector_container.addWidget(QLabel("Layout Algorithm:"))
+        self.layout_algorithm_dropdown = QComboBox()
+        self.layout_algorithm_dropdown.addItems([
+            "hierarchical_betweeness_centrality", "connection_centric", "weighted_spring", "spring", "circular", "kamada_kawai",
+            "planar", "spiral", "force_atlas2", "radial",
+             "weighted_spectral"
+        ])
+        self.layout_algorithm_dropdown.currentTextChanged.connect(self.on_layout_algorithm_changed)
+        layout_selector_container.addWidget(self.layout_algorithm_dropdown)
+        layout_selector_container.addStretch()
+        layer_conn_layout.addLayout(layout_selector_container)
+        
+        # Create figure for Layer Connectivity
+        self.layer_conn_figure = Figure(figsize=(8, 10), dpi=100)
+        self.layer_conn_canvas = FigureCanvas(self.layer_conn_figure)
+        layer_conn_layout.addWidget(self.layer_conn_canvas)
+        
+        # Initialize Layer Connectivity subplot
+        self.layer_conn_ax = self.layer_conn_figure.add_subplot(111)
+        
         # Setup Chord tab
         #chord_layout = QVBoxLayout(self.chord_tab)
         #chord_layout.setContentsMargins(5, 5, 5, 5)
@@ -133,6 +163,26 @@ class NetworkStatsPanel(QWidget):
         #self.heatmap_figure.tight_layout(pad=0.5)
         #self.alluvial_figure.tight_layout(pad=0.5)
 
+    def on_layout_algorithm_changed(self, algorithm):
+        """Handle layout algorithm change and redraw the graph"""
+        # Store the current data for redrawing
+        if hasattr(self, '_current_graph_data'):
+            self.layer_conn_figure.clear()
+            self.layer_conn_ax = self.layer_conn_figure.add_subplot(111)
+            
+            # Unpack stored data
+            layer_connections, layers, medium_font, large_font, visible_layer_indices, layer_colors = self._current_graph_data
+            
+            # Redraw with new layout algorithm
+            create_interlayer_graph(
+                self.layer_conn_ax, layer_connections, layers,
+                medium_font, large_font, visible_layer_indices, layer_colors,
+                layout_algorithm=algorithm
+            )
+            
+            self.layer_conn_figure.tight_layout(pad=1.0)
+            self.layer_conn_canvas.draw()
+
     def update_stats(self, node_positions, link_pairs, node_ids, layers, node_clusters, node_mask, edge_mask, visible_layer_indices, layer_colors=None):
         """Update statistics based on currently visible network elements"""
         logger = logging.getLogger(__name__)
@@ -141,6 +191,7 @@ class NetworkStatsPanel(QWidget):
         self.left_figure.clear()
         self.right_figure.clear()
         self.sankey_figure.clear()
+        self.layer_conn_figure.clear()
         #self.chord_figure.clear()
         #self.heatmap_figure.clear()
         #self.alluvial_figure.clear()
@@ -157,6 +208,7 @@ class NetworkStatsPanel(QWidget):
         
         # Re-create visualization subplots
         self.cluster_sankey_ax = self.sankey_figure.add_subplot(111)
+        self.layer_conn_ax = self.layer_conn_figure.add_subplot(111)
         #self.cluster_chord_ax = self.chord_figure.add_subplot(111)
         #self.cluster_heatmap_ax = self.heatmap_figure.add_subplot(111)
         #self.cluster_alluvial_ax = self.alluvial_figure.add_subplot(111)
@@ -220,6 +272,13 @@ class NetworkStatsPanel(QWidget):
             nodes_per_layer, layers, medium_font, large_font, visible_layer_indices
         )
         
+        # Interlayer graph in separate tab
+        create_interlayer_graph(
+            self.layer_conn_ax, layer_connections, layers,
+            medium_font, large_font, visible_layer_indices, layer_colors,
+            layout_algorithm=self.layout_algorithm_dropdown.currentText()
+        )
+        
         # Cluster Chord diagram
         # create_cluster_chord_diagram(
         #     self.cluster_chord_ax, visible_links, node_ids, node_clusters,
@@ -238,10 +297,14 @@ class NetworkStatsPanel(QWidget):
         #     nodes_per_layer, layers, medium_font, large_font, visible_layer_indices
         # )
 
+        # Store current data for layout algorithm changes
+        self._current_graph_data = (layer_connections, layers, medium_font, large_font, visible_layer_indices, layer_colors)
+
         # Apply tight layout to all figures
         self.left_figure.tight_layout(pad=0.5, h_pad=0.5, w_pad=0.5)
         self.right_figure.tight_layout(pad=0.5, h_pad=0.5, w_pad=0.5)
         self.sankey_figure.tight_layout(pad=1.0)
+        self.layer_conn_figure.tight_layout(pad=1.0)
         #self.chord_figure.tight_layout(pad=1.0)
         #self.heatmap_figure.tight_layout(pad=1.0)
         #self.alluvial_figure.tight_layout(pad=1.0)
@@ -250,6 +313,7 @@ class NetworkStatsPanel(QWidget):
         self.left_canvas.draw()
         self.right_canvas.draw()
         self.sankey_canvas.draw()
+        self.layer_conn_canvas.draw()
         #self.chord_canvas.draw()
         #self.heatmap_canvas.draw()
         #self.alluvial_canvas.draw() 
