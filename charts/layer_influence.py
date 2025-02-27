@@ -55,45 +55,86 @@ def create_layer_influence_chart(bar_ax, network_ax, layer_connections, layers, 
                 if filtered_connections[i, j] > 0:
                     G.add_edge(i, j, weight=filtered_connections[i, j])
         
+        # Check if the graph has any edges
+        if len(G.edges()) == 0:
+            # No edges in the graph, display a message
+            message = 'No connections between visible layers'
+            bar_ax.text(0.5, 0.5, message, ha='center', va='center', **medium_font)
+            bar_ax.axis('off')
+            
+            network_ax.text(0.5, 0.5, message, ha='center', va='center', **medium_font)
+            network_ax.axis('off')
+            return
+        
         # Calculate influence metrics based on selected metric
-        if metric == "PageRank":
-            influence_scores = nx.pagerank(G, weight='weight')
-            metric_name = "PageRank"
-        elif metric == "Eigenvector Centrality":
-            influence_scores = nx.eigenvector_centrality(G, weight='weight', max_iter=1000)
-            metric_name = "Eigenvector Centrality"
-        else:  # Combined Influence Index
-            # Calculate multiple centrality measures and combine them
-            pagerank = nx.pagerank(G, weight='weight')
-            eigenvector = nx.eigenvector_centrality(G, weight='weight', max_iter=1000)
-            betweenness = nx.betweenness_centrality(G, weight='weight', normalized=True)
-            closeness = nx.closeness_centrality(G, distance='weight')
-            
-            # Normalize each metric to [0,1] range
-            def normalize_dict(d):
-                min_val = min(d.values())
-                max_val = max(d.values())
-                range_val = max_val - min_val
-                if range_val == 0:
-                    return {k: 0.5 for k in d}
-                return {k: (v - min_val) / range_val for k, v in d.items()}
-            
-            pagerank_norm = normalize_dict(pagerank)
-            eigenvector_norm = normalize_dict(eigenvector)
-            betweenness_norm = normalize_dict(betweenness)
-            closeness_norm = normalize_dict(closeness)
-            
-            # Combine metrics with weights
-            influence_scores = {}
-            for node in G.nodes():
-                influence_scores[node] = (
-                    0.35 * pagerank_norm[node] +
-                    0.35 * eigenvector_norm[node] +
-                    0.15 * betweenness_norm[node] +
-                    0.15 * closeness_norm[node]
-                )
-            
-            metric_name = "Combined Influence Index"
+        try:
+            if metric == "PageRank":
+                influence_scores = nx.pagerank(G, weight='weight')
+                metric_name = "PageRank"
+            elif metric == "Eigenvector Centrality":
+                influence_scores = nx.eigenvector_centrality(G, weight='weight', max_iter=1000)
+                metric_name = "Eigenvector Centrality"
+            else:  # Combined Influence Index
+                # Calculate multiple centrality measures and combine them
+                try:
+                    pagerank = nx.pagerank(G, weight='weight')
+                except:
+                    # Fallback if PageRank fails
+                    print("Warning: PageRank calculation failed, using default values")
+                    pagerank = {i: 1.0/len(G) for i in G.nodes()}
+                
+                try:
+                    eigenvector = nx.eigenvector_centrality(G, weight='weight', max_iter=1000)
+                except:
+                    # Fallback if eigenvector centrality fails
+                    print("Warning: Eigenvector centrality calculation failed, using default values")
+                    eigenvector = {i: 1.0/len(G) for i in G.nodes()}
+                
+                try:
+                    betweenness = nx.betweenness_centrality(G, weight='weight', normalized=True)
+                except:
+                    # Fallback if betweenness centrality fails
+                    print("Warning: Betweenness centrality calculation failed, using default values")
+                    betweenness = {i: 1.0/len(G) for i in G.nodes()}
+                
+                try:
+                    closeness = nx.closeness_centrality(G, distance='weight')
+                except:
+                    # Fallback if closeness centrality fails
+                    print("Warning: Closeness centrality calculation failed, using default values")
+                    closeness = {i: 1.0/len(G) for i in G.nodes()}
+                
+                # Normalize each metric to [0,1] range
+                def normalize_dict(d):
+                    min_val = min(d.values())
+                    max_val = max(d.values())
+                    range_val = max_val - min_val
+                    if range_val == 0:
+                        return {k: 0.5 for k in d}
+                    return {k: (v - min_val) / range_val for k, v in d.items()}
+                
+                pagerank_norm = normalize_dict(pagerank)
+                eigenvector_norm = normalize_dict(eigenvector)
+                betweenness_norm = normalize_dict(betweenness)
+                closeness_norm = normalize_dict(closeness)
+                
+                # Combine metrics with weights
+                influence_scores = {}
+                for node in G.nodes():
+                    influence_scores[node] = (
+                        0.35 * pagerank_norm[node] +
+                        0.35 * eigenvector_norm[node] +
+                        0.15 * betweenness_norm[node] +
+                        0.15 * closeness_norm[node]
+                    )
+                
+                metric_name = "Combined Influence Index"
+        except Exception as e:
+            # Handle any errors in centrality calculations
+            print(f"Warning: Error calculating {metric}: {e}")
+            # Create default influence scores
+            influence_scores = {i: 1.0/len(filtered_layers) for i in range(len(filtered_layers))}
+            metric_name = f"{metric} (calculation failed)"
         
         # Sort layers by influence score for the bar chart
         sorted_items = sorted(influence_scores.items(), key=lambda x: x[1], reverse=True)

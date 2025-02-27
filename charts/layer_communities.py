@@ -64,6 +64,17 @@ def create_layer_communities_chart(heatmap_ax, network_ax, layer_connections, la
                 if filtered_connections[i, j] > 0:
                     G.add_edge(i, j, weight=filtered_connections[i, j])
         
+        # Check if the graph has any edges
+        if len(G.edges()) == 0:
+            # No edges in the graph, display a message
+            message = 'No connections between visible layers'
+            heatmap_ax.text(0.5, 0.5, message, ha='center', va='center', **medium_font)
+            heatmap_ax.axis('off')
+            
+            network_ax.text(0.5, 0.5, message, ha='center', va='center', **medium_font)
+            network_ax.axis('off')
+            return
+        
         # Detect communities based on selected algorithm
         if algorithm == "Louvain":
             # Use Louvain algorithm if available, otherwise use networkx's community detection
@@ -123,10 +134,19 @@ def create_layer_communities_chart(heatmap_ax, network_ax, layer_connections, la
             community_members[comm].append(filtered_layers[node])
         
         # Calculate community metrics
-        modularity = nx.algorithms.community.modularity(G, [
-            [node for node in G.nodes() if communities[node] == comm]
-            for comm in unique_communities
-        ])
+        try:
+            modularity = nx.algorithms.community.modularity(G, [
+                [node for node in G.nodes() if communities[node] == comm]
+                for comm in unique_communities
+            ])
+        except ZeroDivisionError:
+            # Handle the case where modularity calculation fails
+            modularity = 0.0
+            print("Warning: Modularity calculation failed (division by zero)")
+        except Exception as e:
+            # Handle any other exceptions
+            modularity = 0.0
+            print(f"Warning: Modularity calculation failed: {e}")
         
         # Calculate bridge nodes (nodes with connections to multiple communities)
         bridge_nodes = []
@@ -153,7 +173,7 @@ def create_layer_communities_chart(heatmap_ax, network_ax, layer_connections, la
         im = heatmap_ax.imshow(reordered_connections, cmap='viridis')
         
         # Add colorbar
-        cbar = plt.colorbar(im, ax=heatmap_ax, fraction=0.046, pad=0.04)
+        cbar = heatmap_ax.figure.colorbar(im, ax=heatmap_ax, fraction=0.046, pad=0.04)
         cbar.ax.tick_params(labelsize=8)
         cbar.set_label('Connection Strength', fontsize=8)
         
@@ -254,6 +274,11 @@ def detect_communities_networkx(G):
     dict
         A dictionary mapping node IDs to community IDs
     """
+    # Check if the graph has any edges
+    if len(G.edges()) == 0:
+        # No edges, assign all nodes to the same community
+        return {node: 0 for node in G.nodes()}
+    
     # Try to use Girvan-Newman algorithm (divisive hierarchical clustering)
     try:
         # This is a hierarchical method, so we need to choose a level
