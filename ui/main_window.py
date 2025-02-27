@@ -159,6 +159,17 @@ class MultilayerNetworkViz(QWidget):
             show_nodes = self.control_panel.show_nodes()
             show_labels = self.control_panel.show_labels()
             show_stats_bars = self.control_panel.show_stats_bars()
+            
+            # Track if orthographic setting has changed
+            orthographic = self.control_panel.use_orthographic_view()
+            if hasattr(self, '_previous_orthographic') and self._previous_orthographic == orthographic:
+                # Skip if orthographic setting hasn't changed
+                pass
+            else:
+                # Update projection mode only when the setting changes
+                self.network_canvas.set_projection_mode(orthographic)
+                self._previous_orthographic = orthographic
+                logger.info(f"Projection mode changed to {'orthographic' if orthographic else 'perspective'}")
 
             # Log the current settings for debugging
             logger.info(f"Visibility settings: show_nodes={show_nodes}, show_labels={show_labels}, show_stats_bars={show_stats_bars}")

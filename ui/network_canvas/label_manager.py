@@ -106,20 +106,20 @@ class LabelManager:
                     label_color = self.canvas.data_manager.layer_colors_rgba[layer_name].copy()
                     # Make labels with 0 interlayer connections more transparent
                     if edge_count == 0:
-                        label_color[3] = 0.6  # 60% opacity
+                        label_color[3] = 0.4
                 else:
                     label_color = np.array([1.0, 1.0, 0.0, 1.0])
                     if edge_count == 0:
-                        label_color[3] = 0.6
+                        label_color[3] = 0.8
                 
                 label_colors.append(label_color)
             
             # Update bar charts if needed
             if show_stats_bars and (active_node_count > 0 or edge_count > 0):
                 # Scale factors for bar widths
-                max_bar_width = 0.1
-                node_count_width = min(max_bar_width, 0.005 * active_node_count)
-                edge_count_width = min(max_bar_width, 0.005 * (edge_count//2))
+                max_bar_width = 0.3
+                node_count_width = min(max_bar_width, 0.002 * active_node_count)
+                edge_count_width = min(max_bar_width, 0.002 * (edge_count//2))
                 
                 # Node count bar (top bar)
                 if node_count_width > 0:

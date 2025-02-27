@@ -93,3 +93,15 @@ class NetworkCanvas:
             bottom_labels_only=bottom_labels_only,
             show_stats_bars=show_stats_bars
         ) 
+
+    def set_projection_mode(self, orthographic=True):
+        """Switch between orthographic and perspective projection"""
+        if orthographic:
+            # Use orthographic projection
+            self.view.camera.fov = 0
+        else:
+            # Use perspective projection
+            self.view.camera.fov = 45
+        
+        # Update the view
+        self.canvas.update() 

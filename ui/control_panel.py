@@ -85,6 +85,11 @@ class ControlPanel(QWidget):
         display_layout.setContentsMargins(5, 5, 5, 5)
         display_layout.setSpacing(2)
         
+        # Add orthographic view checkbox
+        self.orthographic_view_checkbox = QCheckBox("Orthographic View")
+        self.orthographic_view_checkbox.setChecked(False)  # On by default (orthographic)
+        display_layout.addWidget(self.orthographic_view_checkbox)
+        
         # Add intralayer edges checkbox
         self.intralayer_edges_checkbox = QCheckBox("Intralayer Edges")
         self.intralayer_edges_checkbox.setChecked(True)  # On by default
@@ -260,6 +265,9 @@ class ControlPanel(QWidget):
             self.origin_layout.addWidget(cb)
             self.origin_checkboxes[origin] = cb
         
+        # Connect orthographic view checkbox
+        self.orthographic_view_checkbox.stateChanged.connect(visibility_callback)
+        
         # Connect intralayer edges checkbox
         self.intralayer_edges_checkbox.stateChanged.connect(visibility_callback)
         
@@ -307,3 +315,7 @@ class ControlPanel(QWidget):
     def show_stats_bars(self):
         """Check if node stats bars should be shown"""
         return self.show_stats_bars_checkbox.isChecked()
+    
+    def use_orthographic_view(self):
+        """Check if orthographic view should be used"""
+        return self.orthographic_view_checkbox.isChecked()
