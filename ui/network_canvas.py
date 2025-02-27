@@ -14,7 +14,7 @@ class NetworkCanvas:
         self.view = self.canvas.central_widget.add_view()
         self.view.camera = 'turntable'
         self.view.camera.fov = 45
-        self.view.camera.distance = 8
+        self.view.camera.distance = 3
 
         self.scatter = Markers()
         self.view.add(self.scatter)
