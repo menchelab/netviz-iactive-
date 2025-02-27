@@ -136,18 +136,6 @@ class LayerCouplingPanel(BaseStatsPanel):
                 self.clear_visualization("Not enough visible layers to analyze (minimum 2 required)")
                 return
             
-            # Get the filtered layer connections that respect all visibility settings
-            # (layers, clusters, and origins)
-            try:
-                filtered_connections = data_manager.get_layer_connections()
-                if filtered_connections is None or filtered_connections.size == 0:
-                    self.clear_visualization("No connection data available")
-                    return
-            except Exception as e:
-                print(f"Error getting layer connections: {e}")
-                self.clear_visualization("Error retrieving connection data")
-                return
-            
             # Filter layers based on visibility
             filtered_layers = []
             for i in visible_layer_indices:
@@ -160,25 +148,29 @@ class LayerCouplingPanel(BaseStatsPanel):
                 self.clear_visualization("Not enough visible layers to analyze (minimum 2 required)")
                 return
             
-            # Create a properly sized connection matrix for the filtered layers
-            # This is the key fix - we need to extract only the connections between visible layers
+            # Get the filtered layer connections that respect all visibility settings
+            # (layers, clusters, and origins)
             try:
-                # Create a new connection matrix with the correct dimensions
-                n_filtered = len(filtered_layers)
-                proper_connections = np.zeros((n_filtered, n_filtered))
-                
-                # Map from visible_layer_indices to positions in the filtered array
-                idx_map = {original_idx: filtered_idx for filtered_idx, original_idx in enumerate(visible_layer_indices)}
-                
-                # Fill the proper connection matrix with values from the filtered_connections
-                for i, orig_i in enumerate(visible_layer_indices):
-                    for j, orig_j in enumerate(visible_layer_indices):
-                        if orig_i < filtered_connections.shape[0] and orig_j < filtered_connections.shape[1]:
-                            proper_connections[i, j] = filtered_connections[orig_i, orig_j]
-                
-                # Calculate structural coupling index using the properly sized matrix
+                # Use the new filter_to_visible parameter to get properly sized matrix
+                filtered_connections = data_manager.get_layer_connections(filter_to_visible=True)
+                if filtered_connections is None or filtered_connections.size == 0:
+                    self.clear_visualization("No connection data available")
+                    return
+                    
+                # Verify dimensions match
+                if filtered_connections.shape[0] != len(filtered_layers):
+                    print(f"Warning: Connection matrix dimensions ({filtered_connections.shape}) don't match filtered layers ({len(filtered_layers)})")
+                    self.clear_visualization("Dimension mismatch in connection data")
+                    return
+            except Exception as e:
+                print(f"Error getting layer connections: {e}")
+                self.clear_visualization("Error retrieving connection data")
+                return
+            
+            # Calculate structural coupling index
+            try:
                 coupling_matrix = self.calculate_structural_coupling(
-                    proper_connections, 
+                    filtered_connections, 
                     metric=self.coupling_metric_dropdown.currentText()
                 )
                 
