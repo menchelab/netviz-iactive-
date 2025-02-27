@@ -2,7 +2,7 @@ import logging
 import numpy as np
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTabWidget, QComboBox, QLabel
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QTabWidget, QComboBox, QLabel, QCheckBox
 
 from charts.layer_connectivity import create_layer_connectivity_chart
 from charts.cluster_distribution import create_cluster_distribution_chart
@@ -84,6 +84,15 @@ class NetworkStatsPanel(QWidget):
         # Setup Sankey tab
         sankey_layout = QVBoxLayout(self.sankey_tab)
         sankey_layout.setContentsMargins(5, 5, 5, 5)
+
+        # Add checkbox to enable/disable Sankey diagram
+        sankey_controls = QHBoxLayout()
+        self.enable_sankey_checkbox = QCheckBox("Enable Sankey Diagram")
+        self.enable_sankey_checkbox.setChecked(False)  # Disabled by default
+        self.enable_sankey_checkbox.stateChanged.connect(self.on_sankey_state_changed)
+        sankey_controls.addWidget(self.enable_sankey_checkbox)
+        sankey_controls.addStretch()
+        sankey_layout.addLayout(sankey_controls)
 
         # Create figure for Sankey diagram
         self.sankey_figure = Figure(figsize=(8, 10), dpi=100)
@@ -183,6 +192,31 @@ class NetworkStatsPanel(QWidget):
             self.layer_conn_figure.tight_layout(pad=1.0)
             self.layer_conn_canvas.draw()
 
+    def on_sankey_state_changed(self, state):
+        """Handle Sankey diagram enable/disable state change"""
+        if hasattr(self, '_current_sankey_data') and state:
+            self.sankey_figure.clear()
+            self.cluster_sankey_ax = self.sankey_figure.add_subplot(111)
+            
+            # Unpack stored data
+            visible_links, node_ids, node_clusters, nodes_per_layer, layers, medium_font, large_font, visible_layer_indices = self._current_sankey_data
+            
+            # Redraw Sankey diagram
+            create_cluster_sankey_chart(
+                self.cluster_sankey_ax, visible_links, node_ids, node_clusters, 
+                nodes_per_layer, layers, medium_font, large_font, visible_layer_indices
+            )
+            
+            self.sankey_figure.tight_layout(pad=1.0)
+            self.sankey_canvas.draw()
+        elif not state:
+            # Clear the Sankey diagram when disabled
+            self.sankey_figure.clear()
+            self.cluster_sankey_ax = self.sankey_figure.add_subplot(111)
+            self.cluster_sankey_ax.text(0.5, 0.5, "Sankey diagram disabled", 
+                                       ha='center', va='center', fontsize=12)
+            self.sankey_canvas.draw()
+
     def update_stats(self, data_manager):
         """Update statistics based on currently visible network elements"""
         logger = logging.getLogger(__name__)
@@ -251,7 +285,8 @@ class NetworkStatsPanel(QWidget):
         # 2. Cluster distribution
         visible_node_ids = [node_ids[i] for i in visible_nodes]
         create_cluster_distribution_chart(
-            self.cluster_distribution_ax, visible_node_ids, node_clusters, small_font, medium_font
+            self.cluster_distribution_ax, visible_node_ids, node_clusters, 
+            small_font, medium_font, data_manager.cluster_colors
         )
 
         # 3. Layer activity chart
@@ -280,11 +315,15 @@ class NetworkStatsPanel(QWidget):
         
         # --- CLUSTER VISUALIZATION TABS ---
         
-        # Cluster Sankey chart
-        create_cluster_sankey_chart(
-            self.cluster_sankey_ax, visible_links, node_ids, node_clusters, 
-            nodes_per_layer, layers, medium_font, large_font, visible_layer_indices
-        )
+        # Cluster Sankey chart - only create if enabled
+        if self.enable_sankey_checkbox.isChecked():
+            create_cluster_sankey_chart(
+                self.cluster_sankey_ax, visible_links, node_ids, node_clusters, 
+                nodes_per_layer, layers, medium_font, large_font, visible_layer_indices
+            )
+        else:
+            self.cluster_sankey_ax.text(0.5, 0.5, "Sankey diagram disabled", 
+                                       ha='center', va='center', fontsize=12)
         
         # Interlayer graph in separate tab
         create_interlayer_graph(
@@ -313,6 +352,10 @@ class NetworkStatsPanel(QWidget):
 
         # Store current data for layout algorithm changes
         self._current_graph_data = (layer_connections, layers, medium_font, large_font, visible_layer_indices, layer_colors)
+
+        # Store current data for Sankey diagram
+        self._current_sankey_data = (visible_links, node_ids, node_clusters, 
+                                    nodes_per_layer, layers, medium_font, large_font, visible_layer_indices)
 
         # Apply tight layout to all figures
         self.left_figure.tight_layout(pad=0.5, h_pad=0.5, w_pad=0.5)
