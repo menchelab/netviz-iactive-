@@ -174,7 +174,6 @@ def create_interlayer_graph(ax, layer_connections, layers, small_font, medium_fo
                 
                 pos[node] = np.array([x, y])
 
-
         elif layout_algorithm == 'connection_centric':
             # Find the most connected node (highest weighted degree)
             weighted_degrees = {node: sum(data['weight'] for _, _, data in G.edges(node, data=True)) 
@@ -282,6 +281,33 @@ def create_interlayer_graph(ax, layer_connections, layers, small_font, medium_fo
                 x = x_offset if i % 2 == 0 else -x_offset
                 pos[node] = np.array([x, y])
             
+        elif layout_algorithm == 'pagerank_centric':
+            # Calculate PageRank scores
+            pagerank_scores = nx.pagerank(G, weight='weight')
+            pos = {}
+            
+            # Sort nodes by PageRank score
+            sorted_nodes = sorted(pagerank_scores.items(), key=lambda x: x[1], reverse=True)
+            
+            # Create positions with highest PageRank nodes at the top
+            levels = min(20, len(G.nodes()))
+            nodes_per_level = max(1, len(G.nodes()) // levels)
+            
+            for i, (node, _) in enumerate(sorted_nodes):
+                level = min(i // nodes_per_level, levels - 1)
+                position_in_level = i % nodes_per_level
+                total_in_level = min(nodes_per_level, len(G.nodes()) - level * nodes_per_level)
+                
+                # Calculate x position (spread across level)
+                if total_in_level > 1:
+                    x = position_in_level / (total_in_level - 1) * 2 - 1
+                else:
+                    x = 0
+                
+                # Calculate y position (level)
+                y = 1 - 2 * level / (levels - 1) if levels > 1 else 0
+                
+                pos[node] = np.array([x, y])
         else:
             # Default to spring layout if invalid algorithm specified
             pos = nx.spring_layout(G, seed=42, weight='weight', k=0.3)
