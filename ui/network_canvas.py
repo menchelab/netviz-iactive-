@@ -1,6 +1,6 @@
 import numpy as np
 from vispy import scene
-from vispy.scene.visuals import Markers, Line, Text
+from vispy.scene.visuals import Markers, Line, Text, Rectangle
 import logging
 from utils.color_utils import hex_to_rgba
 
@@ -32,6 +32,15 @@ class NetworkCanvas:
         self.node_labels = Text(pos=np.array([[0, 0, 0]]), text=[''], color='white', font_size=6)
         self.node_labels.visible = False  # Start with labels invisible
         self.view.add(self.node_labels)
+        
+        # Create bar charts using Line visuals instead of Rectangle
+        self.node_count_bars = Line(pos=np.zeros((0, 3)), color=np.zeros((0, 4)),
+                                   connect='segments', width=3)  # Thicker width for visibility
+        self.view.add(self.node_count_bars)
+        
+        self.edge_count_bars = Line(pos=np.zeros((0, 3)), color=np.zeros((0, 4)),
+                                   connect='segments', width=3)  # Thicker width for visibility
+        self.view.add(self.edge_count_bars)
 
         self.node_positions = None
         self.link_pairs = None
@@ -160,6 +169,13 @@ class NetworkCanvas:
                 label_texts = []
                 label_colors = []
                 
+                # Lists for bar chart data
+                bar_positions = []
+                node_count_widths = []
+                edge_count_widths = []
+                node_count_colors = []
+                edge_count_colors = []
+                
                 # Determine the top layer index (the lowest layer index that is visible)
                 top_layer_idx = min(self.visible_layers) if self.visible_layers else -1
                 
@@ -217,6 +233,26 @@ class NetworkCanvas:
                             
                             # Add both counts to the label
                             label_text = f"{label_text} [{active_node_count}/{edge_count//2}]"
+                            
+                            # Store data for bar charts
+                            bar_pos = self.node_positions[idx].copy()
+                            # Position bars below the label
+                            bar_pos[1] -= 0.05
+                            bar_positions.append(bar_pos)
+                            
+                            # Scale factors for bar widths
+                            max_bar_width = 0.1
+                            node_count_width = min(max_bar_width, 0.005 * active_node_count)
+                            edge_count_width = min(max_bar_width, 0.005 * (edge_count//2))
+                            
+                            node_count_widths.append(node_count_width)
+                            edge_count_widths.append(edge_count_width)
+                            
+                            node_color = np.array([1.0, 0.0, 1.0, 1]) 
+                            edge_color = np.array([0.0, 1.0, 0.0, 1]) 
+                            
+                            node_count_colors.append(node_color)
+                            edge_count_colors.append(edge_color)
                         else:
                             edge_count = 0
                             
@@ -232,11 +268,32 @@ class NetworkCanvas:
                             # Add only active node count if there are no interlayer edges
                             if active_node_count > 0:
                                 label_text = f"{label_text} [{active_node_count}/0]"
+                            
+                            # Store data for bar charts if there are active nodes
+                            if active_node_count > 0:
+                                bar_pos = self.node_positions[idx].copy()
+                                # Position bars below the label
+                                bar_pos[1] -= 0.05
+                                bar_positions.append(bar_pos)
+                                
+                                # Scale factor for bar width
+                                max_bar_width = 2
+                                node_count_width = min(max_bar_width, 0.02 * active_node_count)
+                                
+                                node_count_widths.append(node_count_width)
+                                edge_count_widths.append(0)  # No interlayer edges
+                                
+                                # Use light blue for node count bars and light green for edge count bars
+                                node_color = np.array([0.4, 0.7, 1.0, 0.8])  # Light blue with 80% opacity
+                                edge_color = np.array([0.4, 0.9, 0.4, 0.3])  # Light green with 30% opacity for zero edges
+                                
+                                node_count_colors.append(node_color)
+                                edge_count_colors.append(edge_color)
                         
                         # Add a small offset to position labels better
                         pos = self.node_positions[idx].copy()
                         # Offset in y direction
-                        pos[1] += 0.05
+                        pos[1] += 0.01
                         label_positions.append(pos)
                         label_texts.append(label_text)
                         
@@ -252,8 +309,7 @@ class NetworkCanvas:
                                 label_color[3] = 0.6  # 60% opacity for nodes with no interlayer connections
                             logger.debug(f"Using color {label_color} for node {node_id} in layer {layer_name}")
                         else:
-                            # Default to red if no color is found (for debugging)
-                            label_color = np.array([1.0, 0.0, 0.0, 1.0])
+                            label_color = np.array([1.0, 1.0, 0.0, 1.0])
                             # Make labels with 0 interlayer connections more transparent
                             if edge_count == 0:
                                 label_color[3] = 0.6
@@ -273,12 +329,92 @@ class NetworkCanvas:
                 else:
                     # Use a dummy position but hide the labels
                     self.node_labels.visible = False
+                
+                # Update the bar charts
+                if bar_positions:
+                    # For Line visuals, we need start and end points for each bar
+                    node_count_line_points = []
+                    edge_count_line_points = []
+                    node_count_line_colors = []
+                    edge_count_line_colors = []
+                    
+                    for i, pos in enumerate(bar_positions):
+                        # Node count bar (top bar)
+                        if node_count_widths[i] > 0:
+                            # Start point of the bar - exactly at node position
+                            start_point = self.node_positions[visible_indices[i]].copy()
+                            # End point of the bar (extending to the right)
+                            end_point = start_point.copy()
+                            end_point[0] += node_count_widths[i]
+                            
+                            # Add points to the list
+                            node_count_line_points.append(start_point)
+                            node_count_line_points.append(end_point)
+                            
+                            # Add colors (same color for both points)
+                            node_count_line_colors.append(node_count_colors[i])
+                            node_count_line_colors.append(node_count_colors[i])
+                        
+                        # Edge count bar (bottom bar)
+                        if edge_count_widths[i] > 0:
+                            # Start point of the bar - exactly at node position but slightly lower
+                            start_point = self.node_positions[visible_indices[i]].copy()
+                            start_point[1] -= 0.005  # Offset second barchart
+                            
+                            # End point of the bar (extending to the right)
+                            end_point = start_point.copy()
+                            end_point[0] += edge_count_widths[i]
+                            
+                            # Add points to the list
+                            edge_count_line_points.append(start_point)
+                            edge_count_line_points.append(end_point)
+                            
+                            # Add colors (same color for both points)
+                            edge_count_line_colors.append(edge_count_colors[i])
+                            edge_count_line_colors.append(edge_count_colors[i])
+                    
+                    # Update the line visuals
+                    if node_count_line_points:
+                        self.node_count_bars.set_data(
+                            pos=np.array(node_count_line_points),
+                            color=np.array(node_count_line_colors),
+                            connect='segments',
+                            width=3
+                        )
+                        self.node_count_bars.visible = True
+                    else:
+                        self.node_count_bars.visible = False
+                    
+                    if edge_count_line_points:
+                        self.edge_count_bars.set_data(
+                            pos=np.array(edge_count_line_points),
+                            color=np.array(edge_count_line_colors),
+                            connect='segments',
+                            width=3  # Thicker width for better visibility
+                        )
+                        self.edge_count_bars.visible = True
+                    else:
+                        self.edge_count_bars.visible = False
+                    
+                    # Bring bars to front but behind labels
+                    self.node_count_bars.order = 0.8
+                    self.edge_count_bars.order = 0.9
+                else:
+                    # Hide the bars
+                    self.node_count_bars.visible = False
+                    self.edge_count_bars.visible = False
             else:
                 # Use a dummy position but hide the labels
                 self.node_labels.visible = False
+                # Hide the bars
+                self.node_count_bars.visible = False
+                self.edge_count_bars.visible = False
         else:
             # Hide the labels without changing position
             self.node_labels.visible = False
+            # Hide the bars
+            self.node_count_bars.visible = False
+            self.edge_count_bars.visible = False
 
         # Count edges by type for debugging
         intralayer_count = 0

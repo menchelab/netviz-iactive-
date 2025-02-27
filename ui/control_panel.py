@@ -105,6 +105,7 @@ class ControlPanel(QWidget):
         self.bottom_labels_only_checkbox = QCheckBox("Bottom Layer Labels Only") # actually is top layer but well
         self.bottom_labels_only_checkbox.setChecked(True) 
         self.bottom_labels_only_checkbox.setEnabled(False)
+        self.bottom_labels_only_checkbox.setVisible(False) 
         display_layout.addWidget(self.bottom_labels_only_checkbox)
         
         self.display_group.setLayout(display_layout)
