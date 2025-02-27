@@ -91,7 +91,7 @@ class NetworkCanvas:
     def set_layer_colors(self, layer_colors):
         """Set the layer colors mapping"""
         logger = logging.getLogger(__name__)
-        logger.info(f"Setting layer colors: {layer_colors}")
+        logger.debug(f"Setting layer colors: {layer_colors}")
         
         self.layer_colors = layer_colors
         
@@ -107,45 +107,50 @@ class NetworkCanvas:
         logger = logging.getLogger(__name__)
         logger.info(f"Updating visibility with show_intralayer={show_intralayer}, show_nodes={show_nodes}, show_labels={show_labels}, bottom_labels_only={bottom_labels_only}")
         
-        # Debug layer colors
-        if self.layer_colors_rgba:
-            logger.info(f"Layer colors RGBA: {self.layer_colors_rgba}")
-        else:
-            logger.warning("No layer colors RGBA available")
+        # Store the current masks for later use
+        self.current_node_mask = node_mask
+        self.current_edge_mask = edge_mask
         
-        if self.layer_names:
-            logger.info(f"Layer names: {self.layer_names}")
-        else:
-            logger.warning("No layer names available")
-
-        # Store the node mask for later use
-        self.node_mask = node_mask
-
-        # Handle case when no nodes are visible
-        if not np.any(node_mask):
-            self.scatter.set_data(np.zeros((1, 3)), edge_color='black',
-                                face_color=np.array([[0, 0, 0, 0]]), size=0)
-            self.intralayer_lines.set_data(pos=np.zeros((0, 3)),
-                                        color=np.zeros((0, 4)))
-            self.interlayer_lines.set_data(pos=np.zeros((0, 3)),
-                                        color=np.zeros((0, 4)))
-            # Don't modify the position, just hide the labels
-            self.node_labels.visible = False
-            return
-
-        # Update scatter plot
-        visible_nodes = self.node_positions[node_mask]
-        visible_colors = self.node_colors_rgba[node_mask]
-        visible_sizes = self.node_sizes[node_mask]  # Use the node sizes array
+        # Calculate interlayer edge counts for each node
+        interlayer_edge_counts = {}
+        if self.link_pairs is not None and self.node_ids is not None:
+            for i, (start_idx, end_idx) in enumerate(self.link_pairs):
+                # Skip edges that aren't visible
+                if not edge_mask[i]:
+                    continue
+                    
+                # Skip intralayer edges
+                start_layer = start_idx // self.nodes_per_layer
+                end_layer = end_idx // self.nodes_per_layer
+                if start_layer == end_layer:
+                    continue
+                
+                # Count this edge for both source and destination nodes
+                src_id = self.node_ids[start_idx].split('_')[0]
+                dst_id = self.node_ids[end_idx].split('_')[0]
+                
+                interlayer_edge_counts[src_id] = interlayer_edge_counts.get(src_id, 0) + 1
+                interlayer_edge_counts[dst_id] = interlayer_edge_counts.get(dst_id, 0) + 1
         
-        if show_nodes:
-            self.scatter.set_data(visible_nodes, edge_color='black', 
-                                face_color=visible_colors, size=visible_sizes)
-        else:
-            # Make nodes invisible but keep their positions
-            self.scatter.set_data(visible_nodes, edge_color='black',
-                                face_color=np.zeros_like(visible_colors), size=0)
-
+        # Update node visibility
+        if self.node_positions is not None:
+            # Update the scatter plot with visible nodes
+            visible_positions = self.node_positions[node_mask]
+            visible_colors = self.node_colors_rgba[node_mask]
+            visible_sizes = self.node_sizes[node_mask]
+            
+            if len(visible_positions) > 0 and show_nodes:
+                self.scatter.set_data(
+                    pos=visible_positions,
+                    size=visible_sizes,
+                    edge_width=0,
+                    face_color=visible_colors
+                )
+                self.scatter.visible = True
+            else:
+                # Hide nodes
+                self.scatter.visible = False
+                
         # Update node labels
         if show_labels and self.node_ids is not None and self.visible_layers is not None and self.layer_names is not None:
             # Show labels for all visible layers
@@ -165,16 +170,16 @@ class NetworkCanvas:
                 labeled_base_nodes = set()
                 
                 for idx in visible_indices:
-                    layer_idx = idx // self.nodes_per_layer
+                    node_layer_idx = idx // self.nodes_per_layer
                     # Check if this node's layer is visible
-                    if layer_idx in self.visible_layers:
+                    if node_layer_idx in self.visible_layers:
                         node_id = self.node_ids[idx]
                         base_node = node_id.split('_')[0] if '_' in node_id else node_id
                         
                         # For bottom_labels_only mode (now actually top layer only)
                         if bottom_labels_only:
                             # If this is not the top layer
-                            if layer_idx != top_layer_idx:
+                            if node_layer_idx != top_layer_idx:
                                 # If we've already labeled this base node, skip it
                                 if base_node in labeled_base_nodes:
                                     continue
@@ -197,6 +202,37 @@ class NetworkCanvas:
                         else:
                             label_text = node_id
                         
+                        # Add interlayer edge count if available
+                        if base_node in interlayer_edge_counts:
+                            edge_count = interlayer_edge_counts[base_node]
+                            
+                            # Count active nodes with this base ID across all layers
+                            active_node_count = 0
+                            for current_layer_idx in self.visible_layers:
+                                node_idx_in_layer = current_layer_idx * self.nodes_per_layer + (idx % self.nodes_per_layer)
+                                if (node_idx_in_layer < len(self.node_positions) and 
+                                    node_mask[node_idx_in_layer] and 
+                                    self.active_nodes[node_idx_in_layer]):
+                                    active_node_count += 1
+                            
+                            # Add both counts to the label
+                            label_text = f"{label_text} [{active_node_count}/{edge_count//2}]"
+                        else:
+                            edge_count = 0
+                            
+                            # Count active nodes with this base ID across all layers
+                            active_node_count = 0
+                            for current_layer_idx in self.visible_layers:
+                                node_idx_in_layer = current_layer_idx * self.nodes_per_layer + (idx % self.nodes_per_layer)
+                                if (node_idx_in_layer < len(self.node_positions) and 
+                                    node_mask[node_idx_in_layer] and 
+                                    self.active_nodes[node_idx_in_layer]):
+                                    active_node_count += 1
+                            
+                            # Add only active node count if there are no interlayer edges
+                            if active_node_count > 0:
+                                label_text = f"{label_text} [{active_node_count}/0]"
+                        
                         # Add a small offset to position labels better
                         pos = self.node_positions[idx].copy()
                         # Offset in y direction
@@ -205,16 +241,22 @@ class NetworkCanvas:
                         label_texts.append(label_text)
                         
                         # Get the layer name for this node
-                        layer_name = self.layer_names[layer_idx]
-                        logger.debug(f"Node {node_id} is in layer {layer_name} (index {layer_idx})")
+                        layer_name = self.layer_names[node_layer_idx]
+                        logger.debug(f"Node {node_id} is in layer {layer_name} (index {node_layer_idx})")
                         
                         # Use the layer color from our mapping
                         if self.layer_colors_rgba and layer_name in self.layer_colors_rgba:
                             label_color = self.layer_colors_rgba[layer_name].copy()
+                            # Make labels with 0 interlayer connections more transparent
+                            if edge_count == 0:
+                                label_color[3] = 0.6  # 60% opacity for nodes with no interlayer connections
                             logger.debug(f"Using color {label_color} for node {node_id} in layer {layer_name}")
                         else:
                             # Default to red if no color is found (for debugging)
                             label_color = np.array([1.0, 0.0, 0.0, 1.0])
+                            # Make labels with 0 interlayer connections more transparent
+                            if edge_count == 0:
+                                label_color[3] = 0.6
                             logger.warning(f"No color found for layer {layer_name}, using red")
                         
                         label_colors.append(label_color)

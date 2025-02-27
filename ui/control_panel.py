@@ -102,9 +102,9 @@ class ControlPanel(QWidget):
         display_layout.addWidget(self.show_labels_checkbox)
         
         # Add top layer labels only checkbox
-        self.bottom_labels_only_checkbox = QCheckBox("Top Layer Labels Only")
-        self.bottom_labels_only_checkbox.setChecked(False)  # Off by default
-        self.bottom_labels_only_checkbox.setEnabled(False)  # Initially disabled
+        self.bottom_labels_only_checkbox = QCheckBox("Bottom Layer Labels Only") # actually is top layer but well
+        self.bottom_labels_only_checkbox.setChecked(True) 
+        self.bottom_labels_only_checkbox.setEnabled(False)
         display_layout.addWidget(self.bottom_labels_only_checkbox)
         
         self.display_group.setLayout(display_layout)
@@ -195,7 +195,6 @@ class ControlPanel(QWidget):
                     # Set text color using stylesheet
                     color_hex = qcolor.name()
                     cb.setStyleSheet(f"QCheckBox {{ color: {color_hex}; }}")
-                    logger.info(f"Set layer {layer} color to {color_hex}")
             
             # Add to layout
             self.layer_layout.addWidget(cb)

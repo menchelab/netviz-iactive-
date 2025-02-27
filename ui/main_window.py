@@ -143,13 +143,13 @@ class MultilayerNetworkViz(QWidget):
         
         # Set layer names and nodes per layer in the network canvas
         if layers:
-            logger.info(f"Setting layer names: {layers}")
+            logger.debug(f"Setting layer names: {layers}")
             self.network_canvas.layer_names = layers
             self.network_canvas.nodes_per_layer = len(node_positions) // len(layers)
         
         # Set layer colors in the network canvas
         if layer_colors:
-            logger.info(f"Setting layer colors in network canvas: {layer_colors}")
+            logger.debug(f"Setting layer colors in network canvas: {layer_colors}")
             self.network_canvas.set_layer_colors(layer_colors)
 
         # Update the controls with layer colors
