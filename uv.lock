@@ -125,6 +125,16 @@ wheels = [
 ]
 
 [[package]]
+name = "deepgraph"
+version = "0.2.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "pandas" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/1d/8b/138e11a311d6ef5c211ab64fc128d27b5cce6af14fcbc62d1499ee6c274b/DeepGraph-0.2.4.tar.gz", hash = "sha256:6f6305e4811e713ec02a360a489f1f856be63b4aa4ed0e73ff3729db8b22158b", size = 183928 }
+
+[[package]]
 name = "executing"
 version = "2.2.0"
 source = { registry = "https://pypi.org/simple" }
@@ -183,6 +193,12 @@ sdist = { url = "https://files.pythonhosted.org/packages/ac/81/af16607fa045724e5
 wheels = [
     { url = "https://files.pythonhosted.org/packages/96/36/5bddefea3d7adf22a64f9aa9701492f8a9fe6948223f5cf2602c22ec9be7/hsluv-5.0.4-py2.py3-none-any.whl", hash = "sha256:0138bd10038e2ee1b13eecae9a7d49d4ec8c320b1d7eb4f860832c792e3e4567", size = 5252 },
 ]
+
+[[package]]
+name = "importlib"
+version = "1.0.4"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/31/77/3781f65cafe55480b56914def99022a5d2965a4bb269655c89ef2f1de3cd/importlib-1.0.4.zip", hash = "sha256:b6ee7066fea66e35f8d0acee24d98006de1a0a8a94a8ce6efe73a9a23c8d9826", size = 7074 }
 
 [[package]]
 name = "ipykernel"
@@ -372,7 +388,9 @@ name = "netviz-interactive"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "deepgraph" },
     { name = "fa2-modified" },
+    { name = "importlib" },
     { name = "ipykernel" },
     { name = "matplotlib" },
     { name = "networkx" },
@@ -389,7 +407,9 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "deepgraph", specifier = ">=0.2.4" },
     { name = "fa2-modified", specifier = ">=0.3.10" },
+    { name = "importlib", specifier = ">=1.0.4" },
     { name = "ipykernel", specifier = ">=6.29.5" },
     { name = "matplotlib", specifier = ">=3.10.0" },
     { name = "networkx", specifier = ">=3.4.2" },

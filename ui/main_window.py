@@ -22,7 +22,7 @@ class MultilayerNetworkViz(QWidget):
         self.data_dir = data_dir
         
         # Create data manager
-        self.data_manager = NetworkDataManager()
+        self.data_manager = NetworkDataManager(data_dir)
 
         # Create layout
         main_layout = QVBoxLayout()

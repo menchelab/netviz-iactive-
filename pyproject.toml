@@ -5,7 +5,9 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "deepgraph>=0.2.4",
     "fa2-modified>=0.3.10",
+    "importlib>=1.0.4",
     "ipykernel>=6.29.5",
     "matplotlib>=3.10.0",
     "networkx>=3.4.2",

@@ -8,9 +8,12 @@ class NetworkDataManager:
     Central manager for network data and calculations.
     Stores and caches frequently used calculations to improve performance.
     """
-    def __init__(self):
+    def __init__(self, data_dir=None):
         logger = logging.getLogger(__name__)
         logger.info("Initializing NetworkDataManager")
+        
+        # Store data directory
+        self._data_dir = data_dir
         
         # Core data
         self.node_positions = None
@@ -46,6 +49,10 @@ class NetworkDataManager:
         self.interlayer_edge_counts = {}
         self.layer_connections = None
         self.networkx_graph = None
+        
+    def set_data_dir(self, data_dir):
+        """Set the data directory"""
+        self._data_dir = data_dir
         
     def load_data(self, node_positions, link_pairs, link_colors, node_ids, layers, 
                  node_clusters, unique_clusters, node_colors=None, node_origins=None, 
