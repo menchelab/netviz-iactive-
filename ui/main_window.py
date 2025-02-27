@@ -113,7 +113,8 @@ class MultilayerNetworkViz(QWidget):
     def load_data(self, node_positions, link_pairs, link_colors, node_ids=None, layers=None, node_clusters=None, unique_clusters=None, 
                  node_colors=None, node_origins=None, unique_origins=None, layer_colors=None):
         """Load network data into the visualization"""
-
+        logger = logging.getLogger(__name__)
+        
         self.node_positions = node_positions
         self.link_pairs = link_pairs
         self.link_colors = link_colors
@@ -124,6 +125,8 @@ class MultilayerNetworkViz(QWidget):
         self.node_origins = node_origins or {}
         self.unique_origins = unique_origins or []
         self.layer_colors = layer_colors or {}
+        
+        logger.info(f"Loading data with layer colors: {self.layer_colors}")
 
         # If node_colors is not provided, generate them based on layer colors
         if node_colors is None and layer_colors:
@@ -135,7 +138,19 @@ class MultilayerNetworkViz(QWidget):
                 layer_name = layers[layer_idx]
                 node_colors.append(layer_colors.get(layer_name, '#CCCCCC'))
 
+        # Load data into the network canvas
         self.network_canvas.load_data(node_positions, link_pairs, link_colors, node_colors, node_ids)
+        
+        # Set layer names and nodes per layer in the network canvas
+        if layers:
+            logger.info(f"Setting layer names: {layers}")
+            self.network_canvas.layer_names = layers
+            self.network_canvas.nodes_per_layer = len(node_positions) // len(layers)
+        
+        # Set layer colors in the network canvas
+        if layer_colors:
+            logger.info(f"Setting layer colors in network canvas: {layer_colors}")
+            self.network_canvas.set_layer_colors(layer_colors)
 
         # Update the controls with layer colors
         self.control_panel.update_controls(
