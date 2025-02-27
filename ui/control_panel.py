@@ -100,6 +100,11 @@ class ControlPanel(QWidget):
         self.show_labels_checkbox.setChecked(False)  # Off by default
         display_layout.addWidget(self.show_labels_checkbox)
         
+        # Add show stats bars checkbox
+        self.show_stats_bars_checkbox = QCheckBox("Show Inter Stats Bars")
+        self.show_stats_bars_checkbox.setChecked(False)  # Off by default
+        display_layout.addWidget(self.show_stats_bars_checkbox)
+        
         self.display_group.setLayout(display_layout)
         layout.addWidget(self.display_group)
         
@@ -227,6 +232,9 @@ class ControlPanel(QWidget):
         
         # Connect show labels checkbox
         self.show_labels_checkbox.stateChanged.connect(visibility_callback)
+        
+        # Connect show stats bars checkbox
+        self.show_stats_bars_checkbox.stateChanged.connect(visibility_callback)
     
     def clear_layout(self, layout):
         """Clear all widgets from a layout"""
@@ -259,3 +267,7 @@ class ControlPanel(QWidget):
     def show_labels(self):
         """Check if node labels should be shown"""
         return self.show_labels_checkbox.isChecked()
+    
+    def show_stats_bars(self):
+        """Check if node stats bars should be shown"""
+        return self.show_stats_bars_checkbox.isChecked()
