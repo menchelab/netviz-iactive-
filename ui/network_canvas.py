@@ -111,10 +111,10 @@ class NetworkCanvas:
             self.layer_colors_rgba[layer_name] = rgba
             logger.debug(f"Layer {layer_name}: {color_hex} -> {rgba}")
 
-    def update_visibility(self, node_mask, edge_mask, show_intralayer=True, show_nodes=True, show_labels=True, bottom_labels_only=False):
+    def update_visibility(self, node_mask, edge_mask, show_intralayer=True, show_nodes=True, show_labels=True, bottom_labels_only=True):
         """Update the visibility of nodes and edges based on masks"""
         logger = logging.getLogger(__name__)
-        logger.info(f"Updating visibility with show_intralayer={show_intralayer}, show_nodes={show_nodes}, show_labels={show_labels}, bottom_labels_only={bottom_labels_only}")
+        logger.info(f"Updating visibility with show_intralayer={show_intralayer}, show_nodes={show_nodes}, show_labels={show_labels}")
         
         # Store the current masks for later use
         self.current_node_mask = node_mask
@@ -182,140 +182,140 @@ class NetworkCanvas:
                 # Process visible nodes
                 visible_indices = np.where(node_mask)[0]
                 
-                # Create a set to track which base nodes we've already labeled (for bottom labels only mode)
+                # Create a set to track which base nodes we've already labeled
                 labeled_base_nodes = set()
                 
                 for idx in visible_indices:
                     node_layer_idx = idx // self.nodes_per_layer
-                    # Check if this node's layer is visible
-                    if node_layer_idx in self.visible_layers:
-                        node_id = self.node_ids[idx]
-                        base_node = node_id.split('_')[0] if '_' in node_id else node_id
+                    
+                    # Only show labels for nodes in the top layer
+                    if node_layer_idx != top_layer_idx:
+                        # If this is not the top layer
+                        base_node = self.node_ids[idx].split('_')[0] if '_' in self.node_ids[idx] else self.node_ids[idx]
                         
-                        # For bottom_labels_only mode (now actually top layer only)
-                        if bottom_labels_only:
-                            # If this is not the top layer
-                            if node_layer_idx != top_layer_idx:
-                                # If we've already labeled this base node, skip it
-                                if base_node in labeled_base_nodes:
-                                    continue
-                                
-                                # Check if this base node exists in the top layer
-                                top_layer_node_idx = top_layer_idx * self.nodes_per_layer + (idx % self.nodes_per_layer)
-                                
-                                # If the node exists in the top layer (regardless of active status), skip it
-                                # We'll show it when we process the top layer
-                                if top_layer_node_idx < len(self.node_positions) and node_mask[top_layer_node_idx]:
-                                    continue
-                                
-                                # Mark this base node as labeled
-                                labeled_base_nodes.add(base_node)
+                        # If we've already labeled this base node, skip it
+                        if base_node in labeled_base_nodes:
+                            continue
                         
-                        # Show labels for all nodes, not just active ones
-                        # Extract the part before the first underscore for the label
-                        if '_' in node_id:
-                            label_text = node_id.split('_')[0]
-                        else:
-                            label_text = node_id
+                        # Check if this base node exists in the top layer
+                        top_layer_node_idx = top_layer_idx * self.nodes_per_layer + (idx % self.nodes_per_layer)
                         
-                        # Add interlayer edge count if available
-                        if base_node in interlayer_edge_counts:
-                            edge_count = interlayer_edge_counts[base_node]
-                            
-                            # Count active nodes with this base ID across all layers
-                            active_node_count = 0
-                            for current_layer_idx in self.visible_layers:
-                                node_idx_in_layer = current_layer_idx * self.nodes_per_layer + (idx % self.nodes_per_layer)
-                                if (node_idx_in_layer < len(self.node_positions) and 
-                                    node_mask[node_idx_in_layer] and 
-                                    self.active_nodes[node_idx_in_layer]):
-                                    active_node_count += 1
-                            
-                            # Add both counts to the label
-                            label_text = f"{label_text} [{active_node_count}/{edge_count//2}]"
-                            
-                            # Store data for bar charts
+                        # If the node exists in the top layer (regardless of active status), skip it
+                        # We'll show it when we process the top layer
+                        if top_layer_node_idx < len(self.node_positions) and node_mask[top_layer_node_idx]:
+                            continue
+                        
+                        # Mark this base node as labeled
+                        labeled_base_nodes.add(base_node)
+                    
+                    # Show labels for all nodes, not just active ones
+                    node_id = self.node_ids[idx]
+                    # Extract the part before the first underscore for the label
+                    if '_' in node_id:
+                        label_text = node_id.split('_')[0]
+                    else:
+                        label_text = node_id
+                    
+                    base_node = label_text
+                    
+                    # Add interlayer edge count if available
+                    if base_node in interlayer_edge_counts:
+                        edge_count = interlayer_edge_counts[base_node]
+                        
+                        # Count active nodes with this base ID across all layers
+                        active_node_count = 0
+                        for current_layer_idx in self.visible_layers:
+                            node_idx_in_layer = current_layer_idx * self.nodes_per_layer + (idx % self.nodes_per_layer)
+                            if (node_idx_in_layer < len(self.node_positions) and 
+                                node_mask[node_idx_in_layer] and 
+                                self.active_nodes[node_idx_in_layer]):
+                                active_node_count += 1
+                        
+                        # Add both counts to the label
+                        label_text = f"{label_text} [{active_node_count}/{edge_count//2}]"
+                        
+                        # Store data for bar charts
+                        bar_pos = self.node_positions[idx].copy()
+                        # Position bars below the label
+                        bar_pos[1] -= 0.05
+                        bar_positions.append(bar_pos)
+                        
+                        # Scale factors for bar widths
+                        max_bar_width = 0.1
+                        node_count_width = min(max_bar_width, 0.005 * active_node_count)
+                        edge_count_width = min(max_bar_width, 0.005 * (edge_count//2))
+                        
+                        node_count_widths.append(node_count_width)
+                        edge_count_widths.append(edge_count_width)
+                        
+                        node_color = np.array([1.0, 0.0, 1.0, 1]) 
+                        edge_color = np.array([0.0, 1.0, 0.0, 1]) 
+                        
+                        node_count_colors.append(node_color)
+                        edge_count_colors.append(edge_color)
+                    else:
+                        edge_count = 0
+                        
+                        # Count active nodes with this base ID across all layers
+                        active_node_count = 0
+                        for current_layer_idx in self.visible_layers:
+                            node_idx_in_layer = current_layer_idx * self.nodes_per_layer + (idx % self.nodes_per_layer)
+                            if (node_idx_in_layer < len(self.node_positions) and 
+                                node_mask[node_idx_in_layer] and 
+                                self.active_nodes[node_idx_in_layer]):
+                                active_node_count += 1
+                        
+                        # Add only active node count if there are no interlayer edges
+                        if active_node_count > 0:
+                            label_text = f"{label_text} [{active_node_count}/0]"
+                        
+                        # Store data for bar charts if there are active nodes
+                        if active_node_count > 0:
                             bar_pos = self.node_positions[idx].copy()
                             # Position bars below the label
                             bar_pos[1] -= 0.05
                             bar_positions.append(bar_pos)
                             
-                            # Scale factors for bar widths
-                            max_bar_width = 0.1
-                            node_count_width = min(max_bar_width, 0.005 * active_node_count)
-                            edge_count_width = min(max_bar_width, 0.005 * (edge_count//2))
+                            # Scale factor for bar width
+                            max_bar_width = 2
+                            node_count_width = min(max_bar_width, 0.02 * active_node_count)
                             
                             node_count_widths.append(node_count_width)
-                            edge_count_widths.append(edge_count_width)
+                            edge_count_widths.append(0)  # No interlayer edges
                             
-                            node_color = np.array([1.0, 0.0, 1.0, 1]) 
-                            edge_color = np.array([0.0, 1.0, 0.0, 1]) 
+                            # Use light blue for node count bars and light green for edge count bars
+                            node_color = np.array([0.4, 0.7, 1.0, 0.8])  # Light blue with 80% opacity
+                            edge_color = np.array([0.4, 0.9, 0.4, 0.3])  # Light green with 30% opacity for zero edges
                             
                             node_count_colors.append(node_color)
                             edge_count_colors.append(edge_color)
-                        else:
-                            edge_count = 0
-                            
-                            # Count active nodes with this base ID across all layers
-                            active_node_count = 0
-                            for current_layer_idx in self.visible_layers:
-                                node_idx_in_layer = current_layer_idx * self.nodes_per_layer + (idx % self.nodes_per_layer)
-                                if (node_idx_in_layer < len(self.node_positions) and 
-                                    node_mask[node_idx_in_layer] and 
-                                    self.active_nodes[node_idx_in_layer]):
-                                    active_node_count += 1
-                            
-                            # Add only active node count if there are no interlayer edges
-                            if active_node_count > 0:
-                                label_text = f"{label_text} [{active_node_count}/0]"
-                            
-                            # Store data for bar charts if there are active nodes
-                            if active_node_count > 0:
-                                bar_pos = self.node_positions[idx].copy()
-                                # Position bars below the label
-                                bar_pos[1] -= 0.05
-                                bar_positions.append(bar_pos)
-                                
-                                # Scale factor for bar width
-                                max_bar_width = 2
-                                node_count_width = min(max_bar_width, 0.02 * active_node_count)
-                                
-                                node_count_widths.append(node_count_width)
-                                edge_count_widths.append(0)  # No interlayer edges
-                                
-                                # Use light blue for node count bars and light green for edge count bars
-                                node_color = np.array([0.4, 0.7, 1.0, 0.8])  # Light blue with 80% opacity
-                                edge_color = np.array([0.4, 0.9, 0.4, 0.3])  # Light green with 30% opacity for zero edges
-                                
-                                node_count_colors.append(node_color)
-                                edge_count_colors.append(edge_color)
-                        
-                        # Add a small offset to position labels better
-                        pos = self.node_positions[idx].copy()
-                        # Offset in y direction
-                        pos[1] += 0.01
-                        label_positions.append(pos)
-                        label_texts.append(label_text)
-                        
-                        # Get the layer name for this node
-                        layer_name = self.layer_names[node_layer_idx]
-                        logger.debug(f"Node {node_id} is in layer {layer_name} (index {node_layer_idx})")
-                        
-                        # Use the layer color from our mapping
-                        if self.layer_colors_rgba and layer_name in self.layer_colors_rgba:
-                            label_color = self.layer_colors_rgba[layer_name].copy()
-                            # Make labels with 0 interlayer connections more transparent
-                            if edge_count == 0:
-                                label_color[3] = 0.6  # 60% opacity for nodes with no interlayer connections
-                            logger.debug(f"Using color {label_color} for node {node_id} in layer {layer_name}")
-                        else:
-                            label_color = np.array([1.0, 1.0, 0.0, 1.0])
-                            # Make labels with 0 interlayer connections more transparent
-                            if edge_count == 0:
-                                label_color[3] = 0.6
-                            logger.warning(f"No color found for layer {layer_name}, using red")
-                        
-                        label_colors.append(label_color)
+                    
+                    # Add a small offset to position labels better
+                    pos = self.node_positions[idx].copy()
+                    # Offset in y direction
+                    pos[1] += 0.01
+                    label_positions.append(pos)
+                    label_texts.append(label_text)
+                    
+                    # Get the layer name for this node
+                    layer_name = self.layer_names[node_layer_idx]
+                    logger.debug(f"Node {node_id} is in layer {layer_name} (index {node_layer_idx})")
+                    
+                    # Use the layer color from our mapping
+                    if self.layer_colors_rgba and layer_name in self.layer_colors_rgba:
+                        label_color = self.layer_colors_rgba[layer_name].copy()
+                        # Make labels with 0 interlayer connections more transparent
+                        if edge_count == 0:
+                            label_color[3] = 0.6  # 60% opacity for nodes with no interlayer connections
+                        logger.debug(f"Using color {label_color} for node {node_id} in layer {layer_name}")
+                    else:
+                        label_color = np.array([1.0, 1.0, 0.0, 1.0])
+                        # Make labels with 0 interlayer connections more transparent
+                        if edge_count == 0:
+                            label_color[3] = 0.6
+                        logger.warning(f"No color found for layer {layer_name}, using red")
+                    
+                    label_colors.append(label_color)
                 
                 # Update the labels
                 if label_positions:
