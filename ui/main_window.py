@@ -110,7 +110,7 @@ class MultilayerNetworkViz(QWidget):
             self.load_data(node_positions, link_pairs, link_colors, node_ids, layers, node_clusters, unique_clusters, 
                           node_colors, node_origins, unique_origins, layer_colors)
 
-    def load_data(self, node_positions, link_pairs, link_colors, node_ids, layers, node_clusters, unique_clusters, 
+    def load_data(self, node_positions, link_pairs, link_colors, node_ids=None, layers=None, node_clusters=None, unique_clusters=None, 
                  node_colors=None, node_origins=None, unique_origins=None, layer_colors=None):
         """Load network data into the visualization"""
 
@@ -124,6 +124,16 @@ class MultilayerNetworkViz(QWidget):
         self.node_origins = node_origins or {}
         self.unique_origins = unique_origins or []
         self.layer_colors = layer_colors or {}
+
+        # If node_colors is not provided, generate them based on layer colors
+        if node_colors is None and layer_colors:
+            node_colors = []
+            nodes_per_layer = len(node_positions) // len(layers)
+            
+            for i in range(len(node_positions)):
+                layer_idx = i // nodes_per_layer
+                layer_name = layers[layer_idx]
+                node_colors.append(layer_colors.get(layer_name, '#CCCCCC'))
 
         self.network_canvas.load_data(node_positions, link_pairs, link_colors, node_colors, node_ids)
 

@@ -29,7 +29,7 @@ class NetworkCanvas:
         self.view.add(self.interlayer_lines)
         
         # Create text labels for nodes - initialize with a dummy position that will be invisible
-        self.node_labels = Text(pos=np.array([[0, 0, 0]]), text=[''], color='white', font_size=8)
+        self.node_labels = Text(pos=np.array([[0, 0, 0]]), text=[''], color='white', font_size=6)
         self.node_labels.visible = False  # Start with labels invisible
         self.view.add(self.node_labels)
 
@@ -44,6 +44,8 @@ class NetworkCanvas:
         self.layer_names = None
         self.nodes_per_layer = None
         self.node_mask = None
+        self.layer_colors = None  # Add this to store layer colors
+        self.layer_colors_rgba = None  # Add this to store layer colors in RGBA format
 
     def load_data(self, node_positions, link_pairs, link_colors, node_colors=None, node_ids=None):
         self.node_positions = node_positions
@@ -67,6 +69,7 @@ class NetworkCanvas:
 
             self.link_colors_rgba.append(rgba)
 
+        # Initialize node colors with white
         self.node_colors_rgba = np.ones((len(node_positions), 4))
 
         if node_colors:
@@ -84,6 +87,20 @@ class NetworkCanvas:
         
         # Set larger size for active nodes
         self.node_sizes[self.active_nodes] = 9  # 3x larger
+
+    def set_layer_colors(self, layer_colors):
+        """Set the layer colors mapping"""
+        logger = logging.getLogger(__name__)
+        logger.info(f"Setting layer colors: {layer_colors}")
+        
+        self.layer_colors = layer_colors
+        
+        # Convert hex colors to RGBA
+        self.layer_colors_rgba = {}
+        for layer_name, color_hex in layer_colors.items():
+            rgba = hex_to_rgba(color_hex, alpha=1.0)
+            self.layer_colors_rgba[layer_name] = rgba
+            logger.debug(f"Layer {layer_name}: {color_hex} -> {rgba}")
 
     def update_visibility(self, node_mask, edge_mask, show_intralayer=True, show_nodes=True, show_labels=True):
         """Update the visibility of nodes and edges based on masks"""
@@ -118,22 +135,40 @@ class NetworkCanvas:
             self.scatter.set_data(visible_nodes, edge_color='black',
                                 face_color=np.zeros_like(visible_colors), size=0)
 
+        # First, collect all edges to determine colors
+        visible_edges = self.link_pairs[edge_mask]
+        visible_edge_colors = [self.link_colors_rgba[i] for i, mask in enumerate(edge_mask) if mask]
+        
+        # Create a mapping of layer index to color
+        layer_to_color = {}
+        
+        # First pass: collect layer colors from intralayer edges
+        for i, (start_idx, end_idx) in enumerate(visible_edges):
+            start_layer = start_idx // self.nodes_per_layer
+            end_layer = end_idx // self.nodes_per_layer
+            
+            # If this is an intralayer edge
+            if start_layer == end_layer:
+                # Store the color for this layer
+                layer_to_color[start_layer] = visible_edge_colors[i].copy()
+                # Set full opacity
+                layer_to_color[start_layer][3] = 1.0
+        
         # Update node labels
-        if show_labels and self.node_ids is not None and self.visible_layers is not None:
-            # Find the top and bottom visible layers
+        if show_labels and self.node_ids is not None and self.visible_layers is not None and self.layer_names is not None:
+            # Show labels for all visible layers
             if len(self.visible_layers) > 0:
-                top_layer = min(self.visible_layers)
-                bottom_layer = max(self.visible_layers)
-                
-                # Get nodes in top and bottom layers
+                # Get nodes in all visible layers
                 label_positions = []
                 label_texts = []
+                label_colors = []
                 
                 # Process visible nodes
                 visible_indices = np.where(node_mask)[0]
                 for idx in visible_indices:
                     layer_idx = idx // self.nodes_per_layer
-                    if layer_idx == top_layer or layer_idx == bottom_layer:
+                    # Check if this node's layer is visible
+                    if layer_idx in self.visible_layers:
                         # Only show labels for active nodes
                         if self.active_nodes[idx]:
                             node_id = self.node_ids[idx]
@@ -143,12 +178,19 @@ class NetworkCanvas:
                             pos[1] += 0.05
                             label_positions.append(pos)
                             label_texts.append(str(node_id))
+                            
+                            # Use the color from our layer mapping
+                            if layer_idx in layer_to_color:
+                                label_colors.append(layer_to_color[layer_idx])
+                            else:
+                                # Default to white if no color is found
+                                label_colors.append(np.array([1.0, 1.0, 1.0, 1.0]))
                 
                 # Update the labels
                 if label_positions:
                     self.node_labels.pos = np.array(label_positions)
                     self.node_labels.text = label_texts
-                    self.node_labels.color = 'white'  # Make labels visible
+                    self.node_labels.color = np.array(label_colors)
                     self.node_labels.visible = True
                     # Bring labels to front
                     self.node_labels.order = 1  # Higher order means drawn later (on top)
@@ -162,10 +204,6 @@ class NetworkCanvas:
             # Hide the labels without changing position
             self.node_labels.visible = False
 
-        # Get visible edges
-        visible_edges = self.link_pairs[edge_mask]
-        visible_colors = [self.link_colors_rgba[i] for i, mask in enumerate(edge_mask) if mask]
-
         # Count edges by type for debugging
         intralayer_count = 0
         interlayer_count = 0
@@ -178,7 +216,7 @@ class NetworkCanvas:
         # so we can process them together for offsetting
         interlayer_edges = []
 
-        # First, collect all edges
+        # Process all edges
         for i, (start_idx, end_idx) in enumerate(visible_edges):
             # Check if this is a horizontal (intra-layer) edge or interlayer edge
             # If nodes are in the same layer, their z-coordinates will be the same
@@ -190,8 +228,7 @@ class NetworkCanvas:
                 intralayer_count += 1
                 # Only add intralayer edges if they should be shown
                 if show_intralayer:
-                    # Intra-layer edge: use lower opacity
-                    edge_color = visible_colors[i].copy()
+                    edge_color = visible_edge_colors[i].copy()
                     edge_color[3] = 0.3  # Set opacity to 30% for horizontal edges
 
                     intralayer_pos.append(self.node_positions[start_idx])
@@ -200,8 +237,7 @@ class NetworkCanvas:
                     intralayer_colors.append(edge_color)
             else:
                 interlayer_count += 1
-                # Inter-layer edge: use the color of the starting layer with higher opacity
-                edge_color = visible_colors[i].copy()
+                edge_color = visible_edge_colors[i].copy()
                 edge_color[3] = 0.8  # Higher opacity for interlayer edges
 
                 # Store the edge for later processing
