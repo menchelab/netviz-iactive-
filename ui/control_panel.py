@@ -98,7 +98,14 @@ class ControlPanel(QWidget):
         # Add show node labels checkbox
         self.show_labels_checkbox = QCheckBox("Show Node Labels")
         self.show_labels_checkbox.setChecked(False)  # Off by default
+        self.show_labels_checkbox.stateChanged.connect(self.on_show_labels_changed)
         display_layout.addWidget(self.show_labels_checkbox)
+        
+        # Add top layer labels only checkbox
+        self.bottom_labels_only_checkbox = QCheckBox("Top Layer Labels Only")
+        self.bottom_labels_only_checkbox.setChecked(False)  # Off by default
+        self.bottom_labels_only_checkbox.setEnabled(False)  # Initially disabled
+        display_layout.addWidget(self.bottom_labels_only_checkbox)
         
         self.display_group.setLayout(display_layout)
         layout.addWidget(self.display_group)
@@ -228,6 +235,9 @@ class ControlPanel(QWidget):
         
         # Connect show labels checkbox
         self.show_labels_checkbox.stateChanged.connect(visibility_callback)
+        
+        # Connect bottom layer labels only checkbox
+        self.bottom_labels_only_checkbox.stateChanged.connect(visibility_callback)
     
     def clear_layout(self, layout):
         """Clear all widgets from a layout"""
@@ -260,3 +270,15 @@ class ControlPanel(QWidget):
     def show_labels(self):
         """Check if node labels should be shown"""
         return self.show_labels_checkbox.isChecked()
+    
+    def show_bottom_labels_only(self):
+        """Check if only top layer labels should be shown"""
+        return self.bottom_labels_only_checkbox.isChecked()
+
+    def on_show_labels_changed(self, state):
+        """Enable/disable the top layer labels checkbox based on show labels state"""
+        self.bottom_labels_only_checkbox.setEnabled(state == Qt.Checked)
+        
+        # If show labels is unchecked, also uncheck the top layer labels checkbox
+        if state == Qt.Unchecked:
+            self.bottom_labels_only_checkbox.setChecked(False)

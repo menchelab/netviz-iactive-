@@ -102,10 +102,10 @@ class NetworkCanvas:
             self.layer_colors_rgba[layer_name] = rgba
             logger.debug(f"Layer {layer_name}: {color_hex} -> {rgba}")
 
-    def update_visibility(self, node_mask, edge_mask, show_intralayer=True, show_nodes=True, show_labels=True):
+    def update_visibility(self, node_mask, edge_mask, show_intralayer=True, show_nodes=True, show_labels=True, bottom_labels_only=False):
         """Update the visibility of nodes and edges based on masks"""
         logger = logging.getLogger(__name__)
-        logger.info(f"Updating visibility with show_intralayer={show_intralayer}, show_nodes={show_nodes}, show_labels={show_labels}")
+        logger.info(f"Updating visibility with show_intralayer={show_intralayer}, show_nodes={show_nodes}, show_labels={show_labels}, bottom_labels_only={bottom_labels_only}")
         
         # Debug layer colors
         if self.layer_colors_rgba:
@@ -155,43 +155,69 @@ class NetworkCanvas:
                 label_texts = []
                 label_colors = []
                 
+                # Determine the top layer index (the lowest layer index that is visible)
+                top_layer_idx = min(self.visible_layers) if self.visible_layers else -1
+                
                 # Process visible nodes
                 visible_indices = np.where(node_mask)[0]
+                
+                # Create a set to track which base nodes we've already labeled (for bottom labels only mode)
+                labeled_base_nodes = set()
+                
                 for idx in visible_indices:
                     layer_idx = idx // self.nodes_per_layer
                     # Check if this node's layer is visible
                     if layer_idx in self.visible_layers:
-                        # Only show labels for active nodes
-                        if self.active_nodes[idx]:
-                            node_id = self.node_ids[idx]
-                            
-                            # Extract the part before the first underscore for the label
-                            if '_' in node_id:
-                                label_text = node_id.split('_')[0]
-                            else:
-                                label_text = node_id
-                            
-                            # Add a small offset to position labels better
-                            pos = self.node_positions[idx].copy()
-                            # Offset in y direction
-                            pos[1] += 0.05
-                            label_positions.append(pos)
-                            label_texts.append(label_text)
-                            
-                            # Get the layer name for this node
-                            layer_name = self.layer_names[layer_idx]
-                            logger.debug(f"Node {node_id} is in layer {layer_name} (index {layer_idx})")
-                            
-                            # Use the layer color from our mapping
-                            if self.layer_colors_rgba and layer_name in self.layer_colors_rgba:
-                                label_color = self.layer_colors_rgba[layer_name].copy()
-                                logger.debug(f"Using color {label_color} for node {node_id} in layer {layer_name}")
-                            else:
-                                # Default to red if no color is found (for debugging)
-                                label_color = np.array([1.0, 0.0, 0.0, 1.0])
-                                logger.warning(f"No color found for layer {layer_name}, using red")
-                            
-                            label_colors.append(label_color)
+                        node_id = self.node_ids[idx]
+                        base_node = node_id.split('_')[0] if '_' in node_id else node_id
+                        
+                        # For bottom_labels_only mode (now actually top layer only)
+                        if bottom_labels_only:
+                            # If this is not the top layer
+                            if layer_idx != top_layer_idx:
+                                # If we've already labeled this base node, skip it
+                                if base_node in labeled_base_nodes:
+                                    continue
+                                
+                                # Check if this base node exists in the top layer
+                                top_layer_node_idx = top_layer_idx * self.nodes_per_layer + (idx % self.nodes_per_layer)
+                                
+                                # If the node exists in the top layer (regardless of active status), skip it
+                                # We'll show it when we process the top layer
+                                if top_layer_node_idx < len(self.node_positions) and node_mask[top_layer_node_idx]:
+                                    continue
+                                
+                                # Mark this base node as labeled
+                                labeled_base_nodes.add(base_node)
+                        
+                        # Show labels for all nodes, not just active ones
+                        # Extract the part before the first underscore for the label
+                        if '_' in node_id:
+                            label_text = node_id.split('_')[0]
+                        else:
+                            label_text = node_id
+                        
+                        # Add a small offset to position labels better
+                        pos = self.node_positions[idx].copy()
+                        # Offset in y direction
+                        pos[1] += 0.05
+                        label_positions.append(pos)
+                        label_texts.append(label_text)
+                        
+                        # Get the layer name for this node
+                        layer_name = self.layer_names[layer_idx]
+                        logger.debug(f"Node {node_id} is in layer {layer_name} (index {layer_idx})")
+                        
+                        # Use the layer color from our mapping
+                        if self.layer_colors_rgba and layer_name in self.layer_colors_rgba:
+                            label_color = self.layer_colors_rgba[layer_name].copy()
+                            logger.debug(f"Using color {label_color} for node {node_id} in layer {layer_name}")
+                        else:
+                            # Default to red if no color is found (for debugging)
+                            label_color = np.array([1.0, 0.0, 0.0, 1.0])
+                            logger.warning(f"No color found for layer {layer_name}, using red")
+                        
+                        label_colors.append(label_color)
                 
                 # Update the labels
                 if label_positions:
