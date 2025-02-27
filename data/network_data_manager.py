@@ -67,6 +67,16 @@ class NetworkDataManager:
         self.unique_origins = unique_origins or []
         self.layer_colors = layer_colors or {}
         
+        # Extract cluster colors from metadata
+        # Each cluster should have a consistent color in the metadata
+        self.cluster_colors = {}
+        for cluster in unique_clusters:
+            # Find a node with this cluster and get its color
+            for i, node_id in enumerate(node_ids):
+                if node_clusters.get(node_id) == cluster and i < len(node_colors):
+                    self.cluster_colors[cluster] = node_colors[i]
+                    break
+        
         # Calculate nodes per layer
         self.nodes_per_layer = len(node_positions) // len(layers)
         

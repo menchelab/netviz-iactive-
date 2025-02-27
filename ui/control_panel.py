@@ -153,7 +153,7 @@ class ControlPanel(QWidget):
         logger.info(f"Triggering single update after shift-click on {checkbox.text()}")
         checkbox.stateChanged.emit(checkbox.checkState())
     
-    def update_controls(self, layers, unique_clusters, unique_origins, visibility_callback, layer_colors=None):
+    def update_controls(self, layers, unique_clusters, unique_origins, visibility_callback, layer_colors=None, cluster_colors=None):
         """Update the layer, cluster, and origin controls based on loaded data"""
         logger = logging.getLogger(__name__)
         logger.info("Updating controls...")
@@ -211,6 +211,42 @@ class ControlPanel(QWidget):
             cb.group_name = "clusters"
             cb.setChecked(True)
             cb.stateChanged.connect(visibility_callback)
+            
+            # Set checkbox text color if cluster_colors are provided
+            if cluster_colors and cluster in cluster_colors:
+                color = cluster_colors[cluster]
+                
+                # Convert to QColor
+                qcolor = None
+                if isinstance(color, str) and color.startswith('#'):
+                    # Handle both RGB (#RRGGBB) and RGBA (#RRGGBBAA) formats
+                    if len(color) == 9:  # #RRGGBBAA format
+                        r = int(color[1:3], 16)
+                        g = int(color[3:5], 16)
+                        b = int(color[5:7], 16)
+                        a = int(color[7:9], 16)
+                        qcolor = QColor(r, g, b, a)
+                    else:  # #RRGGBB format
+                        qcolor = QColor(color)
+                elif isinstance(color, (list, tuple)) and len(color) >= 3:
+                    if len(color) >= 4:  # RGBA
+                        r, g, b, a = color[:4]
+                        if isinstance(r, float) and 0 <= r <= 1:
+                            qcolor = QColor(int(r*255), int(g*255), int(b*255), int(a*255))
+                        else:
+                            qcolor = QColor(r, g, b, a)
+                    else:  # RGB
+                        r, g, b = color[:3]
+                        if isinstance(r, float) and 0 <= r <= 1:
+                            qcolor = QColor(int(r*255), int(g*255), int(b*255))
+                        else:
+                            qcolor = QColor(r, g, b)
+                
+                if qcolor:
+                    # Set text color using stylesheet
+                    color_hex = qcolor.name()
+                    cb.setStyleSheet(f"QCheckBox {{ color: {color_hex}; }}")
+            
             self.cluster_layout.addWidget(cb)
             self.cluster_checkboxes[cluster] = cb
         

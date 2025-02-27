@@ -32,7 +32,6 @@ def generate_distinct_colors(num_colors):
         '#000075',  # Navy
         '#a9a9a9',  # Grey
         '#ffffff',  # White
-        '#000000',  # Black
     ]
     
     # If we need more colors than in our palette, we'll create variations

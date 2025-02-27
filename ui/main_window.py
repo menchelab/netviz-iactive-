@@ -132,10 +132,10 @@ class MultilayerNetworkViz(QWidget):
         # Load data into the network canvas
         self.network_canvas.load_data()
         
-        # Update the controls with layer colors
+        # Update the controls with layer and cluster colors
         self.control_panel.update_controls(
             layers, unique_clusters, unique_origins, 
-            self.update_visibility, layer_colors
+            self.update_visibility, layer_colors, self.data_manager.cluster_colors
         )
 
         self.update_visibility()
