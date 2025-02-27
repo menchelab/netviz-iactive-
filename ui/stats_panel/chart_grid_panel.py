@@ -446,6 +446,47 @@ class ChartGridPanel(BaseStatsPanel):
                     ax.text(0.5, 0.5, f"Error generating chart for {dataset}: {str(e)}", 
                            ha='center', va='center', wrap=True)
                     ax.axis('off')
+            elif self._current_chart_function.__name__ == 'create_critical_structure_charts':
+                # Special case for critical_structure_charts which needs four axes
+                gs = gridspec.GridSpec(2, 2, figure=fig)
+                criticality_bar_ax = fig.add_subplot(gs[0, 0])  # Top left
+                impact_ax = fig.add_subplot(gs[0, 1])          # Top right
+                anomaly_ax = fig.add_subplot(gs[1, 0])         # Bottom left
+                network_ax = fig.add_subplot(gs[1, 1])         # Bottom right
+                
+                # Calculate layer connections matrix
+                layer_connections = np.zeros((len(layers), len(layers)), dtype=int)
+                for start_idx, end_idx in link_pairs:
+                    start_layer = start_idx // nodes_per_layer if nodes_per_layer else 0
+                    end_layer = end_idx // nodes_per_layer if nodes_per_layer else 0
+                    layer_connections[start_layer, end_layer] += 1
+                    if start_layer != end_layer:
+                        layer_connections[end_layer, start_layer] += 1
+                
+                # Call the chart function with all required parameters
+                try:
+                    print(f"Calling {self._current_chart_function.__name__} for {dataset}")
+                    self._current_chart_function(
+                        criticality_bar_ax=criticality_bar_ax,
+                        impact_ax=impact_ax,
+                        anomaly_ax=anomaly_ax,
+                        network_ax=network_ax,
+                        layer_connections=layer_connections,
+                        layers=layers,
+                        medium_font=medium_font,
+                        large_font=large_font,
+                        layer_colors=layer_colors
+                    )
+                    fig.suptitle(dataset, fontsize=12)
+                    fig.tight_layout(rect=[0, 0, 1, 0.95])  # Make room for title
+                except Exception as e:
+                    print(f"Error generating critical structure chart for {dataset}: {e}")
+                    logging.error(f"Error generating critical structure chart for {dataset}: {e}")
+                    fig.clear()
+                    ax = fig.add_subplot(111)
+                    ax.text(0.5, 0.5, f"Error generating critical structure chart for {dataset}: {str(e)}", 
+                           ha='center', va='center', wrap=True)
+                    ax.axis('off')
             elif self._current_chart_function.__name__ == 'create_layer_communities_chart':
                 # Special case for layer_communities_chart which needs two axes
                 gs = gridspec.GridSpec(2, 1, height_ratios=[1, 1])
