@@ -5,23 +5,27 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "deepgraph>=0.2.4",
-    "fa2-modified>=0.3.10",
-    "importlib>=1.0.4",
-    "ipykernel>=6.29.5",
-    "leidenalg>=0.10.2",
-    "matplotlib>=3.10.0",
-    "networkx>=3.4.2",
-    "numpy>=2.2.3",
-    "pandas>=2.2.3",
+    "deepgraph",
+    "fa2-modified",
+    "importlib",
+    "ipykernel",
+    "leidenalg",
+    "matplotlib",
+    "networkx",
+    "numpy",
+    "pandas",
     # "pyobjc-framework-quartz>=11.0",
-    # "pyopengl>=3.1.9",
     "pyopengl",
-#    "pyqt5>=5.15.11",
     "pyqt5",
-    "python-louvain>=0.16",
-    "scikit-learn>=1.6.1",
-    "scipy>=1.15.2",
-    "tqdm>=4.67.1",
-    "vispy>=0.14.3",
+    "python-louvain",
+    "scikit-learn",
+    "scipy",
+    "tqdm",
+    "vispy",
 ]
+
+
+[tool.uv]
+# uncomment next line on Windows
+# constraint-dependencies = ["pyqt5-qt5 <=5.15.2"]
+
