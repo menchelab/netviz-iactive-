@@ -30,9 +30,7 @@ on osx maybe uncomment quartz package in pyproject.toml for better performance
 
 ```
 uv sync
-uv run main.py
+uv run python main.py
 ```
 
 
-
-(vispy uses opengl, this is tested on osx, win/linux you might need other sys packages, latest opengl driver etc, .i think on osx i installed glew (brew install glew))
