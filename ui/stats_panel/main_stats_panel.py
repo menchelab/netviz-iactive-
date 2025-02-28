@@ -11,9 +11,10 @@ from charts.layer_similarity import create_layer_similarity_chart
 
 from .base_panel import BaseStatsPanel
 
+
 class MainStatsPanel(BaseStatsPanel):
     """Panel for the main network statistics"""
-    
+
     def setup_ui(self):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -23,7 +24,7 @@ class MainStatsPanel(BaseStatsPanel):
         controls_layout = QHBoxLayout()
         controls_layout.setContentsMargins(5, 5, 5, 0)
         self.enable_checkbox = QCheckBox("Enable Charts")
-        self.enable_checkbox.setChecked(True)  # Enabled by default
+        self.enable_checkbox.setChecked(True)
         self.enable_checkbox.stateChanged.connect(self.on_state_changed)
         controls_layout.addWidget(self.enable_checkbox)
         controls_layout.addStretch()
@@ -53,28 +54,29 @@ class MainStatsPanel(BaseStatsPanel):
         self.betweenness_centrality_ax = self.right_figure.add_subplot(311)
         self.interlayer_graph_ax = self.right_figure.add_subplot(312)
         self.layer_similarity_ax = self.right_figure.add_subplot(313)
-    
+
     def on_state_changed(self, state):
         """Handle enable/disable state change"""
-        if state and hasattr(self, '_current_data'):
+        if state and hasattr(self, "_current_data"):
             self.update_stats(self._current_data)
         elif not state:
             # Clear all figures when disabled
             self.left_figure.clear()
             self.right_figure.clear()
-            
+
             # Add disabled message to both figures
-            self.left_figure.text(0.5, 0.5, "Charts disabled", 
-                                ha='center', va='center', fontsize=12)
-            self.right_figure.text(0.5, 0.5, "Charts disabled", 
-                                ha='center', va='center', fontsize=12)
-            
+            self.left_figure.text(
+                0.5, 0.5, "Charts disabled", ha="center", va="center", fontsize=12
+            )
+            self.right_figure.text(
+                0.5, 0.5, "Charts disabled", ha="center", va="center", fontsize=12
+            )
+
             # Draw canvases
             self.left_canvas.draw()
             self.right_canvas.draw()
 
     def update_stats(self, data_manager):
-        # Store current data for later use
         self._current_data = data_manager
 
         # Only update charts if enabled
@@ -91,13 +93,13 @@ class MainStatsPanel(BaseStatsPanel):
         self.cluster_distribution_ax = self.left_figure.add_subplot(312)
         self.layer_activity_ax = self.left_figure.add_subplot(313)
 
-        # Re-create right column subplots 
+        # Re-create right column subplots
         self.betweenness_centrality_ax = self.right_figure.add_subplot(311)
         self.interlayer_graph_ax = self.right_figure.add_subplot(312)
         self.layer_similarity_ax = self.right_figure.add_subplot(313)
 
-        small_font = {'fontsize': 6}
-        medium_font = {'fontsize': 7}
+        small_font = {"fontsize": 6}
+        medium_font = {"fontsize": 7}
 
         # Get data from manager
         node_positions = data_manager.node_positions
@@ -109,7 +111,7 @@ class MainStatsPanel(BaseStatsPanel):
         edge_mask = data_manager.current_edge_mask
         visible_layer_indices = data_manager.visible_layers
         layer_colors = data_manager.layer_colors
-        
+
         # Get layer connections from data manager
         layer_connections = data_manager.get_layer_connections()
 
@@ -125,35 +127,60 @@ class MainStatsPanel(BaseStatsPanel):
 
         # 1. Layer connectivity matrix
         im, layer_connections = create_layer_connectivity_chart(
-            self.layer_connectivity_ax, visible_links, nodes_per_layer, layers, small_font, medium_font
+            self.layer_connectivity_ax,
+            visible_links,
+            nodes_per_layer,
+            layers,
+            small_font,
+            medium_font,
         )
-        cbar = self.left_figure.colorbar(im, ax=self.layer_connectivity_ax, fraction=0.046, pad=0.02)
+        cbar = self.left_figure.colorbar(
+            im, ax=self.layer_connectivity_ax, fraction=0.046, pad=0.02
+        )
         cbar.ax.tick_params(labelsize=6)  # Smaller colorbar ticks
 
         # 2. Cluster distribution
         visible_node_ids = [node_ids[i] for i in visible_nodes]
         create_cluster_distribution_chart(
-            self.cluster_distribution_ax, visible_node_ids, node_clusters, 
-            small_font, medium_font, data_manager.cluster_colors
+            self.cluster_distribution_ax,
+            visible_node_ids,
+            node_clusters,
+            small_font,
+            medium_font,
+            data_manager.cluster_colors,
         )
 
         # 3. Layer activity chart
         create_layer_activity_chart(
-            self.layer_activity_ax, visible_links, nodes_per_layer, layers, small_font, medium_font
+            self.layer_activity_ax,
+            visible_links,
+            nodes_per_layer,
+            layers,
+            small_font,
+            medium_font,
         )
 
         # --- RIGHT COLUMN CHARTS ---
 
         # 1. Betweenness centrality analysis
         create_betweenness_centrality_chart(
-            self.betweenness_centrality_ax, layer_connections, layers, 
-            visible_layer_indices, small_font, medium_font
+            self.betweenness_centrality_ax,
+            layer_connections,
+            layers,
+            visible_layer_indices,
+            small_font,
+            medium_font,
         )
 
         # 2. Interlayer graph visualization
         create_interlayer_graph(
-            self.interlayer_graph_ax, layer_connections, layers, 
-            small_font, medium_font, visible_layer_indices, layer_colors
+            self.interlayer_graph_ax,
+            layer_connections,
+            layers,
+            small_font,
+            medium_font,
+            visible_layer_indices,
+            layer_colors,
         )
 
         # 3. Layer similarity dendrogram
@@ -167,4 +194,4 @@ class MainStatsPanel(BaseStatsPanel):
 
         # Draw all canvases
         self.left_canvas.draw()
-        self.right_canvas.draw() 
+        self.right_canvas.draw()

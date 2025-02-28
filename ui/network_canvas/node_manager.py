@@ -2,11 +2,19 @@ import numpy as np
 import logging
 from utils.color_utils import hex_to_rgba
 
+
 class NodeManager:
     def __init__(self, canvas):
         self.canvas = canvas
-        
-    def load_data(self, node_positions=None, link_pairs=None, link_colors=None, node_colors=None, node_ids=None):
+
+    def load_data(
+        self,
+        node_positions=None,
+        link_pairs=None,
+        link_colors=None,
+        node_colors=None,
+        node_ids=None,
+    ):
         """Load data either directly or from the data manager"""
         if self.canvas.data_manager is not None:
             # Use data from the manager
@@ -34,16 +42,16 @@ class NodeManager:
             if node_colors:
                 for i, color_hex in enumerate(node_colors):
                     self.canvas.node_colors_rgba[i] = hex_to_rgba(color_hex)
-            
+
             # Initialize node sizes array - default size for all nodes
             self.canvas.node_sizes = np.ones(len(node_positions)) * 3
-            
+
             # Determine which nodes actually exist in each layer based on edges
             self.canvas.active_nodes = np.zeros(len(node_positions), dtype=bool)
             for start_idx, end_idx in self.canvas.link_pairs:
                 self.canvas.active_nodes[start_idx] = True
                 self.canvas.active_nodes[end_idx] = True
-            
+
             # Set larger size for active nodes
             self.canvas.node_sizes[self.canvas.active_nodes] = 9  # 3x larger
 
@@ -65,17 +73,15 @@ class NodeManager:
 
             enhanced_colors.append(rgba)
         return enhanced_colors
-        
+
     def set_layer_colors(self, layer_colors):
-        """Set the layer colors mapping"""
         logger = logging.getLogger(__name__)
         logger.debug(f"Setting layer colors: {layer_colors}")
-        
+
         self.canvas.layer_colors = layer_colors
-        
-        # Convert hex colors to RGBA
+
         self.canvas.layer_colors_rgba = {}
         for layer_name, color_hex in layer_colors.items():
             rgba = hex_to_rgba(color_hex, alpha=1.0)
             self.canvas.layer_colors_rgba[layer_name] = rgba
-            logger.debug(f"Layer {layer_name}: {color_hex} -> {rgba}") 
+            logger.debug(f"Layer {layer_name}: {color_hex} -> {rgba}")

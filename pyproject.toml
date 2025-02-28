@@ -9,6 +9,7 @@ dependencies = [
     "fa2-modified>=0.3.10",
     "importlib>=1.0.4",
     "ipykernel>=6.29.5",
+    "leidenalg>=0.10.2",
     "matplotlib>=3.10.0",
     "networkx>=3.4.2",
     "numpy>=2.2.3",

@@ -1,6 +1,9 @@
 import numpy as np
 
-def create_layer_activity_chart(ax, visible_links, nodes_per_layer, layers, small_font, medium_font):
+
+def create_layer_activity_chart(
+    ax, visible_links, nodes_per_layer, layers, small_font, medium_font
+):
     """Create chart showing edge counts and interlayer connections per layer"""
     edges_per_layer_count = [0] * len(layers)
     interlayer_connections_per_layer = [0] * len(layers)
@@ -22,14 +25,27 @@ def create_layer_activity_chart(ax, visible_links, nodes_per_layer, layers, smal
 
     # Primary axis for both types of data
     ax1 = ax
-    bars1 = ax1.bar(x - width/2, edges_per_layer_count, width, label='Intralayer Edges', color='skyblue')
-    bars2 = ax1.bar(x + width/2, interlayer_connections_per_layer, width, label='Interlayer Connections', color='red', alpha=0.8)
-    
-    ax1.set_xlabel('Layers', **small_font)
-    ax1.set_ylabel('Edge Count', **small_font)
+    bars1 = ax1.bar(
+        x - width / 2,
+        edges_per_layer_count,
+        width,
+        label="Intralayer Edges",
+        color="skyblue",
+    )
+    bars2 = ax1.bar(
+        x + width / 2,
+        interlayer_connections_per_layer,
+        width,
+        label="Interlayer Connections",
+        color="red",
+        alpha=0.8,
+    )
+
+    ax1.set_xlabel("Layers", **small_font)
+    ax1.set_ylabel("Edge Count", **small_font)
     ax1.set_xticks(x)
     ax1.set_xticklabels(layers, rotation=90, **small_font)
-    ax1.tick_params(axis='y', labelsize=6)
-    ax1.legend(loc='upper right', prop={'size': 6})
+    ax1.tick_params(axis="y", labelsize=6)
+    ax1.legend(loc="upper right", prop={"size": 6})
 
-    ax.set_title('Layer Activity', **medium_font) 
+    ax.set_title("Layer Activity", **medium_font)

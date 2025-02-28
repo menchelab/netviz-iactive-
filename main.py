@@ -1,8 +1,8 @@
-import sys
 from PyQt5.QtWidgets import QApplication
 from ui.main_window import MultilayerNetworkViz
 from utils.logging_setup import setup_logging
 from datetime import datetime
+
 
 def main():
     app_instance = QApplication([])
@@ -19,6 +19,7 @@ def main():
 
     logger.info("Starting viz loop")
     app_instance.exec_()
+
 
 if __name__ == "__main__":
     main()

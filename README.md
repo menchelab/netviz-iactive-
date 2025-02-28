@@ -7,7 +7,7 @@ uv sync
 uv run python main.py
 ```
 
-try to make sure gpu is actually used
+try to make sure gpu is actually used, if main viz is slow
 
 ```
 uv run python

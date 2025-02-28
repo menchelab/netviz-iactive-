@@ -1,7 +1,5 @@
-import numpy as np
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QLabel, QCheckBox
+from PyQt5.QtWidgets import QWidget
+
 
 class BaseStatsPanel(QWidget):
     """Base class for all statistics panels"""
@@ -16,4 +14,4 @@ class BaseStatsPanel(QWidget):
 
     def update_stats(self, data_manager):
         """Update statistics - to be implemented by subclasses"""
-        pass 
+        pass

@@ -11,6 +11,7 @@ from .critical_structure_panel import CriticalStructurePanel
 from .hyperbolic_embedding_panel import HyperbolicEmbeddingPanel
 from .chart_grid_panel import ChartGridPanel
 
+
 class NetworkStatsPanel(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -32,11 +33,11 @@ class NetworkStatsPanel(QWidget):
         self.layer_graph_panel = LayerGraphPanel()
         self.layer_communities_panel = LayerCommunitiesPanel()
         self.information_flow_panel = InformationFlowPanel()
-        
+
         # Create advanced analytics panels
         self.layer_coupling_panel = LayerCouplingPanel()
         self.critical_structure_panel = CriticalStructurePanel()
-#        self.hyperbolic_embedding_panel = HyperbolicEmbeddingPanel()
+        #        self.hyperbolic_embedding_panel = HyperbolicEmbeddingPanel()
 
         # Create chart grid panel
         self.chart_grid_panel = ChartGridPanel()
@@ -47,11 +48,11 @@ class NetworkStatsPanel(QWidget):
         self.tab_widget.addTab(self.layer_graph_panel, "L Graph")
         self.tab_widget.addTab(self.layer_communities_panel, "L Communities")
         self.tab_widget.addTab(self.information_flow_panel, "test InfoFlow")
-        
+
         # Add advanced analytics tabs
         self.tab_widget.addTab(self.layer_coupling_panel, "L Coupling")
         self.tab_widget.addTab(self.critical_structure_panel, "test critstruct")
-#        self.tab_widget.addTab(self.hyperbolic_embedding_panel, "Hyperbolic View")
+        #        self.tab_widget.addTab(self.hyperbolic_embedding_panel, "Hyperbolic View")
 
         # Add chart grid tab
         self.tab_widget.addTab(self.chart_grid_panel, "multi")
@@ -59,18 +60,18 @@ class NetworkStatsPanel(QWidget):
     def update_stats(self, data_manager):
         """Update statistics in all panels"""
         logger = logging.getLogger(__name__)
-        
+
         # Update each panel
         self.main_stats_panel.update_stats(data_manager)
         self.sankey_panel.update_stats(data_manager)
         self.layer_graph_panel.update_stats(data_manager)
         self.layer_communities_panel.update_stats(data_manager)
         self.information_flow_panel.update_stats(data_manager)
-        
+
         # Update advanced analytics panels
         self.layer_coupling_panel.update_stats(data_manager)
         self.critical_structure_panel.update_stats(data_manager)
-#        self.hyperbolic_embedding_panel.update_stats(data_manager)
+        #        self.hyperbolic_embedding_panel.update_stats(data_manager)
 
         # Update chart grid panel
-        self.chart_grid_panel.update_stats(data_manager) 
+        self.chart_grid_panel.update_stats(data_manager)
