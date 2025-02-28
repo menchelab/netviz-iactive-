@@ -8,6 +8,22 @@ from scipy.spatial.distance import pdist, squareform
 def calculate_coupling_metric(layer_connections, metric="Edge Density"):
     """Calculate coupling between layers using specified metric"""
     n_layers = layer_connections.shape[0]
+    
+    # Validate input matrix
+    if not isinstance(layer_connections, np.ndarray):
+        raise ValueError("layer_connections must be a numpy array")
+    if layer_connections.shape[0] != layer_connections.shape[1]:
+        raise ValueError("layer_connections must be a square matrix")
+    if np.any(layer_connections < 0):
+        raise ValueError("layer_connections cannot contain negative values")
+    
+    # Print input matrix statistics for debugging
+    print(f"Input matrix statistics:")
+    print(f"- Shape: {layer_connections.shape}")
+    print(f"- Range: [{layer_connections.min():.3f}, {layer_connections.max():.3f}]")
+    print(f"- Mean: {layer_connections.mean():.3f}")
+    print(f"- Unique values: {len(np.unique(layer_connections))}")
+        
     coupling_matrix = np.zeros((n_layers, n_layers))
 
     if metric == "Edge Density":
@@ -19,17 +35,41 @@ def calculate_coupling_metric(layer_connections, metric="Edge Density"):
                     nodes_in_layer = layer_connections[i, i]
                     if nodes_in_layer > 1:
                         max_possible = nodes_in_layer * (nodes_in_layer - 1) / 2
-                        coupling_matrix[i, j] = layer_connections[i, i] / max_possible
+                        coupling_matrix[i, j] = layer_connections[i, i] / max_possible if max_possible > 0 else 0
                     else:
-                        coupling_matrix[i, j] = 1.0
+                        coupling_matrix[i, j] = 0.0  # Single node has no internal coupling
                 else:
                     # For interlayer coupling
                     connections = layer_connections[i, j]
                     # Maximum possible connections based on number of nodes
                     nodes_in_layer_i = layer_connections[i, i]
                     nodes_in_layer_j = layer_connections[j, j]
-                    max_connections = max(1, nodes_in_layer_i * nodes_in_layer_j)
-                    coupling_matrix[i, j] = connections / max_connections
+                    max_connections = nodes_in_layer_i * nodes_in_layer_j
+                    coupling_matrix[i, j] = connections / max_connections if max_connections > 0 else 0
+
+    elif metric == "Topological Overlap":
+        # Calculate number of shared neighbors between layers
+        for i in range(n_layers):
+            for j in range(n_layers):
+                if i == j:
+                    coupling_matrix[i, j] = 1.0
+                else:
+                    # Get neighbors of layer i and j
+                    neighbors_i = set()
+                    neighbors_j = set()
+                    for k in range(n_layers):
+                        if layer_connections[i, k] > 0 and k != i:
+                            neighbors_i.add(k)
+                        if layer_connections[j, k] > 0 and k != j:
+                            neighbors_j.add(k)
+                    
+                    # Calculate overlap
+                    union = len(neighbors_i.union(neighbors_j))
+                    intersection = len(neighbors_i.intersection(neighbors_j))
+                    if union > 0:
+                        coupling_matrix[i, j] = intersection / union
+                    else:
+                        coupling_matrix[i, j] = 0.0
 
     elif metric == "Information Flow":
         # Create a graph from layer connections
@@ -66,6 +106,8 @@ def create_layer_coupling_charts(
     layers,
     medium_font=None,
     large_font=None,
+    edge_threshold=0.1,
+    metric="Edge Density"
 ):
     """Create a visualization of layer coupling with hierarchical organization"""
     if medium_font is None:
@@ -75,22 +117,22 @@ def create_layer_coupling_charts(
 
     # Calculate coupling matrix
     coupling_matrix = calculate_coupling_metric(
-        layer_connections, metric="Edge Density"
+        layer_connections, metric=metric
     )
-
+    
+    # Print coupling matrix statistics
+    print(f"\nCoupling matrix statistics for {metric}:")
+    print(f"- Range: [{coupling_matrix.min():.3f}, {coupling_matrix.max():.3f}]")
+    print(f"- Mean: {coupling_matrix.mean():.3f}")
+    
     # Create heatmap
     im = coupling_heatmap_ax.imshow(coupling_matrix, cmap="viridis", vmin=0, vmax=1)
     plt.colorbar(im, ax=coupling_heatmap_ax, fraction=0.046, pad=0.04)
-
-    # Add labels to heatmap
-    coupling_heatmap_ax.set_xticks(range(len(layers)))
-    coupling_heatmap_ax.set_yticks(range(len(layers)))
-    coupling_heatmap_ax.set_xticklabels(layers, rotation=90, **medium_font)
-    coupling_heatmap_ax.set_yticklabels(layers, **medium_font)
-    coupling_heatmap_ax.set_title("Layer Coupling Matrix", **large_font)
+    coupling_heatmap_ax.set_title(f"Layer Coupling Matrix ({metric})", **large_font)
 
     # Calculate overall coupling scores
-    coupling_scores = coupling_matrix.sum(axis=1) - 1  # Subtract self-coupling
+    np.fill_diagonal(coupling_matrix, 0)  # Zero out self-coupling for score calculation
+    coupling_scores = coupling_matrix.sum(axis=1)  # Sum of all inter-layer coupling
 
     # Create bar chart of coupling scores
     sorted_indices = np.argsort(coupling_scores)[::-1]
@@ -138,11 +180,15 @@ def create_layer_coupling_charts(
     for i, layer in enumerate(layers):
         G.add_node(i, name=layer)
 
-    # Add edges based on coupling strength
+    # Add edges based on coupling strength with threshold
     for i in range(len(layers)):
         for j in range(i + 1, len(layers)):
-            if coupling_matrix[i, j] > 0:
+            if coupling_matrix[i, j] > edge_threshold:  # Only add significant edges
                 G.add_edge(i, j, weight=coupling_matrix[i, j])
+    
+    # Print network statistics
+    print(f"Number of edges in visualization: {G.number_of_edges()}")
+    print(f"Average coupling strength: {np.mean([d['weight'] for (u,v,d) in G.edges(data=True)]):.3f}")
 
     # Get the order of leaves from the dendrogram
     leaf_order = dendrogram["leaves"]

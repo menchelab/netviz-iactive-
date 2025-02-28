@@ -359,6 +359,8 @@ def create_interlayer_graph(
         pos = nx.spring_layout(G, seed=42, weight="weight", k=0.3)
 
     # Get colors directly from layer names
+    if layer_colors is None:
+        layer_colors = {}
     node_colors = [layer_colors.get(active_layers[node], "skyblue") for node in G.nodes()]
 
     # Draw nodes

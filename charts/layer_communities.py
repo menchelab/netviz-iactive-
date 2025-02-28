@@ -47,22 +47,32 @@ def detect_communities_spectral(G, num_clusters=None):
     if num_clusters is None:
         # Estimate number of clusters using eigengap heuristic
         laplacian = nx.normalized_laplacian_matrix(G)
-        eigenvalues = sorted(abs(sparse.linalg.eigvals(laplacian.todense())))
-        gaps = np.diff(eigenvalues)
-        num_clusters = (
-            np.argmax(gaps) + 2
-        )  # Add 2 because we diff'd and want at least 2 communities
-        num_clusters = max(
-            2, min(num_clusters, len(G.nodes()) - 1)
-        )  # Ensure reasonable bounds
+        try:
+            # Try newer scipy API first
+            eigenvalues = sorted(abs(sparse.linalg.eigvalsh(laplacian.todense())))
+        except AttributeError:
+            try:
+                # Fallback to older API
+                eigenvalues = sorted(abs(sparse.linalg.eigvals(laplacian.todense())))
+            except:
+                # If both fail, use a default number of clusters
+                print("Warning: Could not compute eigenvalues, using default number of clusters")
+                eigenvalues = []
+        
+        if len(eigenvalues) > 0:
+            gaps = np.diff(eigenvalues)
+            num_clusters = np.argmax(gaps) + 2  # Add 2 because we diff'd and want at least 2 communities
+        else:
+            # Default to square root of number of nodes if eigenvalue computation fails
+            num_clusters = max(2, min(int(np.sqrt(len(G.nodes()))), len(G.nodes()) - 1))
+            
+        num_clusters = max(2, min(num_clusters, len(G.nodes()) - 1))  # Ensure reasonable bounds
 
     # Create adjacency matrix
     adj_matrix = nx.to_numpy_array(G)
 
     # Apply spectral clustering
-    sc = SpectralClustering(
-        n_clusters=num_clusters, affinity="precomputed", random_state=42
-    )
+    sc = SpectralClustering(n_clusters=num_clusters, affinity="precomputed", random_state=42)
     labels = sc.fit_predict(adj_matrix)
 
     # Convert to dictionary format
@@ -76,24 +86,42 @@ def detect_communities_infomap(G):
     if not HAS_INFOMAP:
         return detect_communities_networkx(G)
 
-    # Initialize Infomap
-    im = infomap.Infomap("--two-level")
+    try:
+        # Initialize Infomap
+        im = infomap.Infomap("--two-level")
 
-    # Add edges to Infomap network
-    for e in G.edges(data=True):
-        weight = e[2].get("weight", 1.0)
-        im.add_link(e[0], e[1], weight)
+        # Add nodes first to ensure all nodes are included
+        for node in G.nodes():
+            im.add_node(node)
 
-    # Run Infomap
-    im.run()
+        # Add edges
+        for e in G.edges(data=True):
+            weight = e[2].get("weight", 1.0)
+            im.add_link(e[0], e[1], weight)
 
-    # Convert to dictionary format
-    communities = {}
-    for node in im.tree:
-        if node.is_leaf:
-            communities[node.physical_id] = node.module_id
+        # Run Infomap
+        im.run()
 
-    return communities
+        # Convert to dictionary format, ensuring all nodes are included
+        communities = {}
+        
+        # First pass: collect all module assignments
+        for node in im.tree:
+            if node.is_leaf:
+                communities[node.physical_id] = node.module_id
+
+        # Second pass: ensure all graph nodes have a community
+        # If a node wasn't assigned by Infomap, give it its own community
+        max_community = max(communities.values(), default=-1)
+        for node in G.nodes():
+            if node not in communities:
+                max_community += 1
+                communities[node] = max_community
+
+        return communities
+    except Exception as e:
+        print(f"Error in Infomap algorithm: {e}")
+        return detect_communities_networkx(G)
 
 
 def detect_communities_fluid(G, k=None):
@@ -296,14 +324,14 @@ def create_layer_communities_chart(
         unique_communities = sorted(set(communities.values()))
         num_communities = len(unique_communities)
 
-        # Create a colormap for communities
-        community_colors = plt.cm.tab10(np.linspace(0, 1, max(10, num_communities)))
+        # Create a colormap for communities - ensure we only generate colors for actual communities
+        community_colors = plt.cm.tab10(np.linspace(0, 1, num_communities))
 
         # Map nodes to their community colors
-        node_colors = [
-            community_colors[communities[node] % len(community_colors)]
-            for node in G.nodes()
-        ]
+        node_colors = []
+        for node in G.nodes():
+            comm_idx = unique_communities.index(communities[node])
+            node_colors.append(community_colors[comm_idx])
 
         # Create a mapping of community ID to list of layers in that community
         community_members = {comm: [] for comm in unique_communities}
@@ -551,4 +579,5 @@ def detect_communities_networkx(G):
             return communities_dict
         except:
             # Last resort: assign all nodes to the same community
+            print("XXXXX Warning: All nodes assigned to the same community, couldnt run algos")
             return {node: 0 for node in G.nodes()}
