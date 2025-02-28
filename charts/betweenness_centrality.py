@@ -15,10 +15,21 @@ def create_betweenness_centrality_chart(ax, layer_connections, layers, visible_l
         ax.axis('off')
         return
 
-    # Filter the layer_connections matrix to only include visible layers
-    visible_indices = np.array(visible_layer_indices)
+    # Validate visible layer indices against matrix size
+    matrix_size = layer_connections.shape[0]
+    valid_indices = [idx for idx in visible_layer_indices if idx < matrix_size]
+    
+    if not valid_indices:
+        logger.warning(f"No valid layer indices found. Matrix size: {matrix_size}, Indices: {visible_layer_indices}")
+        ax.text(0.5, 0.5, 'No valid layers to analyze', 
+               horizontalalignment='center', verticalalignment='center', **small_font)
+        ax.axis('off')
+        return
+
+    # Filter the layer_connections matrix to only include valid visible layers
+    visible_indices = np.array(valid_indices)
     filtered_connections = layer_connections[np.ix_(visible_indices, visible_indices)]
-    filtered_layers = [layers[i] for i in visible_indices]
+    filtered_layers = [layers[i] for i in valid_indices]
 
     if len(filtered_layers) <= 1 or np.sum(filtered_connections) == 0:
         logger.info("Not enough connections for betweenness centrality analysis")

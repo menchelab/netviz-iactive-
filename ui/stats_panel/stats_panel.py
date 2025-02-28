@@ -58,9 +58,6 @@ class NetworkStatsPanel(QWidget):
         self.tab_widget.addTab(self.chart_grid_panel, "multi")
 
     def update_stats(self, data_manager):
-        """Update statistics in all panels"""
-        logger = logging.getLogger(__name__)
-
         # Update each panel
         self.main_stats_panel.update_stats(data_manager)
         self.sankey_panel.update_stats(data_manager)

@@ -38,9 +38,7 @@ class NetworkDataManager:
         self.nodes_per_layer = None
         self.active_nodes = None
         self.node_sizes = None
-        self.base_node_mapping = (
-            None  # Maps base node IDs to their indices in each layer
-        )
+        self.base_node_mapping = None  # Maps base node IDs to their indices in each layer
 
         # Visibility state
         self.visible_layers = None
@@ -50,9 +48,14 @@ class NetworkDataManager:
         self.current_edge_mask = None
 
         # Cached calculations
+        self._reset_cache()
+
+    def _reset_cache(self):
+        """Reset all cached calculations"""
         self.interlayer_edge_counts = {}
         self.layer_connections = None
         self.networkx_graph = None
+        self._last_nx_visible_only = None
 
     def set_data_dir(self, data_dir):
         """Set the data directory"""
@@ -140,9 +143,7 @@ class NetworkDataManager:
         self._create_base_node_mapping()
 
         # Reset cached calculations
-        self.interlayer_edge_counts = {}
-        self.layer_connections = None
-        self.networkx_graph = None
+        self._reset_cache()
 
         logger.info("Data loading complete")
 
@@ -183,6 +184,17 @@ class NetworkDataManager:
         logger = logging.getLogger(__name__)
         logger.info("Updating visibility masks")
 
+        # Check if visibility actually changed
+        visibility_changed = (
+            self.visible_layers != visible_layers or
+            self.visible_clusters != visible_clusters or
+            self.visible_origins != visible_origins
+        )
+
+        if not visibility_changed:
+            return self.current_node_mask, self.current_edge_mask
+
+        # Update visibility state
         self.visible_layers = visible_layers
         self.visible_clusters = visible_clusters
         self.visible_origins = visible_origins
@@ -219,8 +231,8 @@ class NetworkDataManager:
         self.current_node_mask = node_mask
         self.current_edge_mask = edge_mask
 
-        # Reset cached calculations that depend on visibility
-        self.interlayer_edge_counts = {}
+        # Reset cached calculations since visibility changed
+        self._reset_cache()
 
         return node_mask, edge_mask
 
@@ -259,18 +271,23 @@ class NetworkDataManager:
         Parameters:
         -----------
         filter_to_visible : bool
-            If True, return a matrix containing only visible layers
+            If True, return a matrix containing only visible layers, clusters, and origins
 
         Returns:
         --------
         numpy.ndarray
             Matrix of connection counts between layers
         """
+        # Early exit if no visible filters
+        if filter_to_visible:
+            if not self.visible_layers or not self.visible_clusters or not self.visible_origins:
+                return np.array([])
+
         # Calculate the full connection matrix if not cached
         if self.layer_connections is None:
             # Initialize connection matrix
             num_layers = len(self.layers)
-            connections = np.zeros((num_layers, num_layers), dtype=int)
+            self.layer_connections = np.zeros((num_layers, num_layers), dtype=int)
 
             # Count connections between layers
             for i, (start_idx, end_idx) in enumerate(self.link_pairs):
@@ -280,20 +297,43 @@ class NetworkDataManager:
                 start_layer = start_idx // self.nodes_per_layer
                 end_layer = end_idx // self.nodes_per_layer
 
-                connections[start_layer, end_layer] += 1
-                if start_layer != end_layer:
-                    connections[end_layer, start_layer] += 1  # Count both directions
+                # Get node IDs for cluster and origin checks
+                start_node_id = self.node_ids[start_idx]
+                end_node_id = self.node_ids[end_idx]
 
-            self.layer_connections = connections
+                # Check clusters
+                start_cluster = self.node_clusters.get(start_node_id)
+                end_cluster = self.node_clusters.get(end_node_id)
+
+                # Check origins
+                start_origin = self.node_origins.get(start_node_id, "Unknown")
+                end_origin = self.node_origins.get(end_node_id, "Unknown")
+
+                # Apply all filters if requested
+                if filter_to_visible:
+                    # Check layer visibility
+                    if start_layer not in self.visible_layers or end_layer not in self.visible_layers:
+                        continue
+
+                    # Check cluster visibility
+                    if start_cluster not in self.visible_clusters or end_cluster not in self.visible_clusters:
+                        continue
+
+                    # Check origin visibility
+                    if start_origin not in self.visible_origins or end_origin not in self.visible_origins:
+                        continue
+
+                # Add connection to matrix
+                self.layer_connections[start_layer, end_layer] += 1
+                if start_layer != end_layer:
+                    self.layer_connections[end_layer, start_layer] += 1  # Count both directions
 
         # If we don't need to filter, return the full matrix
         if not filter_to_visible:
-            return self.layer_connections
+            return self.layer_connections.copy()
 
-        # Otherwise, create a filtered matrix with only visible layers
-        if not self.visible_layers:
-            return np.array([])
 
+        # Create a filtered matrix with only visible layers
         num_visible = len(self.visible_layers)
         filtered_connections = np.zeros((num_visible, num_visible), dtype=int)
 

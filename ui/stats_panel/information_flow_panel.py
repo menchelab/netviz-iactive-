@@ -63,10 +63,10 @@ class InformationFlowPanel(BaseStatsPanel):
             # Unpack stored data
             (
                 layer_connections,
-                layers,
+                visible_layers,  # Now using filtered layers list
                 medium_font,
                 large_font,
-                visible_layer_indices,
+                visible_indices,  # Now using sequential indices
                 layer_colors,
             ) = self._current_data
 
@@ -75,10 +75,10 @@ class InformationFlowPanel(BaseStatsPanel):
                 self.flow_ax,
                 self.network_ax,
                 layer_connections,
-                layers,
+                visible_layers,  # Use filtered layers list
                 medium_font,
                 large_font,
-                visible_layer_indices,
+                visible_indices,  # Use sequential indices
                 layer_colors,
                 metric=self.flow_metric_dropdown.currentText(),
             )
@@ -129,10 +129,10 @@ class InformationFlowPanel(BaseStatsPanel):
             # Unpack stored data
             (
                 layer_connections,
-                layers,
+                visible_layers,  # Now using filtered layers list
                 medium_font,
                 large_font,
-                visible_layer_indices,
+                visible_indices,  # Now using sequential indices
                 layer_colors,
             ) = self._current_data
 
@@ -141,10 +141,10 @@ class InformationFlowPanel(BaseStatsPanel):
                 self.flow_ax,
                 self.network_ax,
                 layer_connections,
-                layers,
+                visible_layers,  # Use filtered layers list
                 medium_font,
                 large_font,
-                visible_layer_indices,
+                visible_indices,  # Use sequential indices
                 layer_colors,
                 metric=metric,
             )
@@ -167,8 +167,11 @@ class InformationFlowPanel(BaseStatsPanel):
         visible_layer_indices = data_manager.visible_layers
         layer_colors = data_manager.layer_colors
 
-        # Get layer connections from data manager
-        layer_connections = data_manager.get_layer_connections()
+        # Get layer connections from data manager (already filtered)
+        layer_connections = data_manager.get_layer_connections(filter_to_visible=True)
+
+        # Get visible layers list for filtered views
+        visible_layers = [layers[i] for i in visible_layer_indices] if visible_layer_indices else []
 
         # Define font sizes
         medium_font = {"fontsize": 7}
@@ -177,10 +180,10 @@ class InformationFlowPanel(BaseStatsPanel):
         # Store current data for later use
         self._current_data = (
             layer_connections,
-            layers,
+            visible_layers,  # Store filtered layers list
             medium_font,
             large_font,
-            visible_layer_indices,
+            list(range(len(visible_layers))),  # Use sequential indices
             layer_colors,
         )
 
@@ -190,10 +193,10 @@ class InformationFlowPanel(BaseStatsPanel):
                 self.flow_ax,
                 self.network_ax,
                 layer_connections,
-                layers,
+                visible_layers,  # Use filtered layers list
                 medium_font,
                 large_font,
-                visible_layer_indices,
+                list(range(len(visible_layers))),  # Use sequential indices
                 layer_colors,
                 metric=self.flow_metric_dropdown.currentText(),
             )

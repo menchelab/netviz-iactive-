@@ -170,7 +170,7 @@ class LayerInfluencePanel(BaseStatsPanel):
         layer_colors = data_manager.layer_colors
 
         # Get layer connections from data manager
-        layer_connections = data_manager.get_layer_connections()
+        layer_connections = data_manager.get_layer_connections(filter_to_visible=True)
 
         # Define font sizes
         medium_font = {"fontsize": 7}

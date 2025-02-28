@@ -2,14 +2,13 @@ import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
-from matplotlib.colors import LinearSegmentedColormap
-from sklearn.metrics import normalized_mutual_info_score
 from sklearn.cluster import SpectralClustering
 import scipy.sparse as sparse
 
 # Try to import community module, but provide fallback if not available
 try:
     from community import best_partition  # python-louvain package for Louvain algorithm
+
     HAS_COMMUNITY = True
 except ImportError:
     HAS_COMMUNITY = False
@@ -21,6 +20,7 @@ except ImportError:
 try:
     import leidenalg as la
     import igraph as ig
+
     HAS_LEIDEN = True
 except ImportError:
     HAS_LEIDEN = False
@@ -31,12 +31,14 @@ except ImportError:
 # Try to import infomap module, but provide fallback if not available
 try:
     import infomap
+
     HAS_INFOMAP = True
 except ImportError:
     HAS_INFOMAP = False
     print(
         "Warning: infomap package not installed. Using networkx's community detection as fallback."
     )
+
 
 def detect_communities_spectral(G, num_clusters=None):
     """
@@ -47,18 +49,25 @@ def detect_communities_spectral(G, num_clusters=None):
         laplacian = nx.normalized_laplacian_matrix(G)
         eigenvalues = sorted(abs(sparse.linalg.eigvals(laplacian.todense())))
         gaps = np.diff(eigenvalues)
-        num_clusters = np.argmax(gaps) + 2  # Add 2 because we diff'd and want at least 2 communities
-        num_clusters = max(2, min(num_clusters, len(G.nodes()) - 1))  # Ensure reasonable bounds
-    
+        num_clusters = (
+            np.argmax(gaps) + 2
+        )  # Add 2 because we diff'd and want at least 2 communities
+        num_clusters = max(
+            2, min(num_clusters, len(G.nodes()) - 1)
+        )  # Ensure reasonable bounds
+
     # Create adjacency matrix
     adj_matrix = nx.to_numpy_array(G)
-    
+
     # Apply spectral clustering
-    sc = SpectralClustering(n_clusters=num_clusters, affinity='precomputed', random_state=42)
+    sc = SpectralClustering(
+        n_clusters=num_clusters, affinity="precomputed", random_state=42
+    )
     labels = sc.fit_predict(adj_matrix)
-    
+
     # Convert to dictionary format
     return {node: label for node, label in enumerate(labels)}
+
 
 def detect_communities_infomap(G):
     """
@@ -66,25 +75,26 @@ def detect_communities_infomap(G):
     """
     if not HAS_INFOMAP:
         return detect_communities_networkx(G)
-        
+
     # Initialize Infomap
     im = infomap.Infomap("--two-level")
-    
+
     # Add edges to Infomap network
     for e in G.edges(data=True):
-        weight = e[2].get('weight', 1.0)
+        weight = e[2].get("weight", 1.0)
         im.add_link(e[0], e[1], weight)
-    
+
     # Run Infomap
     im.run()
-    
+
     # Convert to dictionary format
     communities = {}
     for node in im.tree:
         if node.is_leaf:
             communities[node.physical_id] = node.module_id
-    
+
     return communities
+
 
 def detect_communities_fluid(G, k=None):
     """
@@ -93,11 +103,11 @@ def detect_communities_fluid(G, k=None):
     if k is None:
         # Estimate k based on network size and connectivity
         k = max(2, min(int(np.sqrt(len(G.nodes()))), len(G.nodes()) - 1))
-    
+
     try:
         communities_generator = nx.algorithms.community.asyn_fluidc(G, k, max_iter=100)
         communities_list = list(communities_generator)
-        
+
         # Convert to dictionary format
         communities = {}
         for i, community in enumerate(communities_list):
@@ -108,12 +118,15 @@ def detect_communities_fluid(G, k=None):
         print(f"Error in Fluid Communities algorithm: {e}")
         return detect_communities_networkx(G)
 
+
 def detect_communities_async_label_prop(G):
     """
     Detect communities using Asynchronous Label Propagation.
     """
     try:
-        communities_list = list(nx.algorithms.community.asyn_lpa_communities(G, weight='weight'))
+        communities_list = list(
+            nx.algorithms.community.asyn_lpa_communities(G, weight="weight")
+        )
         communities = {}
         for i, community in enumerate(communities_list):
             for node in community:
@@ -122,6 +135,7 @@ def detect_communities_async_label_prop(G):
     except Exception as e:
         print(f"Error in Async Label Propagation: {e}")
         return detect_communities_networkx(G)
+
 
 def create_layer_communities_chart(
     heatmap_ax,
@@ -144,47 +158,34 @@ def create_layer_communities_chart(
     network_ax : matplotlib.axes.Axes
         Axes for the community network visualization
     layer_connections : numpy.ndarray
-        Matrix of connection counts between layers
+        Matrix of connection counts between layers (already filtered)
     layers : list
-        List of layer names
+        List of visible layer names (already filtered)
     medium_font, large_font : dict
         Font configuration dictionaries
     visible_layers : list, optional
-        Indices of visible layers
+        Sequential indices for visible layers (0 to len(layers)-1)
     layer_colors : dict, optional
         Dictionary mapping layer names to colors
     algorithm : str
-        The community detection algorithm to use 
+        The community detection algorithm to use
         ("Louvain", "Leiden", "Label Propagation", "Spectral", "Infomap", "Fluid", "AsyncLPA")
     """
-    # If visible_layers is None, show all layers
-    if visible_layers is None:
-        visible_layers = list(range(len(layers)))
-
-    # Filter the layer_connections matrix to only include visible layers
-    visible_indices = np.array(visible_layers)
-    if len(visible_indices) > 0:
-        filtered_connections = layer_connections[
-            np.ix_(visible_indices, visible_indices)
-        ]
-        filtered_layers = [layers[i] for i in visible_indices]
-    else:
-        filtered_connections = np.zeros((0, 0))
-        filtered_layers = []
-
-    if len(filtered_layers) > 0 and np.sum(filtered_connections) > 0:
+    # No need to filter the layer_connections matrix as it's already filtered
+    # Just check if we have any data to visualize
+    if len(layers) > 0 and np.sum(layer_connections) > 0:
         # Create a graph where nodes are layers and edges represent connections
         G = nx.Graph()
 
-        # Add nodes (layers)
-        for i, layer in enumerate(filtered_layers):
+        # Add nodes (layers) using sequential indices
+        for i, layer in enumerate(layers):
             G.add_node(i, name=layer)
 
         # Add edges with weights based on connection counts
-        for i in range(len(filtered_layers)):
-            for j in range(i + 1, len(filtered_layers)):
-                if filtered_connections[i, j] > 0:
-                    G.add_edge(i, j, weight=filtered_connections[i, j])
+        for i in range(len(layers)):
+            for j in range(i + 1, len(layers)):
+                if layer_connections[i, j] > 0:
+                    G.add_edge(i, j, weight=layer_connections[i, j])
 
         # Check if the graph has any edges
         if len(G.edges()) == 0:
@@ -218,22 +219,23 @@ def create_layer_communities_chart(
                 try:
                     # Convert networkx graph to igraph
                     edges = list(G.edges(data=True))
-                    weights = [e[2].get('weight', 1.0) for e in edges]
+                    weights = [e[2].get("weight", 1.0) for e in edges]
                     ig_graph = ig.Graph(
                         n=len(G.nodes()),
                         edges=[(e[0], e[1]) for e in edges],
-                        edge_attrs={'weight': weights}
+                        edge_attrs={"weight": weights},
                     )
-                    
+
                     # Run Leiden algorithm
                     partition = la.find_partition(
-                        ig_graph,
-                        la.ModularityVertexPartition,
-                        weights='weight'
+                        ig_graph, la.ModularityVertexPartition, weights="weight"
                     )
-                    
+
                     # Convert partition to the expected format
-                    communities = {node: membership for node, membership in enumerate(partition.membership)}
+                    communities = {
+                        node: membership
+                        for node, membership in enumerate(partition.membership)
+                    }
                     algorithm_name = "Leiden"
                 except Exception as e:
                     communities = detect_communities_networkx(G)
@@ -306,7 +308,7 @@ def create_layer_communities_chart(
         # Create a mapping of community ID to list of layers in that community
         community_members = {comm: [] for comm in unique_communities}
         for node, comm in communities.items():
-            community_members[comm].append(filtered_layers[node])
+            community_members[comm].append(layers[node])
 
         # Calculate community metrics
         try:
@@ -346,10 +348,10 @@ def create_layer_communities_chart(
                 [i for i, node in enumerate(G.nodes()) if communities[node] == comm]
             )
 
-        reordered_connections = filtered_connections[
+        reordered_connections = layer_connections[
             np.ix_(community_order, community_order)
         ]
-        reordered_layers = [filtered_layers[i] for i in community_order]
+        reordered_layers = [layers[i] for i in community_order]
 
         # Create a matrix plot
         im = heatmap_ax.imshow(reordered_connections, cmap="viridis")
@@ -461,7 +463,7 @@ def create_layer_communities_chart(
             pos,
             labels={
                 i: f"{layer}\n(C{communities[i]})"
-                for i, layer in enumerate(filtered_layers)
+                for i, layer in enumerate(layers)
             },
             font_size=8,
             ax=network_ax,
@@ -488,7 +490,7 @@ def create_layer_communities_chart(
         )
 
     else:
-        if len(filtered_layers) == 0:
+        if len(layers) == 0:
             message = "No visible layers to display"
         else:
             message = "No interlayer connections to display"

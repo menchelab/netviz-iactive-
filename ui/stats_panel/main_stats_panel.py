@@ -112,8 +112,8 @@ class MainStatsPanel(BaseStatsPanel):
         visible_layer_indices = data_manager.visible_layers
         layer_colors = data_manager.layer_colors
 
-        # Get layer connections from data manager
-        layer_connections = data_manager.get_layer_connections()
+        # Get layer connections from data manager (already filtered)
+        layer_connections = data_manager.get_layer_connections(filter_to_visible=True)
 
         # Get visible nodes and edges
         visible_nodes = [i for i, mask in enumerate(node_mask) if mask]
@@ -123,6 +123,12 @@ class MainStatsPanel(BaseStatsPanel):
         # Calculate nodes per layer
         nodes_per_layer = len(node_positions) // len(layers)
 
+        # Get visible layers list for filtered views
+        visible_layers = [layers[i] for i in visible_layer_indices] if visible_layer_indices else []
+
+        # Create mapping from original layer indices to filtered indices
+        layer_index_map = {orig_idx: new_idx for new_idx, orig_idx in enumerate(visible_layer_indices)} if visible_layer_indices else {}
+
         # --- LEFT COLUMN CHARTS ---
 
         # 1. Layer connectivity matrix
@@ -130,9 +136,10 @@ class MainStatsPanel(BaseStatsPanel):
             self.layer_connectivity_ax,
             visible_links,
             nodes_per_layer,
-            layers,
+            visible_layers,  # Use visible layers instead of all layers
             small_font,
             medium_font,
+            layer_index_map,  # Pass the mapping
         )
         cbar = self.left_figure.colorbar(
             im, ax=self.layer_connectivity_ax, fraction=0.046, pad=0.02
@@ -155,9 +162,10 @@ class MainStatsPanel(BaseStatsPanel):
             self.layer_activity_ax,
             visible_links,
             nodes_per_layer,
-            layers,
+            visible_layers,  # Use visible layers instead of all layers
             small_font,
             medium_font,
+            layer_index_map,  # Pass the mapping
         )
 
         # --- RIGHT COLUMN CHARTS ---
@@ -166,8 +174,8 @@ class MainStatsPanel(BaseStatsPanel):
         create_betweenness_centrality_chart(
             self.betweenness_centrality_ax,
             layer_connections,
-            layers,
-            visible_layer_indices,
+            visible_layers,  # Already filtered list of layers
+            list(range(len(visible_layers))),  # Use sequential indices since data is already filtered
             small_font,
             medium_font,
         )
@@ -176,16 +184,20 @@ class MainStatsPanel(BaseStatsPanel):
         create_interlayer_graph(
             self.interlayer_graph_ax,
             layer_connections,
-            layers,
+            visible_layers,  # Already filtered list of layers
             small_font,
             medium_font,
-            visible_layer_indices,
+            list(range(len(visible_layers))),  # Use sequential indices since data is already filtered
             layer_colors,
         )
 
         # 3. Layer similarity dendrogram
         create_layer_similarity_chart(
-            self.layer_similarity_ax, layer_connections, layers, small_font, medium_font
+            self.layer_similarity_ax,
+            layer_connections,
+            visible_layers,  # Use visible layers instead of all layers
+            small_font,
+            medium_font,
         )
 
         # Apply tight layout to all figures

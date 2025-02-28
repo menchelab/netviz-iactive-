@@ -66,7 +66,7 @@ class MultilayerNetworkViz(QWidget):
 
         # Create left panel for controls
         self.control_panel = ControlPanel()
-        self.control_panel.setMinimumWidth(150)  # Set minimum width
+        self.control_panel.setMinimumWidth(80)
         self.splitter.addWidget(self.control_panel)
 
         # Create canvas with data manager
@@ -80,7 +80,7 @@ class MultilayerNetworkViz(QWidget):
         self.splitter.addWidget(self.stats_panel)
 
         # Set initial splitter sizes (control:canvas:stats = 1:3:2)
-        self.splitter.setSizes([180, 540, 480])
+        self.splitter.setSizes([150, 540, 400])
 
         # Initialize data attributes
         self.node_positions = None
@@ -135,7 +135,6 @@ class MultilayerNetworkViz(QWidget):
         data = load_disease_data(self.data_dir, disease_name)
 
         if data:
-            # Unpack the data including layer_colors
             (
                 node_positions,
                 link_pairs,
@@ -180,7 +179,6 @@ class MultilayerNetworkViz(QWidget):
         layer_colors=None,
     ):
         """Load network data into the visualization"""
-        logger = logging.getLogger(__name__)
 
         # Load data into the data manager
         self.data_manager.load_data(
@@ -238,10 +236,8 @@ class MultilayerNetworkViz(QWidget):
                 hasattr(self, "_previous_orthographic")
                 and self._previous_orthographic == orthographic
             ):
-                # Skip if orthographic setting hasn't changed
                 pass
             else:
-                # Update projection mode only when the setting changes
                 self.network_canvas.set_projection_mode(orthographic)
                 self._previous_orthographic = orthographic
                 logger.info(
@@ -249,7 +245,7 @@ class MultilayerNetworkViz(QWidget):
                 )
 
             # Log the current settings for debugging
-            logger.info(
+            logger.debug(
                 f"Visibility settings: show_nodes={show_nodes}, show_labels={show_labels}, show_stats_bars={show_stats_bars}"
             )
 

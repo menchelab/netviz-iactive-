@@ -157,82 +157,61 @@ class CriticalStructurePanel(BaseStatsPanel):
             visible_layer_indices = data_manager.visible_layers
             layer_colors = data_manager.layer_colors
 
-            # Check if we have valid data
-            if (
-                not layers
-                or not visible_layer_indices
-                or len(visible_layer_indices) < 2
-            ):
-                self.clear_visualization(
-                    "Not enough visible layers to analyze (minimum 2 required)"
-                )
-                return
-
             # Get the filtered layer connections that respect all visibility settings
-            # (layers, clusters, and origins)
             try:
-                filtered_connections = data_manager.get_layer_connections()
+                filtered_connections = data_manager.get_layer_connections(filter_to_visible=True)
                 if filtered_connections is None or filtered_connections.size == 0:
                     self.clear_visualization("No connection data available")
                     return
+
+                # Filter layers based on visibility
+                filtered_layers = [layers[i] for i in visible_layer_indices if i < len(layers)]
+                filtered_colors = {layer: layer_colors.get(layer, "skyblue") for layer in filtered_layers}
+
+                # Calculate criticality scores
+                criticality_scores, impact_data = self.identify_critical_layers(
+                    filtered_connections,
+                    filtered_layers,
+                    metric=self.criticality_metric_dropdown.currentText(),
+                )
+
+                # Create criticality visualizations
+                self.create_criticality_visualizations(
+                    criticality_scores,
+                    impact_data,
+                    filtered_layers,
+                    medium_font,
+                    large_font,
+                    filtered_colors,
+                )
+
+                # Detect anomalies
+                anomalies, connection_z_scores = self.detect_anomalies(
+                    filtered_connections,
+                    filtered_layers,
+                    threshold=self.anomaly_threshold_slider.value()
+                    / 10.0,  # Convert slider value to threshold
+                )
+
+                # Create anomaly visualizations
+                self.create_anomaly_visualizations(
+                    anomalies,
+                    connection_z_scores,
+                    filtered_connections,
+                    filtered_layers,
+                    medium_font,
+                    large_font,
+                    filtered_colors,
+                    threshold=self.anomaly_threshold_slider.value() / 10.0,
+                )
+
+                self.figure.tight_layout(pad=1.0)
+                self.canvas.draw()
+
             except Exception as e:
                 print(f"Error getting layer connections: {e}")
                 self.clear_visualization("Error retrieving connection data")
                 return
-
-            # Filter layers based on visibility
-            filtered_layers = [
-                layers[i] for i in visible_layer_indices if i < len(layers)
-            ]
-            filtered_colors = {
-                layer: layer_colors.get(layer, "skyblue") for layer in filtered_layers
-            }
-
-            if len(filtered_layers) < 2:
-                self.clear_visualization(
-                    "Not enough visible layers to analyze (minimum 2 required)"
-                )
-                return
-
-            # Calculate criticality scores
-            criticality_scores, impact_data = self.identify_critical_layers(
-                filtered_connections,
-                filtered_layers,
-                metric=self.criticality_metric_dropdown.currentText(),
-            )
-
-            # Create criticality visualizations
-            self.create_criticality_visualizations(
-                criticality_scores,
-                impact_data,
-                filtered_layers,
-                medium_font,
-                large_font,
-                filtered_colors,
-            )
-
-            # Detect anomalies
-            anomalies, connection_z_scores = self.detect_anomalies(
-                filtered_connections,
-                filtered_layers,
-                threshold=self.anomaly_threshold_slider.value()
-                / 10.0,  # Convert slider value to threshold
-            )
-
-            # Create anomaly visualizations
-            self.create_anomaly_visualizations(
-                anomalies,
-                connection_z_scores,
-                filtered_connections,
-                filtered_layers,
-                medium_font,
-                large_font,
-                filtered_colors,
-                threshold=self.anomaly_threshold_slider.value() / 10.0,
-            )
-
-            self.figure.tight_layout(pad=1.0)
-            self.canvas.draw()
 
         except Exception as e:
             print(f"Error updating Critical Structure visualization: {e}")

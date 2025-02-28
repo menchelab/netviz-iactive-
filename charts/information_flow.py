@@ -27,46 +27,33 @@ def create_information_flow_chart(
     network_ax : matplotlib.axes.Axes
         Axes for the flow network visualization
     layer_connections : numpy.ndarray
-        Matrix of connection counts between layers
+        Matrix of connection counts between layers (already filtered)
     layers : list
-        List of layer names
+        List of visible layer names (already filtered)
     medium_font, large_font : dict
         Font configuration dictionaries
     visible_layers : list, optional
-        Indices of visible layers
+        Sequential indices for visible layers (0 to len(layers)-1)
     layer_colors : dict, optional
         Dictionary mapping layer names to colors
     metric : str
         The flow metric to use ("Betweenness Centrality", "Flow Betweenness", or "Information Centrality")
     """
-    # If visible_layers is None, show all layers
-    if visible_layers is None:
-        visible_layers = list(range(len(layers)))
-
-    # Filter the layer_connections matrix to only include visible layers
-    visible_indices = np.array(visible_layers)
-    if len(visible_indices) > 0:
-        filtered_connections = layer_connections[
-            np.ix_(visible_indices, visible_indices)
-        ]
-        filtered_layers = [layers[i] for i in visible_indices]
-    else:
-        filtered_connections = np.zeros((0, 0))
-        filtered_layers = []
-
-    if len(filtered_layers) > 0 and np.sum(filtered_connections) > 0:
+    # No need to filter the layer_connections matrix as it's already filtered
+    # Just check if we have any data to visualize
+    if len(layers) > 0 and np.sum(layer_connections) > 0:
         # Create a graph where nodes are layers and edges represent connections
         G = nx.Graph()
 
-        # Add nodes (layers)
-        for i, layer in enumerate(filtered_layers):
+        # Add nodes (layers) using sequential indices
+        for i, layer in enumerate(layers):
             G.add_node(i, name=layer)
 
         # Add edges with weights based on connection counts
-        for i in range(len(filtered_layers)):
-            for j in range(i + 1, len(filtered_layers)):
-                if filtered_connections[i, j] > 0:
-                    G.add_edge(i, j, weight=filtered_connections[i, j])
+        for i in range(len(layers)):
+            for j in range(i + 1, len(layers)):
+                if layer_connections[i, j] > 0:
+                    G.add_edge(i, j, weight=layer_connections[i, j])
 
         # Check if the graph has any edges
         if len(G.edges()) == 0:
@@ -88,13 +75,13 @@ def create_information_flow_chart(
                 )
 
                 # Calculate flow matrix based on betweenness
-                flow_matrix = np.zeros_like(filtered_connections, dtype=float)
-                for i in range(len(filtered_layers)):
-                    for j in range(len(filtered_layers)):
-                        if i != j and filtered_connections[i, j] > 0:
+                flow_matrix = np.zeros_like(layer_connections, dtype=float)
+                for i in range(len(layers)):
+                    for j in range(len(layers)):
+                        if i != j and layer_connections[i, j] > 0:
                             # Flow from i to j depends on the betweenness of both layers
                             flow_matrix[i, j] = (
-                                filtered_connections[i, j]
+                                layer_connections[i, j]
                                 * (centrality[i] + centrality[j])
                                 / 2
                             )
@@ -117,13 +104,13 @@ def create_information_flow_chart(
                     )
 
                 # Calculate flow matrix based on flow betweenness
-                flow_matrix = np.zeros_like(filtered_connections, dtype=float)
-                for i in range(len(filtered_layers)):
-                    for j in range(len(filtered_layers)):
-                        if i != j and filtered_connections[i, j] > 0:
+                flow_matrix = np.zeros_like(layer_connections, dtype=float)
+                for i in range(len(layers)):
+                    for j in range(len(layers)):
+                        if i != j and layer_connections[i, j] > 0:
                             # Flow from i to j depends on the flow betweenness of both layers
                             flow_matrix[i, j] = (
-                                filtered_connections[i, j]
+                                layer_connections[i, j]
                                 * (centrality[i] + centrality[j])
                                 / 2
                             )
@@ -137,13 +124,13 @@ def create_information_flow_chart(
                 centrality = nx.closeness_centrality(G, distance="weight")
 
                 # Calculate flow matrix based on information centrality
-                flow_matrix = np.zeros_like(filtered_connections, dtype=float)
-                for i in range(len(filtered_layers)):
-                    for j in range(len(filtered_layers)):
-                        if i != j and filtered_connections[i, j] > 0:
+                flow_matrix = np.zeros_like(layer_connections, dtype=float)
+                for i in range(len(layers)):
+                    for j in range(len(layers)):
+                        if i != j and layer_connections[i, j] > 0:
                             # Flow from i to j depends on the information centrality of both layers
                             flow_matrix[i, j] = (
-                                filtered_connections[i, j]
+                                layer_connections[i, j]
                                 * (centrality[i] + centrality[j])
                                 / 2
                             )
@@ -153,9 +140,9 @@ def create_information_flow_chart(
             # Handle any errors in centrality calculations
             print(f"Warning: Error calculating {metric}: {e}")
             # Create a default flow matrix and centrality
-            flow_matrix = np.zeros_like(filtered_connections, dtype=float)
+            flow_matrix = np.zeros_like(layer_connections, dtype=float)
             centrality = {
-                i: 1.0 / len(filtered_layers) for i in range(len(filtered_layers))
+                i: 1.0 / len(layers) for i in range(len(layers))
             }
             metric_name = f"{metric} (calculation failed)"
 
@@ -168,10 +155,10 @@ def create_information_flow_chart(
         cbar.set_label("Information Flow", fontsize=8)
 
         # Add labels
-        flow_ax.set_xticks(range(len(filtered_layers)))
-        flow_ax.set_yticks(range(len(filtered_layers)))
-        flow_ax.set_xticklabels(filtered_layers, rotation=90, fontsize=8)
-        flow_ax.set_yticklabels(filtered_layers, fontsize=8)
+        flow_ax.set_xticks(range(len(layers)))
+        flow_ax.set_yticks(range(len(layers)))
+        flow_ax.set_xticklabels(layers, rotation=90, fontsize=8)
+        flow_ax.set_yticklabels(layers, fontsize=8)
 
         flow_ax.set_title(f"Information Flow Heatmap ({metric_name})", **large_font)
         flow_ax.set_xlabel("Destination Layer", **medium_font)
@@ -182,12 +169,12 @@ def create_information_flow_chart(
         D = nx.DiGraph()
 
         # Add nodes
-        for i, layer in enumerate(filtered_layers):
+        for i, layer in enumerate(layers):
             D.add_node(i, name=layer)
 
         # Add directed edges with weights based on flow
-        for i in range(len(filtered_layers)):
-            for j in range(len(filtered_layers)):
+        for i in range(len(layers)):
+            for j in range(len(layers)):
                 if i != j and flow_matrix[i, j] > 0:
                     D.add_edge(i, j, weight=flow_matrix[i, j])
 
@@ -196,7 +183,7 @@ def create_information_flow_chart(
         node_sizes = (
             total_flow * 500 / max(total_flow)
             if max(total_flow) > 0
-            else np.ones(len(filtered_layers)) * 300
+            else np.ones(len(layers)) * 300
         )
 
         # Use spring layout for better visualization
@@ -205,13 +192,13 @@ def create_information_flow_chart(
         # Prepare node colors
         node_colors = []
         if layer_colors:
-            for layer in filtered_layers:
+            for layer in layers:
                 if layer in layer_colors:
                     node_colors.append(layer_colors[layer])
                 else:
                     node_colors.append("skyblue")
         else:
-            node_colors = ["skyblue" for _ in range(len(filtered_layers))]
+            node_colors = ["skyblue" for _ in range(len(layers))]
 
         # Draw the nodes
         nx.draw_networkx_nodes(
@@ -252,7 +239,7 @@ def create_information_flow_chart(
         nx.draw_networkx_labels(
             D,
             pos,
-            labels={i: filtered_layers[i] for i in range(len(filtered_layers))},
+            labels={i: layers[i] for i in range(len(layers))},
             font_size=8,
             ax=network_ax,
         )
@@ -283,19 +270,19 @@ def create_information_flow_chart(
                 # Calculate information spread efficiency
                 efficiency = (
                     flow_matrix.sum()
-                    / (len(filtered_layers) * (len(filtered_layers) - 1))
-                    if len(filtered_layers) > 1
+                    / (len(layers) * (len(layers) - 1))
+                    if len(layers) > 1
                     else 0
                 )
 
                 # Identify bottleneck layers (high betweenness)
                 if centrality:
                     bottleneck_idx = max(centrality.items(), key=lambda x: x[1])[0]
-                    bottleneck_layer = filtered_layers[bottleneck_idx]
+                    bottleneck_layer = layers[bottleneck_idx]
 
                     # Identify peripheral layers (low betweenness)
                     peripheral_idx = min(centrality.items(), key=lambda x: x[1])[0]
-                    peripheral_layer = filtered_layers[peripheral_idx]
+                    peripheral_layer = layers[peripheral_idx]
 
                     metrics_text = (
                         f"Information Flow Efficiency: {efficiency:.3f}\n"
@@ -309,8 +296,8 @@ def create_information_flow_chart(
                 # Calculate average flow
                 avg_flow = (
                     flow_matrix.sum()
-                    / (len(filtered_layers) * (len(filtered_layers) - 1))
-                    if len(filtered_layers) > 1
+                    / (len(layers) * (len(layers) - 1))
+                    if len(layers) > 1
                     else 0
                 )
 
@@ -320,7 +307,7 @@ def create_information_flow_chart(
                         centrality.items(), key=lambda x: x[1], reverse=True
                     )
                     top_layers = [
-                        filtered_layers[idx]
+                        layers[idx]
                         for idx, _ in sorted_centrality[
                             : min(3, len(sorted_centrality))
                         ]
@@ -340,7 +327,7 @@ def create_information_flow_chart(
                         centrality.items(), key=lambda x: x[1], reverse=True
                     )
                     top_layers = [
-                        filtered_layers[idx]
+                        layers[idx]
                         for idx, _ in sorted_centrality[
                             : min(3, len(sorted_centrality))
                         ]
@@ -369,7 +356,7 @@ def create_information_flow_chart(
         )
 
     else:
-        if len(filtered_layers) == 0:
+        if len(layers) == 0:
             message = "No visible layers to display"
         else:
             message = "No interlayer connections to display"

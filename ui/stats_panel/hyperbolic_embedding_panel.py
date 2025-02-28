@@ -230,82 +230,61 @@ class HyperbolicEmbeddingPanel(BaseStatsPanel):
             visible_layer_indices = data_manager.visible_layers
             layer_colors = data_manager.layer_colors
 
-            # Check if we have valid data
-            if (
-                not layers
-                or not visible_layer_indices
-                or len(visible_layer_indices) < 2
-            ):
-                self.clear_visualization(
-                    "Not enough visible layers to analyze (minimum 2 required)"
-                )
-                return
-
             # Get the filtered layer connections that respect all visibility settings
-            # (layers, clusters, and origins)
             try:
-                filtered_connections = data_manager.get_layer_connections()
+                filtered_connections = data_manager.get_layer_connections(filter_to_visible=True)
                 if filtered_connections is None or filtered_connections.size == 0:
                     self.clear_visualization("No connection data available")
                     return
+
+                # Filter layers based on visibility
+                filtered_layers = [layers[i] for i in visible_layer_indices if i < len(layers)]
+                filtered_colors = {layer: layer_colors.get(layer, "skyblue") for layer in filtered_layers}
+
+                # Create hyperbolic embedding
+                try:
+                    embedding, hierarchy_data = self.create_hyperbolic_embedding(
+                        filtered_connections,
+                        filtered_layers,
+                        method=self.embedding_method_dropdown.currentText(),
+                        curvature=self.curvature_slider.value() / 5.0,  # Scale to 0.2-2.0
+                    )
+
+                    if not embedding:
+                        self.clear_visualization(
+                            "Could not create embedding with current data"
+                        )
+                        return
+                except Exception as e:
+                    print(f"Error creating hyperbolic embedding: {e}")
+                    self.clear_visualization(f"Error creating embedding: {str(e)}")
+                    return
+
+                # Visualize the embedding
+                try:
+                    self.visualize_hyperbolic_embedding(
+                        embedding,
+                        hierarchy_data,
+                        filtered_layers,
+                        medium_font,
+                        large_font,
+                        filtered_colors,
+                        coloring=self.coloring_dropdown.currentText(),
+                        node_size_factor=self.node_size_slider.value()
+                        / 5.0
+                        * 300,  # Scale to 60-600
+                    )
+                except Exception as e:
+                    print(f"Error visualizing hyperbolic embedding: {e}")
+                    self.clear_visualization(f"Error visualizing embedding: {str(e)}")
+                    return
+
+                self.canvas.draw()
+
             except Exception as e:
                 print(f"Error getting layer connections: {e}")
                 self.clear_visualization("Error retrieving connection data")
                 return
-
-            # Filter layers based on visibility
-            filtered_layers = [
-                layers[i] for i in visible_layer_indices if i < len(layers)
-            ]
-            filtered_colors = {
-                layer: layer_colors.get(layer, "skyblue") for layer in filtered_layers
-            }
-
-            if len(filtered_layers) < 2:
-                self.clear_visualization(
-                    "Not enough visible layers to analyze (minimum 2 required)"
-                )
-                return
-
-            # Create hyperbolic embedding
-            try:
-                embedding, hierarchy_data = self.create_hyperbolic_embedding(
-                    filtered_connections,
-                    filtered_layers,
-                    method=self.embedding_method_dropdown.currentText(),
-                    curvature=self.curvature_slider.value() / 5.0,  # Scale to 0.2-2.0
-                )
-
-                if not embedding:
-                    self.clear_visualization(
-                        "Could not create embedding with current data"
-                    )
-                    return
-            except Exception as e:
-                print(f"Error creating hyperbolic embedding: {e}")
-                self.clear_visualization(f"Error creating embedding: {str(e)}")
-                return
-
-            # Visualize the embedding
-            try:
-                self.visualize_hyperbolic_embedding(
-                    embedding,
-                    hierarchy_data,
-                    filtered_layers,
-                    medium_font,
-                    large_font,
-                    filtered_colors,
-                    coloring=self.coloring_dropdown.currentText(),
-                    node_size_factor=self.node_size_slider.value()
-                    / 5.0
-                    * 300,  # Scale to 60-600
-                )
-            except Exception as e:
-                print(f"Error visualizing hyperbolic embedding: {e}")
-                self.clear_visualization(f"Error visualizing embedding: {str(e)}")
-                return
-
-            self.canvas.draw()
 
         except Exception as e:
             print(f"Error updating Hyperbolic Embedding visualization: {e}")

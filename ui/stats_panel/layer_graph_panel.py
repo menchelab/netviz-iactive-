@@ -2,6 +2,7 @@
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QCheckBox, QComboBox, QLabel
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+import numpy as np
 
 from charts.interlayer_graph import create_interlayer_graph
 from .base_panel import BaseStatsPanel
@@ -70,21 +71,34 @@ class LayerGraphPanel(BaseStatsPanel):
             # Unpack stored data
             (
                 layer_connections,
-                layers,
+                visible_layers,  # Now using filtered layers list
                 medium_font,
                 large_font,
-                visible_layer_indices,
+                visible_indices,  # Now using sequential indices
                 layer_colors,
             ) = self._current_data
+
+            # Check if there are any connections
+            if layer_connections.size == 0 or np.sum(layer_connections) == 0:
+                self.ax.text(
+                    0.5,
+                    0.5,
+                    "No connections between visible layers",
+                    horizontalalignment="center",
+                    verticalalignment="center",
+                    **medium_font
+                )
+                self.ax.axis("off")
+                return
 
             # Redraw with current layout algorithm
             create_interlayer_graph(
                 self.ax,
                 layer_connections,
-                layers,
+                visible_layers,  # Use filtered layers list
                 medium_font,
                 large_font,
-                visible_layer_indices,
+                visible_indices,  # Use sequential indices
                 layer_colors,
                 layout_algorithm=self.layout_algorithm_dropdown.currentText(),
             )
@@ -109,21 +123,34 @@ class LayerGraphPanel(BaseStatsPanel):
             # Unpack stored data
             (
                 layer_connections,
-                layers,
+                visible_layers,  # Now using filtered layers list
                 medium_font,
                 large_font,
-                visible_layer_indices,
+                visible_indices,  # Now using sequential indices
                 layer_colors,
             ) = self._current_data
+
+            # Check if there are any connections
+            if layer_connections.size == 0 or np.sum(layer_connections) == 0:
+                self.ax.text(
+                    0.5,
+                    0.5,
+                    "No connections between visible layers",
+                    horizontalalignment="center",
+                    verticalalignment="center",
+                    **medium_font
+                )
+                self.ax.axis("off")
+                return
 
             # Redraw with new layout algorithm
             create_interlayer_graph(
                 self.ax,
                 layer_connections,
-                layers,
+                visible_layers,  # Use filtered layers list
                 medium_font,
                 large_font,
-                visible_layer_indices,
+                visible_indices,  # Use sequential indices
                 layer_colors,
                 layout_algorithm=algorithm,
             )
@@ -142,8 +169,11 @@ class LayerGraphPanel(BaseStatsPanel):
         visible_layer_indices = data_manager.visible_layers
         layer_colors = data_manager.layer_colors
 
-        # Get layer connections from data manager
-        layer_connections = data_manager.get_layer_connections()
+        # Get layer connections from data manager (already filtered)
+        layer_connections = data_manager.get_layer_connections(filter_to_visible=True)
+
+        # Get visible layers list for filtered views
+        visible_layers = [layers[i] for i in visible_layer_indices] if visible_layer_indices else []
 
         # Define font sizes
         medium_font = {"fontsize": 7}
@@ -152,22 +182,35 @@ class LayerGraphPanel(BaseStatsPanel):
         # Store current data for later use
         self._current_data = (
             layer_connections,
-            layers,
+            visible_layers,  # Store filtered layers list
             medium_font,
             large_font,
-            visible_layer_indices,
+            list(range(len(visible_layers))),  # Use sequential indices
             layer_colors,
         )
+
+        # Check if there are any connections
+        if layer_connections.size == 0 or np.sum(layer_connections) == 0:
+            self.ax.text(
+                0.5,
+                0.5,
+                "No connections between visible layers",
+                horizontalalignment="center",
+                verticalalignment="center",
+                **medium_font
+            )
+            self.ax.axis("off")
+            return
 
         # Only create visualization if enabled
         if self.enable_checkbox.isChecked():
             create_interlayer_graph(
                 self.ax,
                 layer_connections,
-                layers,
+                visible_layers,  # Use filtered layers list
                 medium_font,
                 large_font,
-                visible_layer_indices,
+                list(range(len(visible_layers))),  # Use sequential indices
                 layer_colors,
                 layout_algorithm=self.layout_algorithm_dropdown.currentText(),
             )

@@ -2,16 +2,30 @@ import numpy as np
 
 
 def create_layer_activity_chart(
-    ax, visible_links, nodes_per_layer, layers, small_font, medium_font
+    ax, visible_links, nodes_per_layer, layers, small_font, medium_font, layer_index_map=None
 ):
     """Create chart showing edge counts and interlayer connections per layer"""
     edges_per_layer_count = [0] * len(layers)
     interlayer_connections_per_layer = [0] * len(layers)
 
+    # If no layer_index_map provided, create identity mapping
+    if layer_index_map is None:
+        layer_index_map = {i: i for i in range(len(layers))}
+
     # Count edges per layer (intralayer only)
     for start_idx, end_idx in visible_links:
-        start_layer = start_idx // nodes_per_layer
-        end_layer = end_idx // nodes_per_layer
+        # Get original layer indices
+        orig_start_layer = start_idx // nodes_per_layer
+        orig_end_layer = end_idx // nodes_per_layer
+
+        # Skip if either layer is not in our mapping (filtered out)
+        if orig_start_layer not in layer_index_map or orig_end_layer not in layer_index_map:
+            continue
+
+        # Map to filtered indices
+        start_layer = layer_index_map[orig_start_layer]
+        end_layer = layer_index_map[orig_end_layer]
+
         if start_layer == end_layer:
             edges_per_layer_count[start_layer] += 1
         else:
