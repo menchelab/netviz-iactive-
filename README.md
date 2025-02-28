@@ -17,6 +17,23 @@ print(vispy.sys_info())
 
 if not, you should try to install opengl drivers libs whatever, maybe test with smaller vispy example
 
-on osx maybe uncomment quartz package in pyproject.toml
+## OSX
 
-(vispy uses opengl, this is tested on osx, win/linux you might need other sys packages, i think on osx i installed glew (brew install glew))
+on osx maybe uncomment quartz package in pyproject.toml for better performance
+
+
+## Windows
+
+1. install uv
+2. edit pyproject.toml and comment all pyqt5*
+3. run:
+
+```
+uv sync
+uv pip install pyqt5
+uv run main.py
+```
+
+
+
+(vispy uses opengl, this is tested on osx, win/linux you might need other sys packages, latest opengl driver etc, .i think on osx i installed glew (brew install glew))
