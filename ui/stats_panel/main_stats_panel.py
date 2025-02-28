@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QCheckBox
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
@@ -18,6 +18,16 @@ class MainStatsPanel(BaseStatsPanel):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(2)
+
+        # Add checkbox to enable/disable all charts
+        controls_layout = QHBoxLayout()
+        controls_layout.setContentsMargins(5, 5, 5, 0)
+        self.enable_checkbox = QCheckBox("Enable Charts")
+        self.enable_checkbox.setChecked(True)  # Enabled by default
+        self.enable_checkbox.stateChanged.connect(self.on_state_changed)
+        controls_layout.addWidget(self.enable_checkbox)
+        controls_layout.addStretch()
+        layout.addLayout(controls_layout)
 
         # Create a horizontal layout for two columns of charts
         charts_layout = QHBoxLayout()
@@ -44,7 +54,34 @@ class MainStatsPanel(BaseStatsPanel):
         self.interlayer_graph_ax = self.right_figure.add_subplot(312)
         self.layer_similarity_ax = self.right_figure.add_subplot(313)
     
+    def on_state_changed(self, state):
+        """Handle enable/disable state change"""
+        if state and hasattr(self, '_current_data'):
+            self.update_stats(self._current_data)
+        elif not state:
+            # Clear all figures when disabled
+            self.left_figure.clear()
+            self.right_figure.clear()
+            
+            # Add disabled message to both figures
+            self.left_figure.text(0.5, 0.5, "Charts disabled", 
+                                ha='center', va='center', fontsize=12)
+            self.right_figure.text(0.5, 0.5, "Charts disabled", 
+                                ha='center', va='center', fontsize=12)
+            
+            # Draw canvases
+            self.left_canvas.draw()
+            self.right_canvas.draw()
+
     def update_stats(self, data_manager):
+        # Store current data for later use
+        self._current_data = data_manager
+
+        # Only update charts if enabled
+        if not self.enable_checkbox.isChecked():
+            self.on_state_changed(False)
+            return
+
         # Clear all figures
         self.left_figure.clear()
         self.right_figure.clear()
