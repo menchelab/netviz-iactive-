@@ -7,7 +7,7 @@ uv sync
 uv run python main.py
 ```
 
-try to make sure gpu is actually used, if main viz is slow
+to debug if opengl errors: (maybe try to get glxgears or vispy minimal example running first)
 
 ```
 uv run python
