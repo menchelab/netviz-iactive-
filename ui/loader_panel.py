@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QCheckBox, QComboBox, QPushButton
 from PyQt5.QtCore import Qt
 from data.data_loader import get_available_diseases
+from utils.calc_layout import AVAILABLE_LAYOUTS_NON_WEIGHTED
 
 class LoaderPanel(QWidget):
     def __init__(self, data_dir=None, parent=None):
@@ -26,6 +27,11 @@ class LoaderPanel(QWidget):
         self.ml_layout_checkbox.setChecked(False)
         layout.addWidget(self.ml_layout_checkbox)
 
+        # Create layout algorithm dropdown
+        self.layout_combo = self.create_layout_dropdown()
+        self.layout_combo.setMinimumWidth(150)  # Ensure dropdown has reasonable width
+        layout.addWidget(self.layout_combo)
+
         # Create load button
         self.load_button = QPushButton("Load Dataset")
         layout.addWidget(self.load_button)
@@ -43,4 +49,14 @@ class LoaderPanel(QWidget):
             diseases = get_available_diseases(self.data_dir)
             for disease in diseases:
                 combo.addItem(disease)
+        return combo
+
+    def create_layout_dropdown(self):
+        """Create dropdown menu with available layout algorithms"""
+        combo = QComboBox()
+        for layout in AVAILABLE_LAYOUTS_NON_WEIGHTED:
+            combo.addItem(layout)
+        # Set default to kamada_kawai
+        default_index = AVAILABLE_LAYOUTS_NON_WEIGHTED.index("kamada_kawai")
+        combo.setCurrentIndex(default_index)
         return combo 

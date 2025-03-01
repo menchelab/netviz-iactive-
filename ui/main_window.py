@@ -121,10 +121,11 @@ class MultilayerNetworkViz(QWidget):
         if not disease_name:
             return
 
-        # Get ML layout preference from loader panel
+        # Get ML layout preference and layout algorithm from loader panel
         use_ml_layout = self.loader_panel.ml_layout_checkbox.isChecked()
+        layout_algorithm = self.loader_panel.layout_combo.currentText()
         
-        data = load_disease_data(self.data_dir, disease_name, use_ml_layout)
+        data = load_disease_data(self.data_dir, disease_name, use_ml_layout, layout_algorithm)
         if data:
             (node_positions, link_pairs, link_colors, node_ids, layers, 
              node_clusters, unique_clusters, node_colors, node_origins, 
@@ -152,10 +153,11 @@ class MultilayerNetworkViz(QWidget):
         if not disease_name:
             return
 
-        # Get ML layout preference from control panel
-        use_ml_layout = self.control_panel.ml_layout_checkbox.isChecked()
+        # Get ML layout preference and layout algorithm from loader panel
+        use_ml_layout = self.loader_panel.ml_layout_checkbox.isChecked()
+        layout_algorithm = self.loader_panel.layout_combo.currentText()
 
-        data = load_disease_data(self.data_dir, disease_name, use_ml_layout)
+        data = load_disease_data(self.data_dir, disease_name, use_ml_layout, layout_algorithm)
         if data:
             (
                 node_positions,

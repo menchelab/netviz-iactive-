@@ -7,13 +7,13 @@ from utils.color_utils import generate_distinct_colors
 from utils.calc_layout import get_layout_position
 
 
-def calculate_layer_layout(G, layer_nodes):
+def calculate_layer_layout(G, layer_nodes, layout_algorithm="kamada_kawai"):
     """Calculate layout for a specific layer's nodes"""
     subgraph = G.subgraph(layer_nodes)
-    return get_layout_position(subgraph, layout_algorithm="kamada_kawai")
+    return get_layout_position(subgraph, layout_algorithm=layout_algorithm)
 
 def build_multilayer_network(
-    edge_list_path, node_metadata_path, add_interlayer_edges=True, use_ml_layout=False
+    edge_list_path, node_metadata_path, add_interlayer_edges=True, use_ml_layout=False, layout_algorithm="kamada_kawai"
 ):
     """
     Build a multilayer network from edge list and node metadata files.
@@ -86,14 +86,14 @@ def build_multilayer_network(
             # Get nodes in this layer from edge list
             layer_nodes = set(edgelist_with_att[edgelist_with_att[layer] == 1]['V1'].tolist() + 
                             edgelist_with_att[edgelist_with_att[layer] == 1]['V2'].tolist())
-            layer_pos = calculate_layer_layout(G_base, layer_nodes)
+            layer_pos = calculate_layer_layout(G_base, layer_nodes, layout_algorithm)
             # Map positions to layer-specific nodes
             for node in unique_base_nodes:
                 node_id = f"{node}_{layer}"
                 positions[node_id] = layer_pos[node] if node in layer_pos else positions.get(f"{node}_{first_layer}", (0, 0))
     else:
         # Calculate single layout using first layer nodes
-        base_layout = calculate_layer_layout(G_base, unique_base_nodes)
+        base_layout = calculate_layer_layout(G_base, unique_base_nodes, layout_algorithm)
         positions = {}
         # Map base node positions to all layer nodes
         for layer in layers:
@@ -114,7 +114,7 @@ def build_multilayer_network(
 
             # Get position from layout
             x, y = positions[node_id]
-            node_positions.append([x, y, z / 2]) # TODO make configurable in UI this is z axis step, basically network layer distances
+            node_positions.append([x, y, z / 8]) # TODO make 2 configurable in UI this is z axis step, basically network layer distances
 
             # Get node metadata
             if base_node in node_metadata["Node"].values:

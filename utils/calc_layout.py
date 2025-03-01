@@ -17,6 +17,16 @@ AVAILABLE_LAYOUTS = [
     "pagerank_centric",
 ]
 
+AVAILABLE_LAYOUTS_NON_WEIGHTED = [
+    "hierarchical_betweeness_centrality",
+    "spring",
+    "circular",
+    "kamada_kawai",
+    "spiral",
+    "force_atlas2",
+    "pagerank_centric",
+]
+
 
 def calc_spring_layout(G):
     """Basic spring layout with weight influence"""

@@ -5,12 +5,12 @@ from data.network_builder import build_multilayer_network
 from utils.calc_layout import get_layout_position
 
 
-def calculate_layer_layout(G, layer_nodes):
+def calculate_layer_layout(G, layer_nodes, layout_algorithm="kamada_kawai"):
     """Calculate layout for a specific layer's nodes"""
     # Create subgraph with only nodes in this layer
     subgraph = G.subgraph(layer_nodes)
     # Calculate spring layout for this layer
-    return get_layout_position(subgraph, layout_algorithm="kamada_kawai")
+    return get_layout_position(subgraph, layout_algorithm=layout_algorithm)
 
 
 def get_available_diseases(data_dir):
@@ -23,7 +23,7 @@ def get_available_diseases(data_dir):
     return sorted(diseases)
 
 
-def load_disease_data(data_dir, disease_name, use_ml_layout=False):
+def load_disease_data(data_dir, disease_name, use_ml_layout=False, layout_algorithm="kamada_kawai"):
     """
     Load the selected disease dataset
     
@@ -35,6 +35,8 @@ def load_disease_data(data_dir, disease_name, use_ml_layout=False):
         Name of disease dataset to load
     use_ml_layout : bool
         If True, calculate separate layout for each layer
+    layout_algorithm : str
+        The layout algorithm to use for node positioning
     """
     logger = logging.getLogger(__name__)
     logger.info(f"Loading disease: {disease_name}")
@@ -55,5 +57,6 @@ def load_disease_data(data_dir, disease_name, use_ml_layout=False):
         edge_list_path, 
         node_metadata_path, 
         add_interlayer_edges=True,
-        use_ml_layout=use_ml_layout
+        use_ml_layout=use_ml_layout,
+        layout_algorithm=layout_algorithm
     )
