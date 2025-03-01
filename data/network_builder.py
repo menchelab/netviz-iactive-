@@ -6,8 +6,13 @@ from tqdm import tqdm
 from utils.color_utils import generate_distinct_colors
 
 
+def calculate_layer_layout(G, layer_nodes):
+    """Calculate layout for a specific layer's nodes"""
+    subgraph = G.subgraph(layer_nodes)
+    return nx.spring_layout(subgraph, k=1, iterations=50)
+
 def build_multilayer_network(
-    edge_list_path, node_metadata_path, add_interlayer_edges=True
+    edge_list_path, node_metadata_path, add_interlayer_edges=True, use_ml_layout=False
 ):
     """
     Build a multilayer network from edge list and node metadata files.
@@ -64,15 +69,35 @@ def build_multilayer_network(
         source = row["V1"].split("_")[0]
         target = row["V2"].split("_")[0]
         G_base.add_edge(source, target)
-    logger.info("Calculating layout...")
-    try:
-        layout = nx.kamada_kawai_layout(G_base)
-        # maybe something else better? TODO make this configurable in UI
-        # but take care to re trigger network_builder if setting is changed
 
-    except:
-        logger.warning("Kamada-Kawai layout failed, falling back to spring layout")
-        layout = nx.spring_layout(G_base)
+    # Create node-to-layer mapping before layout calculation
+    node_layers = {}
+    for layer in layers:
+        for base_node in unique_base_nodes:
+            node_id = f"{base_node}_{layer}"
+            node_layers[node_id] = layer
+
+    # Calculate layout
+    logger.info("Calculating layout...")
+    if use_ml_layout:
+        positions = {}
+        for layer in layers:
+            # Get nodes in this layer from edge list
+            layer_nodes = set(edgelist_with_att[edgelist_with_att[layer] == 1]['V1'].tolist() + 
+                            edgelist_with_att[edgelist_with_att[layer] == 1]['V2'].tolist())
+            layer_pos = calculate_layer_layout(G_base, layer_nodes)
+            # Map positions to layer-specific nodes
+            for node in unique_base_nodes:
+                node_id = f"{node}_{layer}"
+                positions[node_id] = layer_pos[node] if node in layer_pos else positions.get(f"{node}_{first_layer}", (0, 0))
+    else:
+        # Calculate single layout using first layer nodes
+        base_layout = calculate_layer_layout(G_base, unique_base_nodes)
+        positions = {}
+        # Map base node positions to all layer nodes
+        for layer in layers:
+            for node in unique_base_nodes:
+                positions[f"{node}_{layer}"] = base_layout[node]
 
     # Create node positions for all layers
     node_positions = []
@@ -87,8 +112,8 @@ def build_multilayer_network(
             node_ids.append(node_id)
 
             # Get position from layout
-            x, y = layout[base_node]
-            node_positions.append([x, y, z / 15]) # TODO make configurable in UI this is z axis step, basically network layer distances
+            x, y = positions[node_id]
+            node_positions.append([x, y, z / 2]) # TODO make configurable in UI this is z axis step, basically network layer distances
 
             # Get node metadata
             if base_node in node_metadata["Node"].values:
@@ -188,15 +213,15 @@ def build_multilayer_network(
     logger.info(f"Found {len(unique_origins)} origins: {unique_origins}")
 
     return (
-        node_positions,
-        link_pairs,
-        link_colors,
-        node_ids,
-        layers,
-        node_clusters,
-        unique_clusters,
-        node_colors,
-        node_origins,
-        unique_origins,
-        layer_colors,
+        node_positions,  # numpy array we already created
+        link_pairs,      # numpy array we already created
+        link_colors,     # list we already created
+        node_ids,        # list we already created
+        layers,          # list we already have
+        node_clusters,   # dict we already created
+        unique_clusters, # list we already created
+        node_colors,     # list we already created
+        node_origins,    # dict we already created
+        unique_origins,  # list we already created
+        layer_colors     # dict we already created
     )

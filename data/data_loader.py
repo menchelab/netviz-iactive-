@@ -1,6 +1,15 @@
 import os
 import logging
+import networkx as nx
 from data.network_builder import build_multilayer_network
+
+
+def calculate_layer_layout(G, layer_nodes):
+    """Calculate layout for a specific layer's nodes"""
+    # Create subgraph with only nodes in this layer
+    subgraph = G.subgraph(layer_nodes)
+    # Calculate spring layout for this layer
+    return nx.spring_layout(subgraph, k=1, iterations=50)
 
 
 def get_available_diseases(data_dir):
@@ -13,8 +22,19 @@ def get_available_diseases(data_dir):
     return sorted(diseases)
 
 
-def load_disease_data(data_dir, disease_name):
-    """Load the selected disease dataset"""
+def load_disease_data(data_dir, disease_name, use_ml_layout=False):
+    """
+    Load the selected disease dataset
+    
+    Parameters:
+    -----------
+    data_dir : str
+        Path to data directory
+    disease_name : str
+        Name of disease dataset to load
+    use_ml_layout : bool
+        If True, calculate separate layout for each layer
+    """
     logger = logging.getLogger(__name__)
     logger.info(f"Loading disease: {disease_name}")
 
@@ -29,7 +49,10 @@ def load_disease_data(data_dir, disease_name):
         logger.error(f"Data files for {disease_name} not found")
         return None
 
-    # Build network
+    # Build network with layout preference
     return build_multilayer_network(
-        edge_list_path, node_metadata_path, add_interlayer_edges=True
+        edge_list_path, 
+        node_metadata_path, 
+        add_interlayer_edges=True,
+        use_ml_layout=use_ml_layout
     )

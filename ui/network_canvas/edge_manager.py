@@ -138,7 +138,7 @@ class EdgeManager:
             self.canvas.interlayer_lines.set_data(
                 pos=np.array(interlayer_pos),
                 color=np.array(interlayer_colors),
-                width=2,  # Thicker width for interlayer edges
+                width=1,  # Thicker width for interlayer edges
             )
         else:
             # Create a dummy point that's invisible

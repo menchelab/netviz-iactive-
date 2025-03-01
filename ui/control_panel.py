@@ -55,7 +55,12 @@ class ControlPanel(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(5)
 
-        # Create dataset selection at the top
+        # Create ML Layout checkbox at the top
+        self.ml_layout_checkbox = QCheckBox("ML Layout")
+        self.ml_layout_checkbox.setChecked(False)  # Disabled by default
+        layout.addWidget(self.ml_layout_checkbox)
+
+        # Create dataset selection
         dataset_group = QGroupBox("Dataset")
         dataset_group.setFlat(True)
         dataset_layout = QVBoxLayout()

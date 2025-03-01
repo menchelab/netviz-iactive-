@@ -105,26 +105,19 @@ class MultilayerNetworkViz(QWidget):
         self.show()
 
     def load_disease(self, disease_name):
-        logger = logging.getLogger(__name__)
-        logger.info(f"Loading dataset: {disease_name}")
+        """Load a disease dataset"""
+        if not disease_name:
+            return
 
-        data = load_disease_data(self.data_dir, disease_name)
-
+        # Get ML layout preference from control panel
+        use_ml_layout = self.control_panel.ml_layout_checkbox.isChecked()
+        
+        data = load_disease_data(self.data_dir, disease_name, use_ml_layout)
         if data:
-            (
-                node_positions,
-                link_pairs,
-                link_colors,
-                node_ids,
-                layers,
-                node_clusters,
-                unique_clusters,
-                node_colors,
-                node_origins,
-                unique_origins,
-                layer_colors,
-            ) = data
-
+            (node_positions, link_pairs, link_colors, node_ids, layers, 
+             node_clusters, unique_clusters, node_colors, node_origins, 
+             unique_origins, layer_colors) = data
+            
             # Load the data into the visualization
             self.load_data(
                 node_positions,
@@ -137,7 +130,7 @@ class MultilayerNetworkViz(QWidget):
                 node_colors,
                 node_origins,
                 unique_origins,
-                layer_colors,
+                layer_colors
             )
 
     def load_data(
