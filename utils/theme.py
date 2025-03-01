@@ -2,11 +2,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication
 
 def enable_dark_mode(app: QApplication):
-    """
-    Enable dark mode for the application with a modern look and feel.
-    Includes improved scrollbar styling and consistent dark theme across all widgets.
-    """
-    # Set dark palette
+
     dark_palette = app.palette()
     
     # Configure basic palette colors
