@@ -37,39 +37,14 @@ class ControlPanel(QWidget):
         self.cluster_checkboxes = {}
         self.origin_checkboxes = {}
 
-        # Setup UI (which will create the intralayer_edges_checkbox)
+        # Setup UI
         self.setup_ui()
-
-        # Initialize the checkbox if it wasn't created in setup_ui
-        if (
-            not hasattr(self, "intralayer_edges_checkbox")
-            or self.intralayer_edges_checkbox is None
-        ):
-            self.intralayer_edges_checkbox = QCheckBox("Intralayer Edges")
-            self.intralayer_edges_checkbox.setChecked(True)  # On by default
-            self.display_layout.addWidget(self.intralayer_edges_checkbox)
 
     def setup_ui(self):
         # Create layout
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(5)
-
-        # Create ML Layout checkbox at the top
-        self.ml_layout_checkbox = QCheckBox("ML Layout")
-        self.ml_layout_checkbox.setChecked(False)  # Disabled by default
-        layout.addWidget(self.ml_layout_checkbox)
-
-        # Create dataset selection
-        dataset_group = QGroupBox("Dataset")
-        dataset_group.setFlat(True)
-        dataset_layout = QVBoxLayout()
-        dataset_layout.setContentsMargins(5, 5, 5, 5)
-        dataset_layout.setSpacing(2)
-        self.disease_combo = self.create_disease_dropdown() if self.data_dir else QComboBox()
-        dataset_layout.addWidget(self.disease_combo)
-        dataset_group.setLayout(dataset_layout)
-        layout.addWidget(dataset_group)
 
         # Create containers for controls
         self.layer_group = QGroupBox("Layers")

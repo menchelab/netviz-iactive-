@@ -17,6 +17,7 @@ from ui.control_panel import ControlPanel
 from data.data_loader import get_available_diseases, load_disease_data
 from utils.color_utils import hex_to_rgba
 from data.network_data_manager import NetworkDataManager
+from ui.loader_panel import LoaderPanel
 
 
 class MultilayerNetworkViz(QWidget):
@@ -44,27 +45,32 @@ class MultilayerNetworkViz(QWidget):
         # Create layout
         main_layout = QVBoxLayout()
         main_layout.setContentsMargins(5, 5, 5, 5)
-        main_layout.setSpacing(5)  # Minimal spacing
+        main_layout.setSpacing(5)
         self.setLayout(main_layout)
 
-        # Create the main content area with splitters for resizable panels
+        # Create and add loader panel at the top
+        self.loader_panel = LoaderPanel(data_dir=data_dir)
+        self.loader_panel.load_button.clicked.connect(self.load_selected_disease)
+        main_layout.addWidget(self.loader_panel)
+
+        # Create the main content area with splitters
         self.splitter = QSplitter(Qt.Horizontal)
         main_layout.addWidget(self.splitter, 1)
 
         # Create left panel for controls
         self.control_panel = ControlPanel(data_dir=data_dir)
-        self.control_panel.disease_combo.currentTextChanged.connect(self.load_disease)
         self.control_panel.setMinimumWidth(80)
         self.splitter.addWidget(self.control_panel)
 
-        # Create canvas with data manager
+        # Create canvas with data manager but don't show it yet
         logger.info("Creating canvas...")
         self.network_canvas = NetworkCanvas(data_manager=self.data_manager)
+        self.network_canvas.canvas.native.hide()  # Hide canvas until data is loaded
         self.splitter.addWidget(self.network_canvas.canvas.native)
 
         # Create stats panel
         self.stats_panel = NetworkStatsPanel()
-        self.stats_panel.setMinimumWidth(400)  # Set minimum width
+        self.stats_panel.setMinimumWidth(400)
         self.splitter.addWidget(self.stats_panel)
 
         # Set initial splitter sizes (control:canvas:stats = 1:3:2)
@@ -84,6 +90,10 @@ class MultilayerNetworkViz(QWidget):
         # Add a flag to prevent multiple updates
         self._updating_visibility = False
 
+        # Minimum sizes for usability
+        self.setMinimumWidth(900)
+        self.setMinimumHeight(600)
+
         # If data is provided, load it
         if node_positions is not None:
             self.load_data(
@@ -95,22 +105,24 @@ class MultilayerNetworkViz(QWidget):
                 node_clusters,
                 unique_clusters,
             )
-        elif self.data_dir and self.control_panel.disease_combo.count() > 0:
-            # Load the first dataset by default
-            self.load_disease(self.control_panel.disease_combo.currentText())
+        # Load first dataset if available
+        elif self.data_dir and self.loader_panel.disease_combo.count() > 0:
+            # Don't automatically load - wait for user to click load button
+            pass
 
         logger.info("Visualization setup complete")
         self.setWindowTitle("DataDiVR - Multiplex")
         self.resize(1200, 768)
         self.show()
 
-    def load_disease(self, disease_name):
-        """Load a disease dataset"""
+    def load_selected_disease(self):
+        """Load the currently selected disease when load button is clicked"""
+        disease_name = self.loader_panel.disease_combo.currentText()
         if not disease_name:
             return
 
-        # Get ML layout preference from control panel
-        use_ml_layout = self.control_panel.ml_layout_checkbox.isChecked()
+        # Get ML layout preference from loader panel
+        use_ml_layout = self.loader_panel.ml_layout_checkbox.isChecked()
         
         data = load_disease_data(self.data_dir, disease_name, use_ml_layout)
         if data:
@@ -131,6 +143,47 @@ class MultilayerNetworkViz(QWidget):
                 node_origins,
                 unique_origins,
                 layer_colors
+            )
+            # Show the canvas after data is loaded
+            self.network_canvas.canvas.native.show()
+
+    def load_disease(self, disease_name):
+        """Load a disease dataset"""
+        if not disease_name:
+            return
+
+        # Get ML layout preference from control panel
+        use_ml_layout = self.control_panel.ml_layout_checkbox.isChecked()
+
+        data = load_disease_data(self.data_dir, disease_name, use_ml_layout)
+        if data:
+            (
+                node_positions,
+                link_pairs,
+                link_colors,
+                node_ids,
+                layers,
+                node_clusters,
+                unique_clusters,
+                node_colors,
+                node_origins,
+                unique_origins,
+                layer_colors,
+            ) = data
+
+            # Load the data into the visualization
+            self.load_data(
+                node_positions,
+                link_pairs,
+                link_colors,
+                node_ids,
+                layers,
+                node_clusters,
+                unique_clusters,
+                node_colors,
+                node_origins,
+                unique_origins,
+                layer_colors,
             )
 
     def load_data(
@@ -217,7 +270,6 @@ class MultilayerNetworkViz(QWidget):
                 f"Visibility settings: show_nodes={show_nodes}, show_labels={show_labels}, show_stats_bars={show_stats_bars}"
             )
 
-            
             filter_changed = False
 
             if not hasattr(self, "_previous_filters"):

@@ -5,6 +5,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import numpy as np
 
 from charts.interlayer_graph import create_interlayer_graph
+from utils.calc_layout import AVAILABLE_LAYOUTS
 from .base_panel import BaseStatsPanel
 
 
@@ -27,22 +28,7 @@ class LayerGraphPanel(BaseStatsPanel):
         # Add layout algorithm dropdown
         controls_layout.addWidget(QLabel("Layout Algorithm:"))
         self.layout_algorithm_dropdown = QComboBox()
-        self.layout_algorithm_dropdown.addItems(
-            [
-                "hierarchical_betweeness_centrality",
-                "connection_centric",
-                "weighted_spring",
-                "spring",
-                "circular",
-                "kamada_kawai",
-                "planar",
-                "spiral",
-                "force_atlas2",
-                "radial",
-                "weighted_spectral",
-                "pagerank_centric",
-            ]
-        )
+        self.layout_algorithm_dropdown.addItems(AVAILABLE_LAYOUTS)
         self.layout_algorithm_dropdown.currentTextChanged.connect(
             self.on_layout_algorithm_changed
         )

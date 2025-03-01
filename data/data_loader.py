@@ -2,6 +2,7 @@ import os
 import logging
 import networkx as nx
 from data.network_builder import build_multilayer_network
+from utils.calc_layout import get_layout_position
 
 
 def calculate_layer_layout(G, layer_nodes):
@@ -9,7 +10,7 @@ def calculate_layer_layout(G, layer_nodes):
     # Create subgraph with only nodes in this layer
     subgraph = G.subgraph(layer_nodes)
     # Calculate spring layout for this layer
-    return nx.spring_layout(subgraph, k=1, iterations=50)
+    return get_layout_position(subgraph, layout_algorithm="kamada_kawai")
 
 
 def get_available_diseases(data_dir):

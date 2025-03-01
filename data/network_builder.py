@@ -4,12 +4,13 @@ import networkx as nx
 import logging
 from tqdm import tqdm
 from utils.color_utils import generate_distinct_colors
+from utils.calc_layout import get_layout_position
 
 
 def calculate_layer_layout(G, layer_nodes):
     """Calculate layout for a specific layer's nodes"""
     subgraph = G.subgraph(layer_nodes)
-    return nx.spring_layout(subgraph, k=1, iterations=50)
+    return get_layout_position(subgraph, layout_algorithm="kamada_kawai")
 
 def build_multilayer_network(
     edge_list_path, node_metadata_path, add_interlayer_edges=True, use_ml_layout=False
