@@ -12,12 +12,34 @@ def calculate_layer_layout(G, layer_nodes, layout_algorithm="kamada_kawai"):
     subgraph = G.subgraph(layer_nodes)
     return get_layout_position(subgraph, layout_algorithm=layout_algorithm)
 
+
 def build_multilayer_network(
-    edge_list_path, node_metadata_path, add_interlayer_edges=True, use_ml_layout=False, layout_algorithm="kamada_kawai"
+    edge_list_path,
+    node_metadata_path,
+    add_interlayer_edges=True,
+    use_ml_layout=False,
+    layout_algorithm="kamada_kawai",
+    z_offset=0.5,
 ):
     """
     Build a multilayer network from edge list and node metadata files.
     Following the logic from multiCore_DataDiVR.ipynb.
+
+    Parameters:
+    -----------
+    edge_list_path : str
+        Path to edge list file
+    node_metadata_path : str
+        Path to node metadata file
+    add_interlayer_edges : bool
+        Whether to add edges between layers
+    use_ml_layout : bool
+        Whether to use multilayer layout
+    layout_algorithm : str
+        The layout algorithm to use
+    z_offset : float
+        The vertical offset between network layers (default: 0.5)
+        If 0, will auto-scale so that total height is 2.0
 
     Returns numpy arrays ready for visualization.
     """
@@ -62,7 +84,7 @@ def build_multilayer_network(
     # Create node positions array
     # First, create a base graph for layout calculation
     G_base = nx.Graph()
-    
+
     # Add nodes with cluster information
     for base_node in unique_base_nodes:
         cluster = "Unknown"
@@ -91,22 +113,56 @@ def build_multilayer_network(
         positions = {}
         for layer in layers:
             # Get nodes in this layer from edge list
-            layer_nodes = set(edgelist_with_att[edgelist_with_att[layer] == 1]['V1'].tolist() + 
-                            edgelist_with_att[edgelist_with_att[layer] == 1]['V2'].tolist())
+            layer_nodes = set(
+                edgelist_with_att[edgelist_with_att[layer] == 1]["V1"].tolist()
+                + edgelist_with_att[edgelist_with_att[layer] == 1]["V2"].tolist()
+            )
             layer_pos = calculate_layer_layout(G_base, layer_nodes, layout_algorithm)
             # Map positions to layer-specific nodes
             for node in unique_base_nodes:
                 node_id = f"{node}_{layer}"
-                positions[node_id] = layer_pos[node] if node in layer_pos else positions.get(f"{node}_{first_layer}", (0, 0))
+                positions[node_id] = (
+                    layer_pos[node]
+                    if node in layer_pos
+                    else positions.get(f"{node}_{first_layer}", (0, 0))
+                )
     else:
         # Calculate single layout using first layer nodes
-        base_layout = calculate_layer_layout(G_base, unique_base_nodes, layout_algorithm)
+        base_layout = calculate_layer_layout(
+            G_base, unique_base_nodes, layout_algorithm
+        )
         positions = {}
         # Map base node positions to all layer nodes
         for layer in layers:
             for node in unique_base_nodes:
                 positions[f"{node}_{layer}"] = base_layout[node]
 
+    # Calculate network width if auto z_offset (0)
+    if z_offset == 0 and positions:
+        # Get all x,y positions from the first layer to calculate width
+        first_layer_positions = [positions[f"{node}_{first_layer}"] for node in unique_base_nodes 
+                                if f"{node}_{first_layer}" in positions]
+        
+        if first_layer_positions:
+            # Calculate the width (max x - min x) and height (max y - min y)
+            x_values = [pos[0] for pos in first_layer_positions]
+            y_values = [pos[1] for pos in first_layer_positions]
+            
+            width = max(x_values) - min(x_values) if x_values else 1.0
+            height = max(y_values) - min(y_values) if y_values else 1.0
+            
+            # Use the larger of width or height as the network extent
+            network_extent = max(width, height)
+            
+            # Set z_offset so that total height is 2 * network_extent
+            # This makes the vertical spacing proportional to the network width
+            z_offset = (2.0 * network_extent) / (len(layers) - 1) if len(layers) > 1 else network_extent
+            logger.info(f"Auto z_offset: {z_offset:.2f} (based on network extent: {network_extent:.2f})")
+        else:
+            # Fallback if no positions found
+            z_offset = 2.0 / (len(layers) - 1) if len(layers) > 1 else 0.5
+            logger.info(f"Auto z_offset fallback: {z_offset:.2f}")
+    
     # Create node positions for all layers
     node_positions = []
     node_ids = []
@@ -121,7 +177,7 @@ def build_multilayer_network(
 
             # Get position from layout
             x, y = positions[node_id]
-            node_positions.append([x, y, z / 8]) # TODO make 2 configurable in UI this is z axis step, basically network layer distances
+            node_positions.append([x, y, z * z_offset])  # Use configurable z_offset
 
             # Get node metadata
             if base_node in node_metadata["Node"].values:
@@ -222,14 +278,14 @@ def build_multilayer_network(
 
     return (
         node_positions,  # numpy array we already created
-        link_pairs,      # numpy array we already created
-        link_colors,     # list we already created
-        node_ids,        # list we already created
-        layers,          # list we already have
-        node_clusters,   # dict we already created
-        unique_clusters, # list we already created
-        node_colors,     # list we already created
-        node_origins,    # dict we already created
+        link_pairs,  # numpy array we already created
+        link_colors,  # list we already created
+        node_ids,  # list we already created
+        layers,  # list we already have
+        node_clusters,  # dict we already created
+        unique_clusters,  # list we already created
+        node_colors,  # list we already created
+        node_origins,  # dict we already created
         unique_origins,  # list we already created
-        layer_colors     # dict we already created
+        layer_colors,  # dict we already created
     )

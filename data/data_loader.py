@@ -23,7 +23,7 @@ def get_available_diseases(data_dir):
     return sorted(diseases)
 
 
-def load_disease_data(data_dir, disease_name, use_ml_layout=False, layout_algorithm="kamada_kawai"):
+def load_disease_data(data_dir, disease_name, use_ml_layout=False, layout_algorithm="kamada_kawai", z_offset=0.5):
     """
     Load the selected disease dataset
     
@@ -37,6 +37,8 @@ def load_disease_data(data_dir, disease_name, use_ml_layout=False, layout_algori
         If True, calculate separate layout for each layer
     layout_algorithm : str
         The layout algorithm to use for node positioning
+    z_offset : float
+        The vertical offset between network layers (default: 0.5)
     """
     logger = logging.getLogger(__name__)
     logger.info(f"Loading disease: {disease_name}")
@@ -58,5 +60,6 @@ def load_disease_data(data_dir, disease_name, use_ml_layout=False, layout_algori
         node_metadata_path, 
         add_interlayer_edges=True,
         use_ml_layout=use_ml_layout,
-        layout_algorithm=layout_algorithm
+        layout_algorithm=layout_algorithm,
+        z_offset=z_offset
     )

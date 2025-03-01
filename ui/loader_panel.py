@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QCheckBox, QComboBox, QPushButton
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QCheckBox, QComboBox, QPushButton, QSlider, QLabel
 from PyQt5.QtCore import Qt
 from data.data_loader import get_available_diseases
 from utils.calc_layout import AVAILABLE_LAYOUTS_LOADER
@@ -32,6 +32,18 @@ class LoaderPanel(QWidget):
         self.layout_combo.setMinimumWidth(150)  # Ensure dropdown has reasonable width
         layout.addWidget(self.layout_combo)
 
+        # Create z offset slider and label
+        self.z_offset_label = QLabel("Z(n+1)*= Auto")
+        layout.addWidget(self.z_offset_label)
+        
+        self.z_offset_slider = QSlider(Qt.Horizontal)
+        self.z_offset_slider.setMinimum(0)  # 0 = auto
+        self.z_offset_slider.setMaximum(10) 
+        self.z_offset_slider.setValue(0)  # Default to auto
+        self.z_offset_slider.setFixedWidth(100)
+        self.z_offset_slider.valueChanged.connect(self._update_z_offset_label)
+        layout.addWidget(self.z_offset_slider)
+
         # Create load button
         self.load_button = QPushButton("Load Dataset")
         layout.addWidget(self.load_button)
@@ -41,6 +53,21 @@ class LoaderPanel(QWidget):
 
         # Set the layout alignment
         layout.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+
+    def _update_z_offset_label(self):
+        """Update the z offset label with the current value"""
+        value = self.z_offset_slider.value()
+        if value == 0:
+            self.z_offset_label.setText("Z Offset: Auto")
+        else:
+            self.z_offset_label.setText(f"Z Offset: {value/10:.1f}")
+
+    def get_z_offset(self):
+        """Get the current z offset value from the slider"""
+        value = self.z_offset_slider.value()
+        if value == 0:
+            return 0.0  # Auto mode
+        return value / 10.0
 
     def create_disease_dropdown(self):
         """Create dropdown menu with available disease datasets"""

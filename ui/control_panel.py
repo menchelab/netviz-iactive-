@@ -87,8 +87,8 @@ class ControlPanel(QWidget):
         # Add orthographic view checkbox
         self.orthographic_view_checkbox = QCheckBox("Orthographic View")
         self.orthographic_view_checkbox.setChecked(
-            False
-        )  # On by default (orthographic)
+            True
+        )
         display_layout.addWidget(self.orthographic_view_checkbox)
 
         # Add intralayer edges checkbox
