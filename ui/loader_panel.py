@@ -56,7 +56,7 @@ class LoaderPanel(QWidget):
         combo = QComboBox()
         for layout in AVAILABLE_LAYOUTS_NON_WEIGHTED:
             combo.addItem(layout)
-        # Set default to kamada_kawai
-        default_index = AVAILABLE_LAYOUTS_NON_WEIGHTED.index("kamada_kawai")
+        # Set default to cluster_centric
+        default_index = AVAILABLE_LAYOUTS_NON_WEIGHTED.index("cluster_centric")
         combo.setCurrentIndex(default_index)
         return combo 

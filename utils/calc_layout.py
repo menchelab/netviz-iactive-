@@ -15,6 +15,10 @@ AVAILABLE_LAYOUTS = [
     "radial",
     "weighted_spectral",
     "pagerank_centric",
+    "cluster_centric",
+    "cluster_grid",
+    "cluster_hierarchical",
+    "cluster_force_directed",
 ]
 
 AVAILABLE_LAYOUTS_NON_WEIGHTED = [
@@ -25,6 +29,10 @@ AVAILABLE_LAYOUTS_NON_WEIGHTED = [
     "spiral",
     "force_atlas2",
     "pagerank_centric",
+    "cluster_centric",
+    "cluster_grid",
+    "cluster_hierarchical",
+    "cluster_force_directed",
 ]
 
 
@@ -264,6 +272,199 @@ def calc_pagerank_centric_layout(G):
     return pos
 
 
+def calc_cluster_centric_layout(G):
+    """
+    Layout that positions nodes from the same cluster closer together.
+    Uses a combination of circular layout for clusters and spring layout within clusters.
+    Ensures strong separation between different clusters.
+    """
+    if not G.nodes:
+        return {}
+
+    # Group nodes by cluster using node attributes
+    clusters = {}
+    for node, attrs in G.nodes(data=True):
+        cluster = attrs.get("cluster", "Unknown")
+        if cluster not in clusters:
+            clusters[cluster] = []
+        clusters[cluster].append(node)
+
+    # If no clusters found, fall back to circular layout
+    if not clusters or all(c == "Unknown" for c in clusters.keys()):
+        return nx.circular_layout(G)
+
+    # Calculate cluster centers using circular layout with larger radius
+    num_clusters = len(clusters)
+    cluster_centers = {}
+    radius = 1  # to be played around with
+    for i, cluster in enumerate(clusters.keys()):
+        angle = 2 * np.pi * i / num_clusters
+        cluster_centers[cluster] = np.array(
+            [radius * np.cos(angle), radius * np.sin(angle)]
+        )
+
+    # Calculate positions for nodes within each cluster
+    pos = {}
+    for cluster, nodes in clusters.items():
+        if not nodes:
+            continue
+
+        # Create subgraph for this cluster
+        subgraph = G.subgraph(nodes)
+
+        # Calculate spring layout for nodes in this cluster
+        cluster_pos = nx.spring_layout(subgraph, k=0.5, iterations=50, seed=42)
+
+        scale = 0.3
+        center = cluster_centers[cluster]
+
+        # Position nodes around their cluster center
+        for node, node_pos in cluster_pos.items():
+            pos[node] = center + scale * node_pos
+
+    return pos
+
+
+def calc_cluster_grid_layout(G):
+    """
+    Layout that arranges clusters in a grid pattern.
+    Each cluster's nodes are arranged in a smaller grid within their cluster space.
+    """
+    if not G.nodes:
+        return {}
+
+    # Group nodes by cluster
+    clusters = {}
+    for node, attrs in G.nodes(data=True):
+        cluster = attrs.get("cluster", "Unknown")
+        if cluster not in clusters:
+            clusters[cluster] = []
+        clusters[cluster].append(node)
+
+    if not clusters or all(c == "Unknown" for c in clusters.keys()):
+        return nx.circular_layout(G)
+
+    # Calculate grid dimensions for clusters
+    num_clusters = len(clusters)
+    grid_size = int(np.ceil(np.sqrt(num_clusters)))
+
+    # Calculate positions for nodes within each cluster
+    pos = {}
+    for i, (cluster, nodes) in enumerate(clusters.items()):
+        # Calculate cluster center in grid
+        cluster_row = i // grid_size
+        cluster_col = i % grid_size
+
+        # Center the grid around origin
+        center_x = (cluster_col - (grid_size - 1) / 2) * 2.5
+        center_y = ((grid_size - 1) / 2 - cluster_row) * 2.5
+
+        # Create mini-grid for nodes within cluster
+        nodes_grid_size = int(np.ceil(np.sqrt(len(nodes))))
+        for j, node in enumerate(nodes):
+            node_row = j // nodes_grid_size
+            node_col = j % nodes_grid_size
+
+            # Position within cluster, scaled down and centered
+            x_offset = (node_col - (nodes_grid_size - 1) / 2) * (0.8 / nodes_grid_size)
+            y_offset = ((nodes_grid_size - 1) / 2 - node_row) * (0.8 / nodes_grid_size)
+
+            pos[node] = np.array([center_x + x_offset, center_y + y_offset])
+
+    return pos
+
+
+def calc_cluster_hierarchical_layout(G):
+    """
+    Layout that arranges clusters in a hierarchical tree-like structure.
+    Larger clusters are placed higher in the hierarchy.
+    """
+    if not G.nodes:
+        return {}
+
+    # Group nodes by cluster
+    clusters = {}
+    for node, attrs in G.nodes(data=True):
+        cluster = attrs.get("cluster", "Unknown")
+        if cluster not in clusters:
+            clusters[cluster] = []
+        clusters[cluster].append(node)
+
+    if not clusters or all(c == "Unknown" for c in clusters.keys()):
+        return nx.circular_layout(G)
+
+    # Sort clusters by size
+    sorted_clusters = sorted(clusters.items(), key=lambda x: len(x[1]), reverse=True)
+
+    pos = {}
+    max_nodes_per_level = max(len(nodes) for _, nodes in sorted_clusters)
+
+    for level, (cluster, nodes) in enumerate(sorted_clusters):
+        # Calculate vertical position for this level
+        y_pos = 1.0 - (
+            2.0 * level / (len(sorted_clusters) - 1) if len(sorted_clusters) > 1 else 0
+        )
+
+        # Arrange nodes horizontally within their level
+        for i, node in enumerate(nodes):
+            x_pos = (i - (len(nodes) - 1) / 2) * (2.0 / max_nodes_per_level)
+            pos[node] = np.array([x_pos, y_pos])
+
+    return pos
+
+
+def calc_cluster_force_directed_layout(G):
+    """
+    Force-directed layout that maintains cluster cohesion using virtual cluster-center nodes.
+    Uses spring layout with additional forces to keep clusters together.
+    """
+    if not G.nodes:
+        return {}
+
+    # Group nodes by cluster
+    clusters = {}
+    for node, attrs in G.nodes(data=True):
+        cluster = attrs.get("cluster", "Unknown")
+        if cluster not in clusters:
+            clusters[cluster] = []
+        clusters[cluster].append(node)
+
+    if not clusters or all(c == "Unknown" for c in clusters.keys()):
+        return nx.circular_layout(G)
+
+    # Create an augmented graph with virtual cluster centers
+    G_augmented = G.copy()
+
+    # Add virtual nodes for cluster centers and connect them to their cluster members
+    for cluster, nodes in clusters.items():
+        center_node = f"CENTER_{cluster}"
+        G_augmented.add_node(center_node)
+        for node in nodes:
+            G_augmented.add_edge(
+                center_node, node, weight=5.0
+            )  # Strong attraction to center
+
+    # Calculate layout with the augmented graph
+    pos_augmented = nx.spring_layout(
+        G_augmented,
+        k=2.0,  # Increase node spacing
+        iterations=100,
+        seed=42,
+    )
+
+    # Remove virtual center nodes from final positions
+    pos = {node: pos_augmented[node] for node in G.nodes()}
+
+    # Scale positions to maintain consistent scale
+    max_dim = max(max(abs(p[0]), abs(p[1])) for p in pos.values())
+    if max_dim > 0:
+        scale = 1.0 / max_dim
+        for node in pos:
+            pos[node] = pos[node] * scale
+
+    return pos
+
+
 def get_layout_position(G, layout_algorithm="spring"):
     """Get node positions based on specified layout algorithm"""
     layout_functions = {
@@ -280,6 +481,10 @@ def get_layout_position(G, layout_algorithm="spring"):
         "hierarchical_betweeness_centrality": calc_hierarchical_betweeness_centrality_layout,
         "connection_centric": calc_connection_centric_layout,
         "pagerank_centric": calc_pagerank_centric_layout,
+        "cluster_centric": calc_cluster_centric_layout,
+        "cluster_grid": calc_cluster_grid_layout,
+        "cluster_hierarchical": calc_cluster_hierarchical_layout,
+        "cluster_force_directed": calc_cluster_force_directed_layout,
     }
 
     layout_func = layout_functions.get(layout_algorithm, calc_spring_layout)

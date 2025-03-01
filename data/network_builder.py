@@ -31,7 +31,7 @@ def build_multilayer_network(
     # Remove .tsv string from the column names
     edgelist_with_att.columns = edgelist_with_att.columns.str.replace(".tsv", "")
 
-    # Read the node metadata
+    # Read the node metadata first
     node_metadata = pd.read_table(
         node_metadata_path, sep="\t", header=0, index_col=False
     )
@@ -62,7 +62,14 @@ def build_multilayer_network(
     # Create node positions array
     # First, create a base graph for layout calculation
     G_base = nx.Graph()
-    G_base.add_nodes_from(unique_base_nodes)
+    
+    # Add nodes with cluster information
+    for base_node in unique_base_nodes:
+        cluster = "Unknown"
+        if base_node in node_metadata["Node"].values:
+            node_data = node_metadata[node_metadata["Node"] == base_node].iloc[0]
+            cluster = node_data["cluster"]
+        G_base.add_node(base_node, cluster=cluster)
 
     # Add edges from the first layer for layout purposes
     first_layer = layers[0]
