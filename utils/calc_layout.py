@@ -15,13 +15,9 @@ AVAILABLE_LAYOUTS = [
     "radial",
     "weighted_spectral",
     "pagerank_centric",
-    "cluster_centric",
-    "cluster_grid",
-    "cluster_hierarchical",
-    "cluster_force_directed",
 ]
 
-AVAILABLE_LAYOUTS_NON_WEIGHTED = [
+AVAILABLE_LAYOUTS_LOADER = [
     "hierarchical_betweeness_centrality",
     "spring",
     "circular",
@@ -441,7 +437,7 @@ def calc_cluster_force_directed_layout(G):
         G_augmented.add_node(center_node)
         for node in nodes:
             G_augmented.add_edge(
-                center_node, node, weight=5.0
+                center_node, node, weight=10.0
             )  # Strong attraction to center
 
     # Calculate layout with the augmented graph

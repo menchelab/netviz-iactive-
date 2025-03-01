@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QCheckBox, QComboBox, QPushButton
 from PyQt5.QtCore import Qt
 from data.data_loader import get_available_diseases
-from utils.calc_layout import AVAILABLE_LAYOUTS_NON_WEIGHTED
+from utils.calc_layout import AVAILABLE_LAYOUTS_LOADER
 
 class LoaderPanel(QWidget):
     def __init__(self, data_dir=None, parent=None):
@@ -54,9 +54,9 @@ class LoaderPanel(QWidget):
     def create_layout_dropdown(self):
         """Create dropdown menu with available layout algorithms"""
         combo = QComboBox()
-        for layout in AVAILABLE_LAYOUTS_NON_WEIGHTED:
+        for layout in AVAILABLE_LAYOUTS_LOADER:
             combo.addItem(layout)
         # Set default to cluster_centric
-        default_index = AVAILABLE_LAYOUTS_NON_WEIGHTED.index("cluster_centric")
+        default_index = AVAILABLE_LAYOUTS_LOADER.index("cluster_centric")
         combo.setCurrentIndex(default_index)
         return combo 
