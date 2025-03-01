@@ -28,12 +28,14 @@ class NetworkCanvas:
         self.view = self.canvas.central_widget.add_view()
         self.view.camera = "turntable"
         self.view.camera.fov = 45
-        self.view.camera.distance = 10 # for non orthographic view
-        self.view.camera.scale_factor = 5 # for orthographic view
+        self.view.camera.distance = 7  # for non orthographic view
+        self.view.camera.scale_factor = 4  # for orthographic view
 
         # Position camera higher on z-axis
         initial_center = self.view.camera.center
-        self.view.camera.center = np.array([initial_center[0], initial_center[1], initial_center[2] + 2.5])
+        self.view.camera.center = np.array(
+            [initial_center[0], initial_center[1], initial_center[2] + 1.5]
+        )
 
         # Set up key event handling
         self.canvas.events.key_press.connect(self._on_key_press)
@@ -43,9 +45,9 @@ class NetworkCanvas:
             "distance": self.view.camera.distance,
             "elevation": self.view.camera.elevation,
             "azimuth": self.view.camera.azimuth,
-            "scale_factor": self.view.camera.scale_factor
+            "scale_factor": self.view.camera.scale_factor,
         }
-        
+
         # Initialize camera animator
         self.camera_animator = CameraAnimator(self.view)
 
@@ -118,6 +120,8 @@ class NetworkCanvas:
             self.camera_animator.pulse_zoom()
         elif event.key == "l":  # Matrix Effect
             self.camera_animator.matrix_effect()
+        elif event.key == "m":  # Slow Matrix Effect
+            self.camera_animator.matrix_effect_slow()
         # Arrow keys and WASD for rotation
         elif event.key in ("Left", "a"):
             self._rotate_z(-move_amount)  # Rotate left around z-axis
@@ -141,11 +145,9 @@ class NetworkCanvas:
             self._look_along_axis("z")
 
     def _center_view(self):
-
         self.view.camera.center = self._initial_camera_state["center"]
         self.view.camera.distance = self._initial_camera_state["distance"]
         self.canvas.update()
-
 
     def _reset_camera_and_rotation(self):
         """Reset camera to an isometric diagonal view"""

@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt
 import logging
 import numpy as np
+from vispy import app
 
 from ui.network_canvas import NetworkCanvas
 from ui.stats_panel import NetworkStatsPanel
@@ -214,6 +215,8 @@ class MultilayerNetworkViz(QWidget):
         layer_colors=None,
     ):
         """Load network data into the visualization"""
+        logger = logging.getLogger(__name__)
+        logger.info("Loading data into visualization...")
 
         # Load data into the data manager
         self.data_manager.load_data(
@@ -243,7 +246,52 @@ class MultilayerNetworkViz(QWidget):
             self.data_manager.cluster_colors,
         )
 
+        # Trigger a random animation after loading
+
+
         self.update_visibility()
+
+        self._trigger_random_animation()
+
+    def _trigger_random_animation(self):
+        """Schedule a random animation after data is loaded"""
+        logger = logging.getLogger(__name__)
+        logger.info("Scheduling random animation after data load")
+
+        # Use a timer to delay the animation slightly to ensure UI remains responsive
+        timer = app.Timer(
+            interval=0.0, connect=self._play_random_animation, iterations=1
+        )
+        timer.start()
+
+    def _play_random_animation(self, event):
+        """Play a random camera animation"""
+        logger = logging.getLogger(__name__)
+
+        # Only proceed if we have a valid network canvas
+        if not hasattr(self, "network_canvas") or not self.network_canvas:
+            logger.warning("Cannot play animation: Network canvas not available")
+            return
+
+        # List of available animation methods
+        animation_methods = [
+            self.network_canvas.camera_animator.cosmic_zoom,
+            self.network_canvas.camera_animator.orbit_flyby,
+            self.network_canvas.camera_animator.spiral_dive,
+            self.network_canvas.camera_animator.bounce_zoom,
+            self.network_canvas.camera_animator.swing_around,
+            self.network_canvas.camera_animator.pulse_zoom,
+            self.network_canvas.camera_animator.matrix_effect,
+            self.network_canvas.camera_animator.matrix_effect_slow,
+        ]
+
+        # Randomly select and play an animation
+        import random
+
+        random_animation = random.choice(animation_methods)
+        animation_name = random_animation.__name__
+        logger.info(f"Playing random animation: {animation_name}")
+        random_animation()
 
     def update_visibility(self):
         """Update the visibility of nodes and edges based on control panel settings"""
@@ -327,3 +375,15 @@ class MultilayerNetworkViz(QWidget):
                 self.stats_panel.update_stats(self.data_manager)
         finally:
             self._updating_visibility = False
+
+    def trigger_animation(self):
+        """Manually trigger a random animation"""
+        logger = logging.getLogger(__name__)
+        logger.info("Manually triggering random animation")
+
+        # Only proceed if we have a valid network canvas
+        if not hasattr(self, "network_canvas") or not self.network_canvas:
+            logger.warning("Cannot trigger animation: Network canvas not available")
+            return
+
+        self._play_random_animation(None)
