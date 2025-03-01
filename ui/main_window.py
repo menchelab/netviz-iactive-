@@ -1,21 +1,16 @@
 from PyQt5.QtWidgets import (
     QWidget,
     QVBoxLayout,
-    QHBoxLayout,
-    QLabel,
-    QComboBox,
     QSplitter,
 )
 from PyQt5.QtCore import Qt
 import logging
 import numpy as np
-import os
 
 from ui.network_canvas import NetworkCanvas
 from ui.stats_panel import NetworkStatsPanel
 from ui.control_panel import ControlPanel
-from data.data_loader import get_available_diseases, load_disease_data
-from utils.color_utils import hex_to_rgba
+from data.data_loader import load_disease_data
 from data.network_data_manager import NetworkDataManager
 from ui.loader_panel import LoaderPanel
 
@@ -125,13 +120,25 @@ class MultilayerNetworkViz(QWidget):
         use_ml_layout = self.loader_panel.ml_layout_checkbox.isChecked()
         layout_algorithm = self.loader_panel.layout_combo.currentText()
         z_offset = self.loader_panel.get_z_offset()
-        
-        data = load_disease_data(self.data_dir, disease_name, use_ml_layout, layout_algorithm, z_offset)
+
+        data = load_disease_data(
+            self.data_dir, disease_name, use_ml_layout, layout_algorithm, z_offset
+        )
         if data:
-            (node_positions, link_pairs, link_colors, node_ids, layers, 
-             node_clusters, unique_clusters, node_colors, node_origins, 
-             unique_origins, layer_colors) = data
-            
+            (
+                node_positions,
+                link_pairs,
+                link_colors,
+                node_ids,
+                layers,
+                node_clusters,
+                unique_clusters,
+                node_colors,
+                node_origins,
+                unique_origins,
+                layer_colors,
+            ) = data
+
             # Load the data into the visualization
             self.load_data(
                 node_positions,
@@ -144,7 +151,7 @@ class MultilayerNetworkViz(QWidget):
                 node_colors,
                 node_origins,
                 unique_origins,
-                layer_colors
+                layer_colors,
             )
             # Show the canvas after data is loaded
             self.network_canvas.canvas.native.show()
@@ -159,7 +166,9 @@ class MultilayerNetworkViz(QWidget):
         layout_algorithm = self.loader_panel.layout_combo.currentText()
         z_offset = self.loader_panel.get_z_offset()
 
-        data = load_disease_data(self.data_dir, disease_name, use_ml_layout, layout_algorithm, z_offset)
+        data = load_disease_data(
+            self.data_dir, disease_name, use_ml_layout, layout_algorithm, z_offset
+        )
         if data:
             (
                 node_positions,
