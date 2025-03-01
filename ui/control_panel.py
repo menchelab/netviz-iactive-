@@ -1,7 +1,8 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QCheckBox, QGroupBox, QFrame, QLabel
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QCheckBox, QGroupBox, QFrame, QLabel, QComboBox
 from PyQt5.QtGui import QColor
 from PyQt5.QtCore import Qt
 import logging
+from data.data_loader import get_available_diseases
 
 
 class ShiftClickCheckBox(QCheckBox):
@@ -27,8 +28,9 @@ class ShiftClickCheckBox(QCheckBox):
 
 
 class ControlPanel(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, data_dir=None):
         super().__init__(parent)
+        self.data_dir = data_dir
 
         # Initialize empty control lists
         self.layer_checkboxes = []
@@ -52,6 +54,17 @@ class ControlPanel(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(5)
+
+        # Create dataset selection at the top
+        dataset_group = QGroupBox("Dataset")
+        dataset_group.setFlat(True)
+        dataset_layout = QVBoxLayout()
+        dataset_layout.setContentsMargins(5, 5, 5, 5)
+        dataset_layout.setSpacing(2)
+        self.disease_combo = self.create_disease_dropdown() if self.data_dir else QComboBox()
+        dataset_layout.addWidget(self.disease_combo)
+        dataset_group.setLayout(dataset_layout)
+        layout.addWidget(dataset_group)
 
         # Create containers for controls
         self.layer_group = QGroupBox("Layers")
@@ -341,3 +354,14 @@ class ControlPanel(QWidget):
     def use_orthographic_view(self):
         """Check if orthographic view should be used"""
         return self.orthographic_view_checkbox.isChecked()
+
+    def create_disease_dropdown(self):
+        """Create dropdown menu with available disease datasets"""
+        combo = QComboBox()
+        
+        diseases = get_available_diseases(self.data_dir)
+        
+        for disease in diseases:
+            combo.addItem(disease)
+            
+        return combo

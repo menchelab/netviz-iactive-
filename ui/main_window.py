@@ -47,25 +47,13 @@ class MultilayerNetworkViz(QWidget):
         main_layout.setSpacing(5)  # Minimal spacing
         self.setLayout(main_layout)
 
-        # Create dropdown for disease selection
-        if self.data_dir:
-            disease_layout = QHBoxLayout()
-            disease_layout.setContentsMargins(0, 0, 0, 0)  # No margins
-            disease_layout.setSpacing(5)
-            disease_layout.addWidget(QLabel("dataset:"))
-            self.disease_combo = self.create_disease_dropdown()
-            disease_layout.addWidget(self.disease_combo)
-            disease_layout.addStretch(1)  # Push controls to the left
-            disease_widget = QWidget()
-            disease_widget.setLayout(disease_layout)
-            main_layout.addWidget(disease_widget)
-
         # Create the main content area with splitters for resizable panels
         self.splitter = QSplitter(Qt.Horizontal)
         main_layout.addWidget(self.splitter, 1)
 
         # Create left panel for controls
-        self.control_panel = ControlPanel()
+        self.control_panel = ControlPanel(data_dir=data_dir)
+        self.control_panel.disease_combo.currentTextChanged.connect(self.load_disease)
         self.control_panel.setMinimumWidth(80)
         self.splitter.addWidget(self.control_panel)
 
@@ -107,26 +95,14 @@ class MultilayerNetworkViz(QWidget):
                 node_clusters,
                 unique_clusters,
             )
-        elif self.data_dir and self.disease_combo.count() > 0:
+        elif self.data_dir and self.control_panel.disease_combo.count() > 0:
             # Load the first dataset by default
-            self.load_disease(self.disease_combo.currentText())
+            self.load_disease(self.control_panel.disease_combo.currentText())
 
         logger.info("Visualization setup complete")
         self.setWindowTitle("DataDiVR - Multiplex")
         self.resize(1200, 768)
         self.show()
-
-    def create_disease_dropdown(self):
-        combo = QComboBox()
-
-        diseases = get_available_diseases(self.data_dir)
-
-        for disease in diseases:
-            combo.addItem(disease)
-
-        combo.currentTextChanged.connect(self.load_disease)
-
-        return combo
 
     def load_disease(self, disease_name):
         logger = logging.getLogger(__name__)
@@ -244,15 +220,13 @@ class MultilayerNetworkViz(QWidget):
                     f"Projection mode changed to {'orthographic' if orthographic else 'perspective'}"
                 )
 
-            # Log the current settings for debugging
             logger.debug(
                 f"Visibility settings: show_nodes={show_nodes}, show_labels={show_labels}, show_stats_bars={show_stats_bars}"
             )
 
-            # Check if filter settings have changed (layers, clusters, origins)
+            
             filter_changed = False
 
-            # Store current filter settings if not already stored
             if not hasattr(self, "_previous_filters"):
                 self._previous_filters = {
                     "layers": set(visible_layers),

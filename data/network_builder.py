@@ -67,6 +67,9 @@ def build_multilayer_network(
     logger.info("Calculating layout...")
     try:
         layout = nx.kamada_kawai_layout(G_base)
+        # maybe something else better? TODO make this configurable in UI
+        # but take care to re trigger network_builder if setting is changed
+
     except:
         logger.warning("Kamada-Kawai layout failed, falling back to spring layout")
         layout = nx.spring_layout(G_base)
@@ -85,7 +88,7 @@ def build_multilayer_network(
 
             # Get position from layout
             x, y = layout[base_node]
-            node_positions.append([x, y, z / 20])
+            node_positions.append([x, y, z / 15]) # TODO make configurable in UI this is z axis step, basically network layer distances
 
             # Get node metadata
             if base_node in node_metadata["Node"].values:
