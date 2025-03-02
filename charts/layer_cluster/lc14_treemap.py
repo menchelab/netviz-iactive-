@@ -347,8 +347,23 @@ def create_layer_cluster_treemap(
 
                         # Create legend for clusters
                         legend_elements = []
+                        
+                        # Calculate total interlayer edges per cluster
+                        cluster_total_edges = {}
+                        if count_type == "interlayer_edges":
+                            for cluster, layer_dict in cluster_layer_counts.items():
+                                # Sum all layer counts and multiply by 2 (since each edge is counted as 0.5 in two layers)
+                                cluster_total_edges[cluster] = sum(layer_dict.values()) * 2
+                        
                         for cluster in sorted(set(node_clusters.values())):
                             color = cluster_colors.get(cluster, "gray")
+                            # Add edge count to legend if available
+                            if count_type == "interlayer_edges" and cluster in cluster_total_edges:
+                                edge_count = int(cluster_total_edges[cluster])
+                                label = f"Cluster {str(cluster)} ({edge_count} interlayer edges)"
+                            else:
+                                label = f"Cluster {str(cluster)}"
+                                
                             legend_elements.append(
                                 Line2D(
                                     [0],
@@ -357,7 +372,7 @@ def create_layer_cluster_treemap(
                                     color="w",
                                     markerfacecolor=color,
                                     markersize=10,
-                                    label=f"Cluster {str(cluster)}",
+                                    label=label,
                                 )
                             )
 
@@ -731,8 +746,23 @@ def create_layer_cluster_treemap(
 
         # Create legend for clusters
         legend_elements = []
+        
+        # Calculate total interlayer edges per cluster
+        cluster_total_edges = {}
+        if count_type == "interlayer_edges":
+            for cluster, layer_dict in cluster_layer_counts.items():
+                # Sum all layer counts and multiply by 2 (since each edge is counted as 0.5 in two layers)
+                cluster_total_edges[cluster] = sum(layer_dict.values()) * 2
+        
         for cluster in sorted(set(node_clusters.values())):
             color = cluster_colors.get(cluster, "gray")
+            # Add edge count to legend if available
+            if count_type == "interlayer_edges" and cluster in cluster_total_edges:
+                edge_count = int(cluster_total_edges[cluster])
+                label = f"Cluster {str(cluster)} ({edge_count} interlayer edges)"
+            else:
+                label = f"Cluster {str(cluster)}"
+                
             legend_elements.append(
                 Line2D(
                     [0],
@@ -741,7 +771,7 @@ def create_layer_cluster_treemap(
                     color="w",
                     markerfacecolor=color,
                     markersize=10,
-                    label=f"Cluster {str(cluster)}",
+                    label=label,
                 )
             )
 
