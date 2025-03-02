@@ -825,4 +825,94 @@ def integrate_lc16_ui_with_panel(panel, parent_layout, analysis_combo=None, clus
                 lambda: panel.update_lc16_path_analysis(panel._current_data) if hasattr(panel, "_current_data") else None
             )
     
-    return ui_elements 
+    # Store references to the UI elements in the panel for later access
+    panel.lc16_ui_elements = ui_elements
+    
+    return ui_elements
+
+def get_lc16_visualization_settings(panel):
+    """
+    Get the current visualization settings from the LC16 UI elements.
+    
+    Parameters:
+    -----------
+    panel : QWidget
+        The panel containing the LC16 UI elements
+        
+    Returns:
+    --------
+    dict
+        A dictionary containing the current visualization settings
+    """
+    settings = {}
+    
+    # Check if the panel has the UI elements
+    if hasattr(panel, "lc16_ui_elements"):
+        ui_elements = panel.lc16_ui_elements
+        
+        # Get the visualization style
+        settings["viz_style"] = ui_elements["viz_style_combo"].currentText()
+        
+        # Get the checkbox states
+        settings["show_labels"] = ui_elements["show_labels_checkbox"].isChecked()
+        settings["show_nodes"] = ui_elements["show_nodes_checkbox"].isChecked()
+        settings["color_by_centrality"] = ui_elements["color_by_centrality_checkbox"].isChecked()
+    else:
+        # Default settings if UI elements are not available
+        settings["viz_style"] = "Standard"
+        settings["show_labels"] = True
+        settings["show_nodes"] = True
+        settings["color_by_centrality"] = False
+        
+    return settings
+
+def get_selected_cluster(panel):
+    """
+    Get the selected cluster from the cluster combo box.
+    
+    Parameters:
+    -----------
+    panel : QWidget
+        The panel containing the cluster combo box
+        
+    Returns:
+    --------
+    int or None
+        The selected cluster number, or None if "All Clusters" is selected
+    """
+    selected_cluster = None
+    
+    # Check if the panel has the cluster combo box
+    if hasattr(panel, "path_similarity_cluster_combo"):
+        cluster_selection = panel.path_similarity_cluster_combo.currentText()
+        try:
+            # Handle different possible formats of cluster selection text
+            if cluster_selection == "All Clusters":
+                selected_cluster = None
+            else:
+                # Try to extract the cluster number, handling different formats
+                parts = cluster_selection.split()
+                if len(parts) > 1 and parts[0].lower() == "cluster":
+                    selected_cluster = int(parts[1])
+                elif len(parts) > 1:
+                    # Try to find a number in the parts
+                    for part in parts:
+                        if part.isdigit():
+                            selected_cluster = int(part)
+                            break
+                    else:
+                        selected_cluster = None
+                else:
+                    # If it's just a number
+                    selected_cluster = (
+                        int(cluster_selection) if cluster_selection.isdigit() else None
+                    )
+        except (ValueError, IndexError):
+            # If parsing fails, default to All Clusters
+            import logging
+            logging.warning(
+                f"Could not parse cluster selection: {cluster_selection}, defaulting to All Clusters"
+            )
+            selected_cluster = None
+            
+    return selected_cluster 

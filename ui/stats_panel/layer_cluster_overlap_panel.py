@@ -62,7 +62,9 @@ from charts.layer_cluster.lc14_treemap import create_layer_cluster_treemap
 from charts.layer_cluster.lc16_interlayer_paths import (
     create_interlayer_path_analysis,
     create_lc16_ui_elements,
-    integrate_lc16_ui_with_panel
+    integrate_lc16_ui_with_panel,
+    get_selected_cluster,
+    get_lc16_visualization_settings,
 )
 from charts.layer_cluster.lc17_cluster_bridging_analysis import (
     create_cluster_bridging_analysis,
@@ -109,13 +111,11 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         self.aspect_ratio_combo.currentTextChanged.connect(self.on_layout_changed)
         controls_layout.addWidget(self.aspect_ratio_combo)
 
-        # Add analysis type dropdown for LC16
-        controls_layout.addSpacing(20)
-        controls_layout.addWidget(QLabel("LC16 Analysis:"))
+        # Remove LC16 Analysis dropdown from top controls
+        # It will be moved to the LC16 tab
         self.path_analysis_combo = QComboBox()
         self.path_analysis_combo.addItems(["Path Length", "Betweenness", "Bottleneck"])
         self.path_analysis_combo.currentIndexChanged.connect(self.on_layout_changed)
-        controls_layout.addWidget(self.path_analysis_combo)
 
         # Add analysis type dropdown for LC17
         controls_layout.addSpacing(20)
@@ -166,22 +166,9 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         )
         controls_layout.addWidget(self.path_similarity_cluster_combo)
 
-        # Add LC16 visualization controls using the integration function
-        controls_layout.addSpacing(20)
-        lc16_ui_elements = integrate_lc16_ui_with_panel(
-            self, 
-            controls_layout, 
-            analysis_combo=self.path_analysis_combo,
-            cluster_combo=self.path_similarity_cluster_combo
-        )
-        
-        # Store references to the UI elements for later use
-        self.lc16_viz_style_combo = lc16_ui_elements["viz_style_combo"]
-        self.lc16_show_labels_cb = lc16_ui_elements["show_labels_checkbox"]
-        self.lc16_show_nodes_cb = lc16_ui_elements["show_nodes_checkbox"]
-        self.lc16_color_by_centrality_cb = lc16_ui_elements["color_by_centrality_checkbox"]
-
         # LC4A: Enhanced Network Diagram controls - moved to the LC4A tab itself
+        # Remove LC16 UI elements integration from top controls
+        # It will be moved to the LC16 tab
         self.enhanced_network_ui = create_enhanced_network_ui()
         self.edge_counting_combo = self.enhanced_network_ui["edge_counting_combo"]
         self.community_algorithm_combo = self.enhanced_network_ui[
@@ -397,7 +384,38 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         self.tab_widget.addTab(self.bubble_canvas, "LC13")
         self.tab_widget.addTab(self.lc14_container, "LC14")
         self.tab_widget.addTab(lc15_container, "LC15")
-        self.tab_widget.addTab(self.path_analysis_canvas, "LC16")
+        
+        # Create a container widget for the LC16 tab
+        lc16_container = QWidget()
+        lc16_layout = QVBoxLayout(lc16_container)
+        
+        # Add controls layout for LC16
+        lc16_controls_layout = QHBoxLayout()
+        lc16_controls_layout.addWidget(QLabel("LC16 Analysis:"))
+        lc16_controls_layout.addWidget(self.path_analysis_combo)
+        lc16_controls_layout.addStretch()
+        lc16_layout.addLayout(lc16_controls_layout)
+        
+        # Add LC16 visualization controls using the integration function
+        lc16_ui_elements = integrate_lc16_ui_with_panel(
+            self, 
+            lc16_layout,  # Add to the LC16 tab layout instead of the top controls
+            analysis_combo=self.path_analysis_combo,
+            cluster_combo=self.path_similarity_cluster_combo
+        )
+        
+        # Store references to the UI elements for later use
+        self.lc16_viz_style_combo = lc16_ui_elements["viz_style_combo"]
+        self.lc16_show_labels_cb = lc16_ui_elements["show_labels_checkbox"]
+        self.lc16_show_nodes_cb = lc16_ui_elements["show_nodes_checkbox"]
+        self.lc16_color_by_centrality_cb = lc16_ui_elements["color_by_centrality_checkbox"]
+        
+        # Add the canvas to the LC16 tab
+        lc16_layout.addWidget(self.path_analysis_canvas)
+        
+        # Add the LC16 tab to the tab widget
+        self.tab_widget.addTab(lc16_container, "LC16")
+        
         self.tab_widget.addTab(self.bridge_analysis_canvas, "LC17")
         self.tab_widget.addTab(self.interlayer_path_similarity_canvas, "LC20")
 
@@ -1079,45 +1097,9 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         # Get the selected analysis type
         analysis_type = self.path_analysis_combo.currentText().lower().replace(" ", "_")
 
-        # Get the selected cluster from the LC20 dropdown
-        selected_cluster = None
-        if hasattr(self, "path_similarity_cluster_combo"):
-            cluster_selection = self.path_similarity_cluster_combo.currentText()
-            try:
-                # Handle different possible formats of cluster selection text
-                if cluster_selection == "All Clusters":
-                    selected_cluster = None
-                else:
-                    # Try to extract the cluster number, handling different formats
-                    parts = cluster_selection.split()
-                    if len(parts) > 1 and parts[0].lower() == "cluster":
-                        selected_cluster = int(parts[1])
-                    elif len(parts) > 1:
-                        # Try to find a number in the parts
-                        for part in parts:
-                            if part.isdigit():
-                                selected_cluster = int(part)
-                                break
-                        else:
-                            selected_cluster = None
-                    else:
-                        # If it's just a number
-                        selected_cluster = (
-                            int(cluster_selection) if cluster_selection.isdigit() else None
-                        )
-            except (ValueError, IndexError):
-                # If parsing fails, default to All Clusters
-                import logging
-                logging.warning(
-                    f"Could not parse cluster selection: {cluster_selection}, defaulting to All Clusters"
-                )
-                selected_cluster = None
-
-        # Get visualization configuration options from the UI elements
-        viz_style = self.lc16_viz_style_combo.currentText()
-        show_labels = self.lc16_show_labels_cb.isChecked()
-        show_nodes = self.lc16_show_nodes_cb.isChecked()
-        color_by_centrality = self.lc16_color_by_centrality_cb.isChecked()
+        # Get the selected cluster and visualization settings from the LC16 module
+        selected_cluster = get_selected_cluster(self)
+        viz_settings = get_lc16_visualization_settings(self)
 
         # Get visible links
         visible_links = []
@@ -1147,10 +1129,10 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
             data_manager.cluster_colors,
             analysis_type,
             selected_cluster=selected_cluster,
-            viz_style=viz_style,
-            show_labels=show_labels,
-            show_nodes=show_nodes,
-            color_by_centrality=color_by_centrality,
+            viz_style=viz_settings["viz_style"],
+            show_labels=viz_settings["show_labels"],
+            show_nodes=viz_settings["show_nodes"],
+            color_by_centrality=viz_settings["color_by_centrality"],
         )
 
         # Apply tight layout and draw
