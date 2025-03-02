@@ -35,7 +35,7 @@ def create_lc16_ui_elements(parent=None):
     # Create a dropdown for visualization style
     viz_style_label = QLabel("LC16 Visualization:")
     viz_style_combo = QComboBox()
-    viz_style_combo.addItems(["Standard", "Simplified", "Detailed", "Classic Circle"])
+    viz_style_combo.addItems(["Standard", "Simplified", "Detailed", "Classic Circle", "Layer-Focused"])
     viz_style_combo.setToolTip("Select a visualization style for the bottleneck analysis")
     
     # Create checkboxes for various options
@@ -51,12 +51,46 @@ def create_lc16_ui_elements(parent=None):
     color_by_centrality_checkbox.setChecked(False)
     color_by_centrality_checkbox.setToolTip("Color edges by betweenness centrality instead of edge type")
     
+    # Add new UI elements for improved visualization
+    hide_unconnected_checkbox = QCheckBox("Hide Unconnected Nodes")
+    hide_unconnected_checkbox.setChecked(False)
+    hide_unconnected_checkbox.setToolTip("Hide nodes with no significant connections to improve layout")
+    
+    emphasize_layers_checkbox = QCheckBox("Emphasize Layer Labels")
+    emphasize_layers_checkbox.setChecked(True)
+    emphasize_layers_checkbox.setToolTip("Add prominent layer labels to the visualization")
+    
+    # Create a slider or dropdown for node size scaling
+    node_size_label = QLabel("Node Size:")
+    node_size_combo = QComboBox()
+    node_size_combo.addItems(["Small", "Medium", "Large", "Dynamic"])
+    node_size_combo.setCurrentText("Medium")
+    node_size_combo.setToolTip("Adjust the size of nodes in the visualization")
+    
+    # Create a dropdown for layout spacing
+    layout_spacing_label = QLabel("Layout Spacing:")
+    layout_spacing_combo = QComboBox()
+    layout_spacing_combo.addItems(["Compact", "Standard", "Expanded"])
+    layout_spacing_combo.setCurrentText("Standard")
+    layout_spacing_combo.setToolTip("Adjust the spacing between nodes in the layout")
+    
     # Add the UI elements to the grid layout
     grid_layout.addWidget(viz_style_label, 0, 0)
     grid_layout.addWidget(viz_style_combo, 0, 1)
+    
     grid_layout.addWidget(show_labels_checkbox, 1, 0)
     grid_layout.addWidget(show_nodes_checkbox, 1, 1)
-    grid_layout.addWidget(color_by_centrality_checkbox, 2, 0, 1, 2)
+    
+    grid_layout.addWidget(color_by_centrality_checkbox, 2, 0)
+    grid_layout.addWidget(hide_unconnected_checkbox, 2, 1)
+    
+    grid_layout.addWidget(emphasize_layers_checkbox, 3, 0)
+    
+    grid_layout.addWidget(node_size_label, 4, 0)
+    grid_layout.addWidget(node_size_combo, 4, 1)
+    
+    grid_layout.addWidget(layout_spacing_label, 5, 0)
+    grid_layout.addWidget(layout_spacing_combo, 5, 1)
     
     # Set the layout for the group box
     group_box.setLayout(grid_layout)
@@ -67,7 +101,11 @@ def create_lc16_ui_elements(parent=None):
         "viz_style_combo": viz_style_combo,
         "show_labels_checkbox": show_labels_checkbox,
         "show_nodes_checkbox": show_nodes_checkbox,
-        "color_by_centrality_checkbox": color_by_centrality_checkbox
+        "color_by_centrality_checkbox": color_by_centrality_checkbox,
+        "hide_unconnected_checkbox": hide_unconnected_checkbox,
+        "emphasize_layers_checkbox": emphasize_layers_checkbox,
+        "node_size_combo": node_size_combo,
+        "layout_spacing_combo": layout_spacing_combo
     }
     
     return ui_elements
@@ -88,7 +126,11 @@ def create_interlayer_path_analysis(
     viz_style="Standard",  # Visualization style: "Standard", "Simplified", "Detailed", "Classic Circle"
     show_labels=True,      # Whether to show node and edge labels
     show_nodes=True,       # Whether to show nodes
-    color_by_centrality=False  # Whether to color edges by centrality instead of type
+    color_by_centrality=False,  # Whether to color edges by centrality instead of type
+    hide_unconnected=False,     # Whether to hide nodes with no significant connections
+    emphasize_layers=True,      # Whether to emphasize layer labels
+    node_size="Medium",         # Node size: "Small", "Medium", "Large", "Dynamic"
+    layout_spacing="Standard"   # Layout spacing: "Compact", "Standard", "Expanded"
 ):
     """
     Analyze and visualize interlayer paths between layers, regardless of cluster.
@@ -140,6 +182,14 @@ def create_interlayer_path_analysis(
         Whether to show nodes
     color_by_centrality : bool, optional
         Whether to color edges by centrality instead of type
+    hide_unconnected : bool, optional
+        Whether to hide nodes with no significant connections
+    emphasize_layers : bool, optional
+        Whether to emphasize layer labels
+    node_size : str, optional
+        Node size: "Small", "Medium", "Large", "Dynamic"
+    layout_spacing : str, optional
+        Layout spacing: "Compact", "Standard", "Expanded"
     """
     try:
         # Ensure visible_layer_indices is defined
@@ -306,7 +356,9 @@ def create_interlayer_path_analysis(
         elif analysis_type == "bottleneck":
             _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cluster_colors,
                                 viz_style=viz_style, show_labels=show_labels, show_nodes=show_nodes,
-                                color_by_centrality=color_by_centrality)
+                                color_by_centrality=color_by_centrality, hide_unconnected=hide_unconnected,
+                                emphasize_layers=emphasize_layers, node_size=node_size, 
+                                layout_spacing=layout_spacing)
         else:
             ax.text(0.5, 0.5, f"Unknown analysis type: {analysis_type}", 
                    ha='center', va='center')
@@ -513,7 +565,8 @@ def _analyze_betweenness(ax, G, visible_layer_indices, layers, node_clusters, cl
     logger.info(f"Created betweenness visualization with {len(unique_layers)} layers")
 
 def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cluster_colors,
-                         viz_style="Standard", show_labels=True, show_nodes=True, color_by_centrality=False):
+                         viz_style="Standard", show_labels=True, show_nodes=True, color_by_centrality=False,
+                         hide_unconnected=False, emphasize_layers=True, node_size="Medium", layout_spacing="Standard"):
     """Analyze and visualize bottleneck connections in the duplicated node network"""
     logger = logging.getLogger(__name__)
     logger.info(f"Analyzing bottleneck connections in the duplicated node network with style: {viz_style}")
@@ -525,6 +578,22 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
     max_betweenness = max(edge_betweenness.values()) if edge_betweenness else 1.0
     normalized_betweenness = {edge: bc / max_betweenness for edge, bc in edge_betweenness.items()}
     
+    # Calculate node betweenness for filtering and sizing
+    node_betweenness = nx.betweenness_centrality(G, weight='weight')
+    max_node_betweenness = max(node_betweenness.values()) if node_betweenness else 1.0
+    
+    # Filter out unconnected nodes if requested
+    if hide_unconnected:
+        # Define a threshold for "significant" connections
+        betweenness_threshold = 0.05  # Nodes with betweenness < 5% of max are considered unconnected
+        
+        # Create a subgraph with only the connected nodes
+        connected_nodes = [node for node, bc in node_betweenness.items() 
+                          if bc > max_node_betweenness * betweenness_threshold]
+        G = G.subgraph(connected_nodes).copy()
+        
+        logger.info(f"Filtered graph to {len(G.nodes)} connected nodes from original {len(node_betweenness)} nodes")
+    
     # Group nodes by layer and cluster for better layout
     layer_nodes = defaultdict(list)
     cluster_nodes = defaultdict(list)
@@ -535,7 +604,10 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
         cluster_nodes[cluster].append(node)
     
     # Create a layout based on the selected visualization style
-    if viz_style == "Classic Circle":
+    if viz_style == "Layer-Focused":
+        # Create a layout that emphasizes layers
+        pos = _create_layer_focused_layout(G, layer_nodes)
+    elif viz_style == "Classic Circle":
         # Use a circular layout
         pos = nx.circular_layout(G, scale=0.9)
     elif viz_style == "Simplified":
@@ -586,6 +658,13 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
             # Fall back to spring layout if kamada_kawai fails
             pos = nx.spring_layout(G, k=0.3, iterations=50, seed=42)
     
+    # Apply layout spacing adjustment
+    spacing_factor = 1.0  # Default for "Standard" spacing
+    if layout_spacing == "Compact":
+        spacing_factor = 0.8
+    elif layout_spacing == "Expanded":
+        spacing_factor = 1.5
+    
     # Scale the layout to fill the available space
     pos_array = np.array(list(pos.values()))
     if len(pos_array) > 0:
@@ -594,7 +673,7 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
         max_x, max_y = pos_array.max(axis=0)
         
         # Scale to ensure we use most of the available space
-        scale_factor = 0.8  # Use 80% of the available space
+        scale_factor = 0.8 * spacing_factor  # Adjust scale based on spacing preference
         for node in pos:
             pos[node] = [
                 (pos[node][0] - min_x) / (max_x - min_x + 1e-10) * scale_factor * 2 - scale_factor,
@@ -616,11 +695,14 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
     
     # 2. Draw the significant edges with width and color based on betweenness
     for edge, betweenness in normalized_betweenness.items():
+        if edge[0] not in G.nodes or edge[1] not in G.nodes:
+            continue  # Skip edges that involve filtered nodes
+            
         if betweenness < 0.1 and viz_style != "Detailed":  # Skip low betweenness edges for clarity, except in detailed mode
             continue
             
         u, v = edge
-        edge_type = G.edges[u, v].get('edge_type', 'unknown')
+        edge_type = G.edges.get(edge, {}).get('edge_type', G.edges.get((v, u), {}).get('edge_type', 'unknown'))
         
         # Calculate edge width based on betweenness
         width = 0.5 + 4 * betweenness
@@ -667,17 +749,23 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
                    zorder=3)
     
     if show_nodes:
-        # 3. Draw nodes with size based on betweenness and color based on cluster
-        node_betweenness = nx.betweenness_centrality(G, weight='weight')
-        max_betweenness = max(node_betweenness.values()) if node_betweenness else 1.0
-        
-        # Determine node size scaling based on network size and visualization style
+        # Determine node size scaling based on network size, visualization style, and user preference
+        if node_size == "Small":
+            size_factor = 0.6
+        elif node_size == "Large":
+            size_factor = 1.5
+        elif node_size == "Dynamic":
+            # Dynamic sizing will be handled differently
+            size_factor = 1.0
+        else:  # Medium (default)
+            size_factor = 1.0
+            
         if viz_style == "Simplified":
-            base_size = max(30, 300 / np.sqrt(len(G)))
+            base_size = max(30, 300 / np.sqrt(len(G))) * size_factor
         elif viz_style == "Detailed":
-            base_size = max(70, 600 / np.sqrt(len(G)))
+            base_size = max(70, 600 / np.sqrt(len(G))) * size_factor
         else:  # Standard or Classic Circle
-            base_size = max(50, 500 / np.sqrt(len(G)))
+            base_size = max(50, 500 / np.sqrt(len(G))) * size_factor
         
         # First draw all nodes with minimal styling to show the structure
         for node in G.nodes:
@@ -697,7 +785,8 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
         # Then draw significant nodes with more emphasis
         for node in G.nodes:
             betweenness = node_betweenness.get(node, 0)
-            if betweenness < 0.1 and viz_style != "Detailed":  # Skip low betweenness nodes for clarity, except in detailed mode
+            if betweenness < 0.1 and viz_style != "Detailed" and node_size != "Dynamic":
+                # Skip low betweenness nodes for clarity, except in detailed mode or with dynamic sizing
                 continue
                 
             # Get node attributes
@@ -705,8 +794,13 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
             cluster = G.nodes[node]['cluster']
             original_id = G.nodes[node].get('original_id', node)
             
-            # Calculate node size based on betweenness
-            size = base_size + 300 * (betweenness / max_betweenness)
+            # Calculate node size based on betweenness and user preference
+            if node_size == "Dynamic":
+                # Dynamic sizing: size directly proportional to betweenness
+                size = base_size * 0.5 + base_size * 2 * (betweenness / max_node_betweenness)
+            else:
+                # Standard sizing with a boost based on betweenness
+                size = base_size + 300 * (betweenness / max_node_betweenness) * size_factor
             
             # Get node color based on cluster
             if cluster_colors and cluster in cluster_colors:
@@ -720,7 +814,7 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
                       zorder=2)  # Higher zorder to draw on top of edges
             
             # Add node label for significant nodes
-            if show_labels and betweenness > 0.3:
+            if show_labels and (betweenness > 0.3 or node_size == "Dynamic"):
                 # Extract layer and original node ID from the node name
                 node_parts = node.split('_', 1)
                 if len(node_parts) == 2:
@@ -739,6 +833,10 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
                        ha='center', va='center',
                        bbox=dict(facecolor='white', alpha=0.9, edgecolor='gray', pad=1, boxstyle='round'),
                        zorder=4)  # Highest zorder to draw on top of everything
+    
+    # Add layer labels if requested
+    if emphasize_layers:
+        _add_layer_labels(ax, G, pos, layer_nodes, layers)
     
     # Add a legend based on the coloring mode
     if color_by_centrality:
@@ -770,6 +868,103 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
     ax.grid(alpha=0.1)
     
     logger.info(f"Created bottleneck visualization with {len(G.nodes)} nodes and {len(G.edges)} edges")
+
+def _create_layer_focused_layout(G, layer_nodes):
+    """
+    Create a layout that emphasizes the layer structure of the network.
+    
+    Parameters:
+    -----------
+    G : networkx.Graph
+        The graph to create a layout for
+    layer_nodes : dict
+        Dictionary mapping layer indices to lists of node IDs
+        
+    Returns:
+    --------
+    dict
+        Dictionary mapping node IDs to (x, y) positions
+    """
+    # Create a position dictionary
+    pos = {}
+    
+    # Get unique layers and sort them
+    unique_layers = sorted(layer_nodes.keys())
+    num_layers = len(unique_layers)
+    
+    # Calculate the radius for the outer circle
+    radius = 1.0
+    
+    # Place nodes in concentric circles based on their layer
+    for i, layer_idx in enumerate(unique_layers):
+        # Get nodes in this layer
+        nodes = layer_nodes[layer_idx]
+        num_nodes = len(nodes)
+        
+        # Calculate the radius for this layer's circle
+        layer_radius = radius * (0.3 + 0.7 * i / max(1, num_layers - 1))
+        
+        # Place nodes evenly around the circle
+        for j, node in enumerate(nodes):
+            angle = 2 * np.pi * j / max(1, num_nodes)
+            x = layer_radius * np.cos(angle)
+            y = layer_radius * np.sin(angle)
+            pos[node] = np.array([x, y])
+    
+    return pos
+
+def _add_layer_labels(ax, G, pos, layer_nodes, layers):
+    """
+    Add prominent layer labels to the visualization.
+    
+    Parameters:
+    -----------
+    ax : matplotlib.axes.Axes
+        The axis to draw on
+    G : networkx.Graph
+        The graph being visualized
+    pos : dict
+        Dictionary mapping node IDs to (x, y) positions
+    layer_nodes : dict
+        Dictionary mapping layer indices to lists of node IDs
+    layers : list
+        List of layer names
+    """
+    # Get unique layers
+    unique_layers = sorted(layer_nodes.keys())
+    
+    # Calculate the center position for each layer
+    layer_centers = {}
+    for layer_idx in unique_layers:
+        nodes = layer_nodes[layer_idx]
+        if not nodes:
+            continue
+            
+        # Calculate the average position of nodes in this layer
+        x_sum = sum(pos[node][0] for node in nodes)
+        y_sum = sum(pos[node][1] for node in nodes)
+        
+        # Calculate the center
+        center_x = x_sum / len(nodes)
+        center_y = y_sum / len(nodes)
+        
+        layer_centers[layer_idx] = (center_x, center_y)
+    
+    # Add layer labels with background boxes
+    for layer_idx, (center_x, center_y) in layer_centers.items():
+        # Get the layer name
+        if layer_idx < len(layers):
+            layer_name = layers[layer_idx]
+        else:
+            layer_name = f"Layer {layer_idx}"
+            
+        # Add a background box for the label
+        ax.text(center_x, center_y, layer_name,
+               fontsize=10, fontweight='bold',
+               ha='center', va='center',
+               bbox=dict(facecolor='white', alpha=0.8, edgecolor='gray', 
+                        boxstyle='round,pad=0.5'),
+               zorder=5)  # Highest zorder to draw on top of everything
 
 def integrate_lc16_ui_with_panel(panel, parent_layout, analysis_combo=None, cluster_combo=None):
     """
@@ -810,6 +1005,20 @@ def integrate_lc16_ui_with_panel(panel, parent_layout, analysis_combo=None, clus
             lambda: panel.update_lc16_path_analysis(panel._current_data) if hasattr(panel, "_current_data") else None
         )
         ui_elements["color_by_centrality_checkbox"].stateChanged.connect(
+            lambda: panel.update_lc16_path_analysis(panel._current_data) if hasattr(panel, "_current_data") else None
+        )
+        
+        # Connect the new UI elements
+        ui_elements["hide_unconnected_checkbox"].stateChanged.connect(
+            lambda: panel.update_lc16_path_analysis(panel._current_data) if hasattr(panel, "_current_data") else None
+        )
+        ui_elements["emphasize_layers_checkbox"].stateChanged.connect(
+            lambda: panel.update_lc16_path_analysis(panel._current_data) if hasattr(panel, "_current_data") else None
+        )
+        ui_elements["node_size_combo"].currentIndexChanged.connect(
+            lambda: panel.update_lc16_path_analysis(panel._current_data) if hasattr(panel, "_current_data") else None
+        )
+        ui_elements["layout_spacing_combo"].currentIndexChanged.connect(
             lambda: panel.update_lc16_path_analysis(panel._current_data) if hasattr(panel, "_current_data") else None
         )
         
@@ -857,12 +1066,22 @@ def get_lc16_visualization_settings(panel):
         settings["show_labels"] = ui_elements["show_labels_checkbox"].isChecked()
         settings["show_nodes"] = ui_elements["show_nodes_checkbox"].isChecked()
         settings["color_by_centrality"] = ui_elements["color_by_centrality_checkbox"].isChecked()
+        
+        # Get the new UI element states
+        settings["hide_unconnected"] = ui_elements["hide_unconnected_checkbox"].isChecked()
+        settings["emphasize_layers"] = ui_elements["emphasize_layers_checkbox"].isChecked()
+        settings["node_size"] = ui_elements["node_size_combo"].currentText()
+        settings["layout_spacing"] = ui_elements["layout_spacing_combo"].currentText()
     else:
         # Default settings if UI elements are not available
         settings["viz_style"] = "Standard"
         settings["show_labels"] = True
         settings["show_nodes"] = True
         settings["color_by_centrality"] = False
+        settings["hide_unconnected"] = False
+        settings["emphasize_layers"] = True
+        settings["node_size"] = "Medium"
+        settings["layout_spacing"] = "Standard"
         
     return settings
 
