@@ -70,10 +70,10 @@ def create_lc16_ui_elements(parent=None):
     )
 
     # Add new UI elements for improved visualization
-    hide_unconnected_checkbox = QCheckBox("Hide Unconnected")
+    hide_unconnected_checkbox = QCheckBox("remove trash")
     hide_unconnected_checkbox.setChecked(False)
     hide_unconnected_checkbox.setToolTip(
-        "Hide nodes with no significant connections to improve layout"
+        "15% thres, if n > 80% -> 5% thres"
     )
 
     # Add all UI elements to the horizontal layout

@@ -375,6 +375,8 @@ def _analyze_layer_span(ax, G, unique_clusters, nodes_by_cluster, nodes_by_layer
     Analyze and visualize how clusters span across different layers.
     This shows the distribution of cluster nodes across layers.
     """
+    logging.info("Analyzing layer span for clusters")
+    
     # Calculate layer distribution for each cluster
     layer_distribution = {}
     for cluster in unique_clusters:
@@ -386,19 +388,31 @@ def _analyze_layer_span(ax, G, unique_clusters, nodes_by_cluster, nodes_by_layer
         layer_counts = Counter()
         for node in cluster_nodes:
             if node in G.nodes:
-                layer_counts[G.nodes[node]['layer']] += 1
+                layer_idx = G.nodes[node]['layer']
+                if layer_idx in visible_layer_indices:
+                    layer_counts[layer_idx] += 1
         
+        # Skip clusters with no nodes in visible layers
+        if sum(layer_counts.values()) == 0:
+            continue
+            
         # Calculate percentage distribution
         total_nodes = sum(layer_counts.values())
         distribution = {layer: count / total_nodes for layer, count in layer_counts.items()}
         layer_distribution[cluster] = distribution
+    
+    # Skip if no clusters have layer distribution
+    if not layer_distribution:
+        ax.text(0.5, 0.5, "No clusters with nodes in visible layers", 
+               ha='center', va='center')
+        return
     
     # Sort clusters by number of layers they span
     cluster_span = {c: len(dist) for c, dist in layer_distribution.items()}
     sorted_clusters = sorted(layer_distribution.keys(), key=lambda c: cluster_span[c], reverse=True)
     
     # Create stacked bar chart
-    y_pos = np.arange(len(sorted_clusters))
+    x_pos = np.arange(len(sorted_clusters))
     bottoms = np.zeros(len(sorted_clusters))
     
     # Get layer names for legend
@@ -413,23 +427,23 @@ def _analyze_layer_span(ax, G, unique_clusters, nodes_by_cluster, nodes_by_layer
             layer_values.append(dist.get(layer_idx, 0))
         
         layer_color = layer_colors.get(layer_idx, '#CCCCCC')
-        bar = ax.bar(y_pos, layer_values, bottom=bottoms, color=layer_color, label=layers[layer_idx])
+        bar = ax.bar(x_pos, layer_values, bottom=bottoms, color=layer_color, label=layers[layer_idx])
         bars.append(bar)
         bottoms += layer_values
     
     # Add labels and formatting
-    ax.set_xticks(y_pos)
+    ax.set_xticks(x_pos)
     ax.set_xticklabels([f"C{c}" for c in sorted_clusters])
     ax.set_ylabel("Proportion of Cluster Nodes")
     ax.set_ylim(0, 1.0)
     
-    # Add legend
-    ax.legend(title="Layers")
+    # Add legend with smaller font size
+    ax.legend(title="Layers", loc='upper right', fontsize='small')
     
     # Add span values above bars
     for i, cluster in enumerate(sorted_clusters):
         span = cluster_span[cluster]
-        ax.text(i, 1.02, f"Span: {span}", ha='center', va='bottom')
+        ax.text(i, 1.02, f"Span: {span}", ha='center', va='bottom', fontsize=9)
     
     # Add explanation
     ax.text(0.5, -0.15, 
@@ -449,139 +463,49 @@ def _analyze_centrality_distribution(ax, G, unique_clusters, nodes_by_cluster, n
     betweenness = nx.betweenness_centrality(G)
     closeness = nx.closeness_centrality(G)
     
-    # Handle eigenvector centrality for potentially disconnected graphs
-    try:
-        # Try to calculate eigenvector centrality
-        eigenvector = nx.eigenvector_centrality_numpy(G)
-    except nx.NetworkXError:
-        # If the graph is disconnected, calculate eigenvector centrality for each connected component
-        eigenvector = {}
-        for component in nx.connected_components(G):
-            subgraph = G.subgraph(component)
-            # Only calculate if the component has more than 1 node
-            if len(subgraph) > 1:
-                sub_eigenvector = nx.eigenvector_centrality_numpy(subgraph)
-                eigenvector.update(sub_eigenvector)
-            else:
-                # For isolated nodes, set eigenvector centrality to 0
-                for node in component:
-                    eigenvector[node] = 0.0
-    
+    # We'll use only betweenness centrality for simplicity and to avoid eigenvector issues
     # Group centrality measures by cluster
-    cluster_centrality = defaultdict(lambda: {'betweenness': [], 'closeness': [], 'eigenvector': []})
+    cluster_centrality = defaultdict(lambda: {'betweenness': []})
     
     for node, bc in betweenness.items():
         if node in G.nodes:
             cluster = G.nodes[node]['cluster']
             cluster_centrality[cluster]['betweenness'].append(bc)
-            cluster_centrality[cluster]['closeness'].append(closeness[node])
-            # Check if node has eigenvector centrality (it might not if it's in a tiny component)
-            if node in eigenvector:
-                cluster_centrality[cluster]['eigenvector'].append(eigenvector[node])
-            else:
-                cluster_centrality[cluster]['eigenvector'].append(0.0)
     
-    # Create a figure with subplots for each centrality measure
-    gs = GridSpec(2, 2, width_ratios=[3, 1], height_ratios=[1, 1], wspace=0.3, hspace=0.3)
-    
-    # Create subplots
-    scatter_ax = plt.subplot(gs[:, 0])  # Left column, both rows
-    bc_ax = plt.subplot(gs[0, 1])       # Top right
-    ec_ax = plt.subplot(gs[1, 1])       # Bottom right
-    
-    # 1. Create a scatter plot of betweenness vs eigenvector centrality
+    # Calculate average betweenness centrality for each cluster
+    avg_betweenness = {}
     for cluster in unique_clusters:
-        if cluster not in cluster_centrality:
-            continue
-            
-        bc_values = cluster_centrality[cluster]['betweenness']
-        ec_values = cluster_centrality[cluster]['eigenvector']
-        
-        if not bc_values or not ec_values:
-            continue
-            
-        color = cluster_colors.get(cluster, '#CCCCCC')
-        
-        # Calculate the average values for this cluster
-        avg_bc = np.mean(bc_values)
-        avg_ec = np.mean(ec_values)
-        
-        # Plot individual nodes with transparency
-        scatter_ax.scatter(bc_values, ec_values, color=color, alpha=0.3, s=30, label=f"C{cluster} nodes")
-        
-        # Plot the cluster average as a larger point
-        scatter_ax.scatter([avg_bc], [avg_ec], color=color, edgecolor='black', s=150, 
-                         marker='o', label=f"C{cluster} avg")
-        
-        # Add cluster label
-        scatter_ax.text(avg_bc, avg_ec, f"C{cluster}", fontweight='bold', ha='center', va='center')
+        if cluster in cluster_centrality and cluster_centrality[cluster]['betweenness']:
+            avg_betweenness[cluster] = np.mean(cluster_centrality[cluster]['betweenness'])
+        else:
+            avg_betweenness[cluster] = 0
     
-    scatter_ax.set_xlabel('Betweenness Centrality')
-    scatter_ax.set_ylabel('Eigenvector Centrality')
-    scatter_ax.set_title('Centrality Distribution by Cluster')
-    scatter_ax.grid(True, alpha=0.3)
+    # Sort clusters by average betweenness centrality
+    sorted_clusters = sorted(unique_clusters, key=lambda c: avg_betweenness[c], reverse=True)
     
-    # Remove duplicate labels
-    handles, labels = scatter_ax.get_legend_handles_labels()
-    by_label = dict(zip(labels, handles))
-    scatter_ax.legend(by_label.values(), by_label.keys(), loc='upper right')
+    # Create bar chart of average betweenness centrality
+    y_pos = np.arange(len(sorted_clusters))
+    values = [avg_betweenness[c] for c in sorted_clusters]
+    colors = [cluster_colors.get(c, '#CCCCCC') for c in sorted_clusters]
     
-    # 2. Create density plots for betweenness centrality
-    for cluster in unique_clusters:
-        if cluster not in cluster_centrality:
-            continue
-            
-        bc_values = cluster_centrality[cluster]['betweenness']
-        
-        if not bc_values or len(bc_values) < 2:
-            continue
-            
-        color = cluster_colors.get(cluster, '#CCCCCC')
-        
-        # Create a kernel density estimate
-        try:
-            kde = gaussian_kde(bc_values)
-            x = np.linspace(0, max(bc_values) * 1.1, 100)
-            bc_ax.plot(x, kde(x), color=color, label=f"C{cluster}")
-        except:
-            # If KDE fails, create a simple histogram
-            bc_ax.hist(bc_values, bins=10, alpha=0.5, color=color, density=True, label=f"C{cluster}")
+    bars = ax.barh(y_pos, values, color=colors)
     
-    bc_ax.set_xlabel('Betweenness Centrality')
-    bc_ax.set_ylabel('Density')
-    bc_ax.set_title('Betweenness Distribution')
-    bc_ax.legend()
+    # Add labels and formatting
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels([f"Cluster {c}" for c in sorted_clusters])
+    ax.set_xlabel("Average Betweenness Centrality")
+    ax.set_title("Cluster Centrality Distribution")
     
-    # 3. Create density plots for eigenvector centrality
-    for cluster in unique_clusters:
-        if cluster not in cluster_centrality:
-            continue
-            
-        ec_values = cluster_centrality[cluster]['eigenvector']
-        
-        if not ec_values or len(ec_values) < 2:
-            continue
-            
-        color = cluster_colors.get(cluster, '#CCCCCC')
-        
-        # Create a kernel density estimate
-        try:
-            kde = gaussian_kde(ec_values)
-            x = np.linspace(0, max(ec_values) * 1.1, 100)
-            ec_ax.plot(x, kde(x), color=color, label=f"C{cluster}")
-        except:
-            # If KDE fails, create a simple histogram
-            ec_ax.hist(ec_values, bins=10, alpha=0.5, color=color, density=True, label=f"C{cluster}")
-    
-    ec_ax.set_xlabel('Eigenvector Centrality')
-    ec_ax.set_ylabel('Density')
-    ec_ax.set_title('Eigenvector Distribution')
-    ec_ax.legend()
+    # Add value labels
+    for i, bar in enumerate(bars):
+        width = bar.get_width()
+        ax.text(width + 0.01, bar.get_y() + bar.get_height()/2, 
+               f"{width:.3f}", ha='left', va='center')
     
     # Add explanation
     ax.text(0.5, -0.1, 
-           "Centrality Distribution: Shows how different centrality measures are distributed across clusters.\n"
-           "Clusters in the upper right of the scatter plot are important bridges in the network.",
+           "Centrality Distribution: Shows the average betweenness centrality for each cluster.\n"
+           "Clusters with higher values are more important for information flow in the network.",
            ha='center', va='center', transform=ax.transAxes)
 
 
@@ -642,49 +566,43 @@ def _analyze_cluster_cohesion(ax, G, unique_clusters, nodes_by_cluster, nodes_by
         
         inter_cohesion[cluster] = interlayer_edges / max(total_edges, 1)
     
-    # Create a scatter plot of intra vs inter cohesion
+    # Create a bar chart of combined cohesion score
+    # Calculate combined score as weighted average of intra and inter cohesion
+    combined_scores = {}
     for cluster in unique_clusters:
-        intra = intra_cohesion[cluster]
-        inter = inter_cohesion[cluster]
-        
-        color = cluster_colors.get(cluster, '#CCCCCC')
-        
-        # Plot the cluster as a point
-        ax.scatter(intra, inter, color=color, edgecolor='black', s=200, alpha=0.7)
-        
-        # Add cluster label
-        ax.text(intra, inter, f"C{cluster}", fontweight='bold', ha='center', va='center')
+        intra = intra_cohesion.get(cluster, 0)
+        inter = inter_cohesion.get(cluster, 0)
+        # Weight inter-layer cohesion more heavily as it's more important for bridging
+        combined_scores[cluster] = 0.4 * intra + 0.6 * inter
     
-    # Add quadrant labels
-    ax.axhline(0.5, color='gray', linestyle='--', alpha=0.5)
-    ax.axvline(0.5, color='gray', linestyle='--', alpha=0.5)
+    # Sort clusters by combined score
+    sorted_clusters = sorted(unique_clusters, key=lambda c: combined_scores[c], reverse=True)
     
-    # Add quadrant annotations
-    ax.text(0.25, 0.75, "Bridging Clusters\n(Low internal cohesion,\nhigh interlayer connectivity)",
-           ha='center', va='center', bbox=dict(facecolor='white', alpha=0.7))
+    # Create bar chart
+    y_pos = np.arange(len(sorted_clusters))
+    values = [combined_scores[c] for c in sorted_clusters]
+    colors = [cluster_colors.get(c, '#CCCCCC') for c in sorted_clusters]
     
-    ax.text(0.75, 0.75, "Super-Connectors\n(High internal cohesion,\nhigh interlayer connectivity)",
-           ha='center', va='center', bbox=dict(facecolor='white', alpha=0.7))
+    bars = ax.barh(y_pos, values, color=colors)
     
-    ax.text(0.25, 0.25, "Weak Clusters\n(Low internal cohesion,\nlow interlayer connectivity)",
-           ha='center', va='center', bbox=dict(facecolor='white', alpha=0.7))
+    # Add labels and formatting
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels([f"Cluster {c}" for c in sorted_clusters])
+    ax.set_xlabel("Cohesion Score")
+    ax.set_title("Cluster Cohesion Analysis")
     
-    ax.text(0.75, 0.25, "Layer-Specific\n(High internal cohesion,\nlow interlayer connectivity)",
-           ha='center', va='center', bbox=dict(facecolor='white', alpha=0.7))
-    
-    # Set labels and title
-    ax.set_xlabel('Within-Layer Cohesion (Clustering Coefficient)')
-    ax.set_ylabel('Between-Layer Cohesion (Interlayer Edge Ratio)')
-    ax.set_title('Cluster Cohesion Analysis')
-    
-    # Set axis limits
-    ax.set_xlim(-0.05, 1.05)
-    ax.set_ylim(-0.05, 1.05)
+    # Add value labels
+    for i, bar in enumerate(bars):
+        width = bar.get_width()
+        intra = intra_cohesion.get(sorted_clusters[i], 0)
+        inter = inter_cohesion.get(sorted_clusters[i], 0)
+        ax.text(width + 0.01, bar.get_y() + bar.get_height()/2, 
+               f"{width:.2f} (I:{intra:.2f}, E:{inter:.2f})", ha='left', va='center', fontsize=8)
     
     # Add explanation
     ax.text(0.5, -0.1, 
-           "Cluster Cohesion: Shows how tightly connected nodes are within and between layers.\n"
-           "Clusters in the upper right quadrant are ideal bridges with strong internal and external connections.",
+           "Cluster Cohesion: Combined score of within-layer (I) and between-layer (E) cohesion.\n"
+           "Higher scores indicate clusters that effectively bridge between layers while maintaining internal structure.",
            ha='center', va='center', transform=ax.transAxes)
 
 
