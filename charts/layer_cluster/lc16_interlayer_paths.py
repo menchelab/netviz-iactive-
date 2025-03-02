@@ -29,21 +29,17 @@ def create_lc16_ui_elements(parent=None):
     # Create a group box to contain all the UI elements
     group_box = QGroupBox()
     
-    # Create a grid layout for the UI elements
-    grid_layout = QGridLayout()
-    grid_layout.setContentsMargins(5, 5, 5, 5)
-    grid_layout.setSpacing(5)
+    # Create a horizontal layout for all UI elements
+    horizontal_layout = QHBoxLayout()
+    horizontal_layout.setContentsMargins(5, 5, 5, 5)
+    horizontal_layout.setSpacing(10)
     
     # Create a dropdown for visualization style
     viz_style_combo = QComboBox()
     viz_style_combo.addItems(["Standard", "Simplified", "Detailed", "Layer-Focused", "Expanded Layers"])
     viz_style_combo.setToolTip("Select a visualization style for the network")
     
-    # Create checkboxes for various options
-    show_labels_checkbox = QCheckBox("Labels")
-    show_labels_checkbox.setChecked(True)
-    show_labels_checkbox.setToolTip("Show node and edge labels")
-    
+    # Create checkboxes for various options - reduced set
     show_nodes_checkbox = QCheckBox("Nodes")
     show_nodes_checkbox.setChecked(True)
     show_nodes_checkbox.setToolTip("Show nodes in the visualization")
@@ -57,41 +53,28 @@ def create_lc16_ui_elements(parent=None):
     hide_unconnected_checkbox.setChecked(False)
     hide_unconnected_checkbox.setToolTip("Hide nodes with no significant connections to improve layout")
     
-    emphasize_layers_checkbox = QCheckBox("Layer Labels")
-    emphasize_layers_checkbox.setChecked(True)
-    emphasize_layers_checkbox.setToolTip("Add prominent layer labels to the visualization")
-    
-    # Add the UI elements to the grid layout - more compact arrangement
-    grid_layout.addWidget(viz_style_combo, 0, 0, 1, 2)
-    
-    # First row of checkboxes
-    checkbox_layout1 = QHBoxLayout()
-    checkbox_layout1.addWidget(show_labels_checkbox)
-    checkbox_layout1.addWidget(show_nodes_checkbox)
-    checkbox_layout1.addWidget(emphasize_layers_checkbox)
-    grid_layout.addLayout(checkbox_layout1, 1, 0, 1, 2)
-    
-    # Second row of checkboxes
-    checkbox_layout2 = QHBoxLayout()
-    checkbox_layout2.addWidget(color_by_centrality_checkbox)
-    checkbox_layout2.addWidget(hide_unconnected_checkbox)
-    grid_layout.addLayout(checkbox_layout2, 2, 0, 1, 2)
+    # Add all UI elements to the horizontal layout
+    horizontal_layout.addWidget(viz_style_combo)
+    horizontal_layout.addWidget(show_nodes_checkbox)
+    horizontal_layout.addWidget(color_by_centrality_checkbox)
+    horizontal_layout.addWidget(hide_unconnected_checkbox)
     
     # Set the layout for the group box
-    group_box.setLayout(grid_layout)
+    group_box.setLayout(horizontal_layout)
     
     # Create a dictionary to store the UI elements
     ui_elements = {
         "group": group_box,
         "viz_style_combo": viz_style_combo,
-        "show_labels_checkbox": show_labels_checkbox,
         "show_nodes_checkbox": show_nodes_checkbox,
         "color_by_centrality_checkbox": color_by_centrality_checkbox,
         "hide_unconnected_checkbox": hide_unconnected_checkbox,
-        "emphasize_layers_checkbox": emphasize_layers_checkbox,
-        # Remove node_size and layout_spacing options
-        "node_size": "Medium",  # Default value
-        "layout_spacing": "Standard"  # Default value
+        # Always show labels and layer labels
+        "show_labels": True,
+        "emphasize_layers": True,
+        # Default values for removed options
+        "node_size": "Medium",
+        "layout_spacing": "Standard"
     }
     
     return ui_elements
@@ -550,6 +533,121 @@ def _analyze_betweenness(ax, G, visible_layer_indices, layers, node_clusters, cl
     
     logger.info(f"Created betweenness visualization with {len(unique_layers)} layers")
 
+def _create_links_table(ax, G, normalized_betweenness, node_betweenness, pos):
+    """
+    Create a table with information about significant links in the network.
+    
+    Parameters:
+    -----------
+    ax : matplotlib.axes.Axes
+        The axis to draw on
+    G : networkx.Graph
+        The graph being visualized
+    normalized_betweenness : dict
+        Dictionary mapping edges to normalized betweenness values
+    node_betweenness : dict
+        Dictionary mapping nodes to betweenness values
+    pos : dict
+        Dictionary mapping node IDs to (x, y) positions
+        
+    Returns:
+    --------
+    matplotlib.table.Table
+        The created table
+    """
+    # Collect data for significant links
+    link_data = []
+    for edge, betweenness in normalized_betweenness.items():
+        if betweenness < 0.3:  # Only include significant links
+            continue
+            
+        u, v = edge
+        if u not in G.nodes or v not in G.nodes:
+            continue
+            
+        # Get edge type
+        edge_type = G.edges.get(edge, {}).get('edge_type', G.edges.get((v, u), {}).get('edge_type', 'unknown'))
+        
+        # Get node information
+        u_layer = G.nodes[u].get('layer', 'Unknown')
+        v_layer = G.nodes[v].get('layer', 'Unknown')
+        u_cluster = G.nodes[u].get('cluster', 'Unknown')
+        v_cluster = G.nodes[v].get('cluster', 'Unknown')
+        
+        # Extract original node IDs
+        u_parts = u.split('_', 1)
+        v_parts = v.split('_', 1)
+        u_id = u_parts[1] if len(u_parts) > 1 else u
+        v_id = v_parts[1] if len(v_parts) > 1 else v
+        
+        # Create a row with all the information
+        link_data.append({
+            'betweenness': betweenness,
+            'type': 'Interlayer' if edge_type == 'interlayer' else 'Intralayer',
+            'source': f"L{u_layer}N{u_id}",
+            'target': f"L{v_layer}N{v_id}",
+            'source_layer': u_layer,
+            'target_layer': v_layer,
+            'source_cluster': u_cluster,
+            'target_cluster': v_cluster,
+            'source_bc': node_betweenness.get(u, 0),
+            'target_bc': node_betweenness.get(v, 0)
+        })
+    
+    # Sort by betweenness in descending order
+    link_data.sort(key=lambda x: x['betweenness'], reverse=True)
+    
+    # Limit to top 15 links
+    link_data = link_data[:15]
+    
+    # Create a table
+    if not link_data:
+        return None
+        
+    # Create a table in the left part of the figure
+    # Calculate the position and size of the table
+    table_width = 0.25
+    table_height = 0.5
+    table_x = -0.15  # Position on the left side
+    table_y = 0.5 - table_height/2  # Center vertically
+    
+    # Create the table with column headers
+    cell_text = []
+    for link in link_data:
+        cell_text.append([
+            f"{link['type'][0]}",  # E or A
+            f"{link['betweenness']:.2f}",
+            f"{link['source']}→{link['target']}",
+            f"L{link['source_layer']}→L{link['target_layer']}",
+            f"C{link['source_cluster']}→C{link['target_cluster']}"
+        ])
+    
+    # Create the table
+    table = ax.table(
+        cellText=cell_text,
+        colLabels=['Type', 'BC', 'Nodes', 'Layers', 'Clusters'],
+        loc='left',
+        bbox=[table_x, table_y, table_width, table_height]
+    )
+    
+    # Style the table
+    table.auto_set_font_size(False)
+    table.set_fontsize(8)
+    for key, cell in table.get_celld().items():
+        cell.set_linewidth(0.5)
+        if key[0] == 0:  # Header row
+            cell.set_text_props(weight='bold')
+            cell.set_facecolor('lightgray')
+        else:  # Data rows
+            # Color by betweenness
+            row_idx = key[0] - 1
+            if row_idx < len(link_data):
+                bc = link_data[row_idx]['betweenness']
+                # Use a color gradient from white to light blue
+                cell.set_facecolor(plt.cm.Blues(0.3 + 0.7 * bc))
+    
+    return table
+
 def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cluster_colors,
                          viz_style="Standard", show_labels=True, show_nodes=True, color_by_centrality=False,
                          hide_unconnected=False, emphasize_layers=True, node_size="Medium", layout_spacing="Standard"):
@@ -676,16 +774,27 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
                 (pos[node][1] - min_y) / (max_y - min_y + 1e-10) * scale_factor * 2 - scale_factor
             ]
     
-    # Clear the axis for a clean visualization
-    ax.clear()
+    # Create a figure with two subplots - one for the network and one for the table
+    # Adjust the figure size to make room for the table
+    fig = ax.figure
+    fig.set_size_inches(12, 8)
     
-    # Draw the graph
+    # Create a new axis for the network visualization
+    network_ax = fig.add_axes([0.3, 0.1, 0.65, 0.8])
+    
+    # Create the links table
+    _create_links_table(ax, G, normalized_betweenness, node_betweenness, pos)
+    
+    # Clear the network axis for a clean visualization
+    network_ax.clear()
+    
+    # Draw the graph on the network axis
     # 1. First draw all edges with minimal styling to show the structure
     for u, v in G.edges():
         edge_type = G.edges[u, v].get('edge_type', 'unknown')
         # Use very light colors for the background structure
         color = 'lightblue' if edge_type == "interlayer" else 'mistyrose'
-        ax.plot([pos[u][0], pos[v][0]], [pos[u][1], pos[v][1]], 
+        network_ax.plot([pos[u][0], pos[v][0]], [pos[u][1], pos[v][1]], 
                linewidth=0.5, color=color, alpha=0.3,
                zorder=0)  # Lowest zorder to draw in the background
     
@@ -715,7 +824,7 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
                 color = plt.cm.Reds(0.5 + 0.5 * betweenness)   # Red for intralayer
         
         # Draw the edge
-        ax.plot([pos[u][0], pos[v][0]], [pos[u][1], pos[v][1]], 
+        network_ax.plot([pos[u][0], pos[v][0]], [pos[u][1], pos[v][1]], 
                linewidth=width, color=color, alpha=0.8,
                zorder=1)  # Higher zorder to draw on top of background edges
         
@@ -735,9 +844,10 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
             else:
                 offset_x = offset_y = 0
             
-            # Add the label with simplified text - just the betweenness value
-            ax.text(x + offset_x, y + offset_y, 
-                   f"{betweenness:.2f}", 
+            # Add the label with edge type indicator (A for intralayer, E for interlayer)
+            edge_type_indicator = "E" if edge_type == "interlayer" else "A"
+            network_ax.text(x + offset_x, y + offset_y, 
+                   f"{edge_type_indicator}:{betweenness:.2f}", 
                    fontsize=7,
                    ha='center', va='center',
                    bbox=dict(facecolor='white', alpha=0.7, edgecolor='gray', pad=0.3, boxstyle='round'),
@@ -766,7 +876,7 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
                 color = plt.cm.tab10(cluster % 10)
                 
             # Draw all nodes with a small size for context
-            ax.scatter(pos[node][0], pos[node][1], 
+            network_ax.scatter(pos[node][0], pos[node][1], 
                       s=base_size * 0.5, color=color, alpha=0.3, edgecolor='none',
                       zorder=1.5)  # Draw between edges and significant nodes
         
@@ -792,7 +902,7 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
                 color = plt.cm.tab10(cluster % 10)
             
             # Draw the significant node
-            ax.scatter(pos[node][0], pos[node][1], 
+            network_ax.scatter(pos[node][0], pos[node][1], 
                       s=size, color=color, edgecolor='black', linewidth=0.8,
                       zorder=2)  # Higher zorder to draw on top of edges
             
@@ -810,7 +920,7 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
                 if betweenness > 0.5:
                     label += f"\n{betweenness:.2f}"
                     
-                ax.text(pos[node][0], pos[node][1], 
+                network_ax.text(pos[node][0], pos[node][1], 
                        label, 
                        fontsize=7,
                        ha='center', va='center',
@@ -819,38 +929,43 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
     
     # Add layer labels if requested
     if emphasize_layers:
-        _add_layer_labels(ax, G, pos, layer_nodes, layers)
+        _add_layer_labels(network_ax, G, pos, layer_nodes, layers)
     
     # Add a legend based on the coloring mode
     if color_by_centrality:
         # Create a colormap for edge betweenness
         sm = ScalarMappable(cmap=plt.cm.RdYlBu_r, norm=Normalize(0, 1))
         sm.set_array([])
-        cbar = plt.colorbar(sm, ax=ax, shrink=0.8)
+        cbar = plt.colorbar(sm, ax=network_ax, shrink=0.8)
         cbar.set_label('Edge Betweenness Centrality')
     else:
         # Add a legend for edge types
-        inter_line = plt.Line2D([0], [0], color=plt.cm.Blues(0.8), linewidth=3, label='Interlayer Edge')
-        intra_line = plt.Line2D([0], [0], color=plt.cm.Reds(0.8), linewidth=3, label='Intralayer Edge')
-        ax.legend(handles=[inter_line, intra_line], loc='upper right', framealpha=0.9)
+        inter_line = plt.Line2D([0], [0], color=plt.cm.Blues(0.8), linewidth=3, label='Interlayer Edge (E)')
+        intra_line = plt.Line2D([0], [0], color=plt.cm.Reds(0.8), linewidth=3, label='Intralayer Edge (A)')
+        network_ax.legend(handles=[inter_line, intra_line], loc='upper right', framealpha=0.9)
     
     # Add a title with the visualization style
     title = f'Critical Connections in Duplicated Network ({viz_style})'
-    ax.set_title(title, fontsize=12)
+    network_ax.set_title(title, fontsize=12)
     
     # Remove axis ticks and spines for a cleaner look
-    ax.set_xticks([])
-    ax.set_yticks([])
-    for spine in ax.spines.values():
+    network_ax.set_xticks([])
+    network_ax.set_yticks([])
+    for spine in network_ax.spines.values():
         spine.set_visible(False)
     
     # Set equal aspect ratio to prevent distortion
-    ax.set_aspect('equal')
+    network_ax.set_aspect('equal')
     
     # Add a subtle grid for better orientation
-    ax.grid(alpha=0.1)
+    network_ax.grid(alpha=0.1)
+    
+    # Hide the original axis
+    ax.axis('off')
     
     logger.info(f"Created bottleneck visualization with {len(G.nodes)} nodes and {len(G.edges)} edges")
+    
+    return network_ax
 
 def _create_layer_focused_layout(G, layer_nodes):
     """
@@ -1054,9 +1169,6 @@ def integrate_lc16_ui_with_panel(panel, parent_layout, analysis_combo=None, clus
         ui_elements["viz_style_combo"].currentIndexChanged.connect(
             lambda: panel.update_lc16_path_analysis(panel._current_data) if hasattr(panel, "_current_data") else None
         )
-        ui_elements["show_labels_checkbox"].stateChanged.connect(
-            lambda: panel.update_lc16_path_analysis(panel._current_data) if hasattr(panel, "_current_data") else None
-        )
         ui_elements["show_nodes_checkbox"].stateChanged.connect(
             lambda: panel.update_lc16_path_analysis(panel._current_data) if hasattr(panel, "_current_data") else None
         )
@@ -1066,9 +1178,6 @@ def integrate_lc16_ui_with_panel(panel, parent_layout, analysis_combo=None, clus
         
         # Connect the new UI elements
         ui_elements["hide_unconnected_checkbox"].stateChanged.connect(
-            lambda: panel.update_lc16_path_analysis(panel._current_data) if hasattr(panel, "_current_data") else None
-        )
-        ui_elements["emphasize_layers_checkbox"].stateChanged.connect(
             lambda: panel.update_lc16_path_analysis(panel._current_data) if hasattr(panel, "_current_data") else None
         )
         
@@ -1084,7 +1193,7 @@ def integrate_lc16_ui_with_panel(panel, parent_layout, analysis_combo=None, clus
                 lambda: panel.update_lc16_path_analysis(panel._current_data) if hasattr(panel, "_current_data") else None
             )
     
-    # Store references to the UI elements in the panel for later access
+    # Store the UI elements in the panel for later access
     panel.lc16_ui_elements = ui_elements
     
     return ui_elements
@@ -1113,15 +1222,19 @@ def get_lc16_visualization_settings(panel):
         settings["viz_style"] = ui_elements["viz_style_combo"].currentText()
         
         # Get the checkbox states
-        settings["show_labels"] = ui_elements["show_labels_checkbox"].isChecked()
         settings["show_nodes"] = ui_elements["show_nodes_checkbox"].isChecked()
         settings["color_by_centrality"] = ui_elements["color_by_centrality_checkbox"].isChecked()
         
         # Get the new UI element states
         settings["hide_unconnected"] = ui_elements["hide_unconnected_checkbox"].isChecked()
-        settings["emphasize_layers"] = ui_elements["emphasize_layers_checkbox"].isChecked()
-        settings["node_size"] = ui_elements["node_size"]
-        settings["layout_spacing"] = ui_elements["layout_spacing"]
+        
+        # Always show labels and layer labels
+        settings["show_labels"] = True
+        settings["emphasize_layers"] = True
+        
+        # Default values for removed options
+        settings["node_size"] = "Medium"
+        settings["layout_spacing"] = "Standard"
     else:
         # Default settings if UI elements are not available
         settings["viz_style"] = "Standard"

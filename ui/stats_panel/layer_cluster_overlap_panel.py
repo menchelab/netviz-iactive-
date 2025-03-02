@@ -406,9 +406,9 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         
         # Store references to the UI elements for later use
         self.lc16_viz_style_combo = lc16_ui_elements["viz_style_combo"]
-        self.lc16_show_labels_cb = lc16_ui_elements["show_labels_checkbox"]
         self.lc16_show_nodes_cb = lc16_ui_elements["show_nodes_checkbox"]
         self.lc16_color_by_centrality_cb = lc16_ui_elements["color_by_centrality_checkbox"]
+        self.lc16_hide_unconnected_cb = lc16_ui_elements["hide_unconnected_checkbox"]
         
         # Add the canvas to the LC16 tab
         lc16_layout.addWidget(self.path_analysis_canvas)
@@ -1133,6 +1133,10 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
             show_labels=viz_settings["show_labels"],
             show_nodes=viz_settings["show_nodes"],
             color_by_centrality=viz_settings["color_by_centrality"],
+            hide_unconnected=viz_settings["hide_unconnected"],
+            emphasize_layers=viz_settings["emphasize_layers"],
+            node_size=viz_settings["node_size"],
+            layout_spacing=viz_settings["layout_spacing"]
         )
 
         # Apply tight layout and draw
