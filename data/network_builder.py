@@ -137,6 +137,8 @@ def build_multilayer_network(
             for node in unique_base_nodes:
                 positions[f"{node}_{layer}"] = base_layout[node]
 
+    logger.info("... Layout calc done.")
+
     # Calculate network width if auto z_offset (0)
     if z_offset == 0 and positions:
         # Get all x,y positions from the first layer to calculate width

@@ -11,8 +11,8 @@ def enable_dark_mode(app: QApplication):
     dark_palette.setColor(dark_palette.WindowText, Qt.white)
     dark_palette.setColor(dark_palette.Base, Qt.black)
     dark_palette.setColor(dark_palette.AlternateBase, Qt.black)
-    dark_palette.setColor(dark_palette.ToolTipBase, Qt.white)
-    dark_palette.setColor(dark_palette.ToolTipText, Qt.white)
+    dark_palette.setColor(dark_palette.ToolTipBase, Qt.black)  # Dark background for tooltips
+    dark_palette.setColor(dark_palette.ToolTipText, Qt.white)  # White text for tooltips
     dark_palette.setColor(dark_palette.Text, Qt.white)
     dark_palette.setColor(dark_palette.Button, Qt.black)
     dark_palette.setColor(dark_palette.ButtonText, Qt.white)
@@ -42,6 +42,15 @@ def enable_dark_mode(app: QApplication):
 
     QPushButton:pressed {
         background-color: #2d2d2d;
+    }
+
+    /* Tooltip styling */
+    QToolTip {
+        background-color: #2d2d2d;
+        color: #ffffff;
+        border: 1px solid #3d3d3d;
+        border-radius: 4px;
+        padding: 4px;
     }
 
     /* Modern Scrollbar Styling */

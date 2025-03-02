@@ -194,3 +194,64 @@ class EdgeManager:
 
         # Update interlayer lines
         self._set_interlayer_lines(interlayer_pos, interlayer_colors)
+
+    def update_with_optimized_data(self, edge_connections, edge_colors, edge_importance=None, show_intralayer=True):
+        """
+        Update edges with optimized data from NetworkDataManager.
+        
+        Parameters:
+        -----------
+        edge_connections : numpy.ndarray
+            Array of edge connections (start_idx, end_idx)
+        edge_colors : numpy.ndarray
+            Array of edge colors (RGBA)
+        edge_importance : numpy.ndarray, optional
+            Array of edge importance scores for level-of-detail rendering
+        show_intralayer : bool
+            Whether to show intralayer edges
+        """
+        logger = logging.getLogger(__name__)
+        
+        try:
+            # Validate input data
+            if edge_connections is None or len(edge_connections) == 0:
+                logger.warning("No edge connections provided")
+                self.canvas.interlayer_lines.visible = False
+                self.canvas.intralayer_lines.visible = False
+                return
+                
+            if edge_colors is None or len(edge_colors) != len(edge_connections):
+                logger.warning(f"Invalid edge colors: expected {len(edge_connections)}, got {len(edge_colors) if edge_colors is not None else 0}")
+                # Use default colors if none provided
+                edge_colors = np.ones((len(edge_connections), 4)) * np.array([0.7, 0.7, 0.7, 0.5])
+            
+            # Store the data for later use
+            self.canvas.link_pairs = edge_connections
+            self.canvas.link_colors_rgba = edge_colors
+            
+            # Separate intralayer and interlayer edges
+            if show_intralayer:
+                # Process all edges with the _update_edge_visibility method
+                self._update_edge_visibility(np.ones(len(edge_connections), dtype=bool), show_intralayer)
+            else:
+                # If intralayer edges are hidden, only process interlayer edges
+                # Get node positions from the canvas
+                node_positions = self.canvas.node_positions
+                
+                # Identify interlayer edges
+                interlayer_mask = np.zeros(len(edge_connections), dtype=bool)
+                for i, (start_idx, end_idx) in enumerate(edge_connections):
+                    if start_idx < len(node_positions) and end_idx < len(node_positions):
+                        start_z = node_positions[start_idx][2]
+                        end_z = node_positions[end_idx][2]
+                        is_interlayer = abs(start_z - end_z) >= 0.001
+                        interlayer_mask[i] = is_interlayer
+                
+                # Process only interlayer edges
+                self._update_edge_visibility(interlayer_mask, False)
+            
+            logger.debug(f"Updated edges with optimized data: {len(edge_connections)} edges")
+        except Exception as e:
+            logger.error(f"Error updating edges with optimized data: {e}")
+            import traceback
+            traceback.print_exc()

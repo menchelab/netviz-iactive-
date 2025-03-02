@@ -113,50 +113,127 @@ class MultilayerNetworkViz(QWidget):
         self.show()
 
     def load_selected_disease(self):
-        """Load the currently selected disease when load button is clicked"""
-        disease_name = self.loader_panel.disease_combo.currentText()
-        if not disease_name:
+        """Load the selected disease data"""
+        logger = logging.getLogger(__name__)
+        
+        # Get selected disease from loader panel
+        disease = self.loader_panel.get_selected_disease()
+        if not disease:
+            logger.warning("No disease selected")
             return
+            
+        logger.info(f"Loading disease: {disease}")
+        
+        # Show loading indicator
+        self.loader_panel.set_loading(True)
+        
+        try:
+            # Load data from the data loader
+            from data.data_loader import load_disease_data
+            
+            # Get prefiltering options from the loader panel
+            prefilter_options = self.loader_panel.get_prefilter_options()
+            
+            # Load data with prefiltering for large networks
+            if prefilter_options:
+                logger.info(f"Loading with prefilter options: {prefilter_options}")
+                
+                # Load data with prefiltering
+                data = load_disease_data(
+                    disease, 
+                    self.data_dir,
+                    prefilter_layers=prefilter_options.get('layers'),
+                    prefilter_clusters=prefilter_options.get('clusters'),
+                    prefilter_max_nodes=prefilter_options.get('max_nodes')
+                )
+            else:
+                # Load data normally
+                data = load_disease_data(disease, self.data_dir)
+            
+            # Check if data was loaded successfully
+            if data is None:
+                logger.error(f"Failed to load data for disease: {disease}")
+                from PyQt5.QtWidgets import QMessageBox
+                QMessageBox.critical(self, "Error", f"Failed to load data for disease: {disease}\nData files may be missing or corrupted.")
+                return
+                
+            # Load data into the data manager
+            if prefilter_options:
+                # Create prefilter criteria dictionary
+                prefilter_criteria = {}
+                if 'layers' in prefilter_options and prefilter_options['layers']:
+                    prefilter_criteria['layers'] = prefilter_options['layers']
+                if 'clusters' in prefilter_options and prefilter_options['clusters']:
+                    prefilter_criteria['clusters'] = prefilter_options['clusters']
+                if 'max_nodes' in prefilter_options and prefilter_options['max_nodes']:
+                    prefilter_criteria['max_nodes'] = prefilter_options['max_nodes']
+                
+                # Load data with prefiltering
+                self.data_manager.load_data_with_prefilter(
+                    data["node_positions"],
+                    data["link_pairs"],
+                    data["link_colors"],
+                    data["node_ids"],
+                    data["layers"],
+                    data["node_clusters"],
+                    data["unique_clusters"],
+                    prefilter_criteria=prefilter_criteria,
+                    node_colors=data.get("node_colors"),
+                    node_origins=data.get("node_origins"),
+                    unique_origins=data.get("unique_origins"),
+                    layer_colors=data.get("layer_colors"),
+                )
+            else:
+                # Load data normally
+                self.data_manager.load_data(
+                    data["node_positions"],
+                    data["link_pairs"],
+                    data["link_colors"],
+                    data["node_ids"],
+                    data["layers"],
+                    data["node_clusters"],
+                    data["unique_clusters"],
+                    data.get("node_colors"),
+                    data.get("node_origins"),
+                    data.get("unique_origins"),
+                    data.get("layer_colors"),
+                )
+            
+            # Load data into the network canvas
+            self.network_canvas.load_data()
 
-        # Get ML layout preference and layout algorithm from loader panel
-        use_ml_layout = self.loader_panel.ml_layout_checkbox.isChecked()
-        layout_algorithm = self.loader_panel.layout_combo.currentText()
-        z_offset = self.loader_panel.get_z_offset()
-
-        data = load_disease_data(
-            self.data_dir, disease_name, use_ml_layout, layout_algorithm, z_offset
-        )
-        if data:
-            (
-                node_positions,
-                link_pairs,
-                link_colors,
-                node_ids,
-                layers,
-                node_clusters,
-                unique_clusters,
-                node_colors,
-                node_origins,
-                unique_origins,
-                layer_colors,
-            ) = data
-
-            # Load the data into the visualization
-            self.load_data(
-                node_positions,
-                link_pairs,
-                link_colors,
-                node_ids,
-                layers,
-                node_clusters,
-                unique_clusters,
-                node_colors,
-                node_origins,
-                unique_origins,
-                layer_colors,
-            )
-            # Show the canvas after data is loaded
+            # Show the canvas now that data is loaded
             self.network_canvas.canvas.native.show()
+            logger.info("Showing Vispy canvas")
+
+            # Update the controls with layer and cluster colors
+            self.control_panel.update_controls(
+                data["layers"],
+                data["unique_clusters"],
+                data.get("unique_origins", []),
+                self.update_visibility,
+                data.get("layer_colors", {}),
+                self.data_manager.cluster_colors,
+            )
+            
+            # Update visibility
+            self.update_visibility()
+            
+            # Trigger a random animation
+            self._trigger_random_animation()
+            
+            logger.info(f"Successfully loaded disease: {disease}")
+        except Exception as e:
+            logger.error(f"Error loading disease {disease}: {e}")
+            import traceback
+            traceback.print_exc()
+            
+            # Show error message to user
+            from PyQt5.QtWidgets import QMessageBox
+            QMessageBox.critical(self, "Error", f"Error loading disease {disease}:\n{str(e)}")
+        finally:
+            # Hide loading indicator
+            self.loader_panel.set_loading(False)
 
     def load_disease(self, disease_name):
         """Load a disease dataset"""
@@ -168,38 +245,37 @@ class MultilayerNetworkViz(QWidget):
         layout_algorithm = self.loader_panel.layout_combo.currentText()
         z_offset = self.loader_panel.get_z_offset()
 
+        # Load data from the data loader
         data = load_disease_data(
-            self.data_dir, disease_name, use_ml_layout, layout_algorithm, z_offset
+            disease_name,
+            self.data_dir,
+            use_ml_layout=use_ml_layout, 
+            layout_algorithm=layout_algorithm, 
+            z_offset=z_offset
         )
-        if data:
-            (
-                node_positions,
-                link_pairs,
-                link_colors,
-                node_ids,
-                layers,
-                node_clusters,
-                unique_clusters,
-                node_colors,
-                node_origins,
-                unique_origins,
-                layer_colors,
-            ) = data
-
-            # Load the data into the visualization
-            self.load_data(
-                node_positions,
-                link_pairs,
-                link_colors,
-                node_ids,
-                layers,
-                node_clusters,
-                unique_clusters,
-                node_colors,
-                node_origins,
-                unique_origins,
-                layer_colors,
-            )
+        
+        # Check if data was loaded successfully
+        if data is None:
+            logger = logging.getLogger(__name__)
+            logger.error(f"Failed to load data for disease: {disease_name}")
+            from PyQt5.QtWidgets import QMessageBox
+            QMessageBox.critical(self, "Error", f"Failed to load data for disease: {disease_name}\nData files may be missing or corrupted.")
+            return
+            
+        # Load the data into the visualization
+        self.load_data(
+            data["node_positions"],
+            data["link_pairs"],
+            data["link_colors"],
+            data["node_ids"],
+            data["layers"],
+            data["node_clusters"],
+            data["unique_clusters"],
+            data.get("node_colors"),
+            data.get("node_origins"),
+            data.get("unique_origins"),
+            data.get("layer_colors"),
+        )
 
     def load_data(
         self,
@@ -218,39 +294,94 @@ class MultilayerNetworkViz(QWidget):
         """Load network data into the visualization"""
         logger = logging.getLogger(__name__)
         logger.info("Loading data into visualization...")
+        
+        try:
+            # Validate input data
+            if node_positions is None or len(node_positions) == 0:
+                logger.error("No node positions provided")
+                return
+                
+            if link_pairs is None or len(link_pairs) == 0:
+                logger.warning("No link pairs provided - network will have no edges")
+                
+            if link_colors is None and link_pairs is not None and len(link_pairs) > 0:
+                logger.warning("No link colors provided - using default colors")
+                link_colors = ["#CCCCCC"] * len(link_pairs)
 
-        # Load data into the data manager
-        self.data_manager.load_data(
-            node_positions,
-            link_pairs,
-            link_colors,
-            node_ids,
-            layers,
-            node_clusters,
-            unique_clusters,
-            node_colors,
-            node_origins,
-            unique_origins,
-            layer_colors,
-        )
+            # Check if this is a large network
+            is_large_network = len(node_positions) > 500000
+            
+            if is_large_network:
+                logger.info(f"Large network detected: {len(node_positions)} nodes. Using optimized loading.")
+                
+                # Define prefiltering criteria for large networks
+                # This can be customized based on the application's needs
+                prefilter_criteria = {
+                    'max_nodes': 500000,  # Limit to 500K nodes for better performance
+                }
+                
+                # Load data with prefiltering for large networks
+                self.data_manager.load_data_with_prefilter(
+                    node_positions,
+                    link_pairs,
+                    link_colors,
+                    node_ids,
+                    layers,
+                    node_clusters,
+                    unique_clusters,
+                    prefilter_criteria=prefilter_criteria,
+                    node_colors=node_colors,
+                    node_origins=node_origins,
+                    unique_origins=unique_origins,
+                    layer_colors=layer_colors,
+                )
+            else:
+                # Load data normally for smaller networks
+                self.data_manager.load_data(
+                    node_positions,
+                    link_pairs,
+                    link_colors,
+                    node_ids,
+                    layers,
+                    node_clusters,
+                    unique_clusters,
+                    node_colors,
+                    node_origins,
+                    unique_origins,
+                    layer_colors,
+                )
 
-        # Load data into the network canvas
-        self.network_canvas.load_data()
+            # Load data into the network canvas
+            self.network_canvas.load_data()
 
-        # Update the controls with layer and cluster colors
-        self.control_panel.update_controls(
-            layers,
-            unique_clusters,
-            unique_origins,
-            self.update_visibility,
-            layer_colors,
-            self.data_manager.cluster_colors,
-        )
+            # Show the canvas now that data is loaded
+            self.network_canvas.canvas.native.show()
+            logger.info("Showing Vispy canvas")
 
-        # Trigger a random animation after loading
-        self.update_visibility()
+            # Update the controls with layer and cluster colors
+            self.control_panel.update_controls(
+                layers,
+                unique_clusters,
+                unique_origins,
+                self.update_visibility,
+                layer_colors,
+                self.data_manager.cluster_colors,
+            )
 
-        self._trigger_random_animation()
+            # Trigger a random animation after loading
+            self.update_visibility()
+
+            self._trigger_random_animation()
+            
+            logger.info("Data loaded successfully")
+        except Exception as e:
+            logger.error(f"Error loading data: {e}")
+            import traceback
+            traceback.print_exc()
+            
+            # Show error message to user
+            from PyQt5.QtWidgets import QMessageBox
+            QMessageBox.critical(self, "Error", f"Error loading data:\n{str(e)}")
 
     def _trigger_random_animation(self):
         """Maybe trigger a random animation after data is loaded"""
@@ -327,14 +458,28 @@ class MultilayerNetworkViz(QWidget):
                 node_mask, edge_mask = self.data_manager.update_visibility(
                     visible_layers, visible_clusters, visible_origins
                 )
-
-            # Update network canvas with visibility settings
-            self.network_canvas.update_visibility(
-                show_intralayer=show_intralayer,
-                show_nodes=show_nodes,
-                show_labels=show_labels,
-                show_stats_bars=show_stats_bars,
-            )
+                
+                # Get optimized data for Vispy visualization
+                # This uses the level-of-detail approach for large networks
+                max_edges = 100000  # Can be adjusted based on performance needs
+                optimized_data = self.data_manager.optimize_for_vispy(max_visible_edges=max_edges)
+                
+                # Update network canvas with optimized data
+                self.network_canvas.update_with_optimized_data(
+                    optimized_data,
+                    show_intralayer=show_intralayer,
+                    show_nodes=show_nodes,
+                    show_labels=show_labels,
+                    show_stats_bars=show_stats_bars
+                )
+            else:
+                # Just update visibility settings without re-filtering data
+                self.network_canvas.update_visibility(
+                    show_intralayer=show_intralayer,
+                    show_nodes=show_nodes,
+                    show_labels=show_labels,
+                    show_stats_bars=show_stats_bars,
+                )
 
             # Only update statistics panel if filter settings have changed
             if filter_changed:

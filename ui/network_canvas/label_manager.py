@@ -6,6 +6,47 @@ class LabelManager:
     def __init__(self, canvas):
         self.canvas = canvas
 
+    def update_labels(self, node_positions, node_ids, bottom_only=True):
+        """
+        Update node labels with the provided positions and IDs.
+        
+        Parameters:
+        -----------
+        node_positions : numpy.ndarray
+            Array of node positions (x, y, z)
+        node_ids : list
+            List of node IDs corresponding to the positions
+        bottom_only : bool
+            Whether to show labels only for nodes in the bottom layer
+        """
+        logger = logging.getLogger(__name__)
+        logger.info(f"Updating labels with {len(node_positions)} nodes")
+        
+        try:
+            # Create a simple node mask (all True)
+            node_mask = np.ones(len(node_positions), dtype=bool)
+            
+            # Get interlayer edge counts if available
+            if hasattr(self.canvas.data_manager, 'get_interlayer_edge_counts'):
+                interlayer_edge_counts = self.canvas.data_manager.get_interlayer_edge_counts()
+            else:
+                interlayer_edge_counts = {}
+            
+            # Update labels
+            self._update_labels_and_bars(
+                node_mask=node_mask,
+                interlayer_edge_counts=interlayer_edge_counts,
+                show_labels=True,
+                show_stats_bars=False
+            )
+        except Exception as e:
+            logger.error(f"Error updating labels: {e}")
+            import traceback
+            traceback.print_exc()
+            
+            # Hide labels in case of error
+            self.hide_labels()
+
     def _update_labels_and_bars(
         self, node_mask, interlayer_edge_counts, show_labels, show_stats_bars
     ):
@@ -220,3 +261,8 @@ class LabelManager:
         logger.info(
             f"Bar visibility set to {self.canvas.node_count_bars.visible} and {self.canvas.edge_count_bars.visible}"
         )
+
+    def hide_labels(self):
+        """Hide all node labels"""
+        if hasattr(self.canvas, 'node_labels'):
+            self.canvas.node_labels.visible = False

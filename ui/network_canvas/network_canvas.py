@@ -266,3 +266,114 @@ class NetworkCanvas:
             self.view.camera.fov = 45
 
         self.canvas.update()
+
+    def update_with_optimized_data(
+        self,
+        optimized_data,
+        show_intralayer=True,
+        show_nodes=True,
+        show_labels=True,
+        bottom_labels_only=True,
+        show_stats_bars=False,
+    ):
+        """
+        Update the visualization with optimized data from the NetworkDataManager.
+        This method is designed for efficient rendering of large networks.
+        
+        Parameters:
+        -----------
+        optimized_data : dict
+            Dictionary containing optimized data from NetworkDataManager.optimize_for_vispy():
+            - 'node_positions': NumPy array of node positions
+            - 'node_colors': NumPy array of node colors (RGBA)
+            - 'node_sizes': NumPy array of node sizes
+            - 'edge_connections': NumPy array of edge connections
+            - 'edge_colors': NumPy array of edge colors (RGBA)
+            - 'edge_importance': NumPy array of edge importance scores (for LOD)
+            - 'is_simplified': Boolean indicating if the data was simplified
+        """
+        logger = logging.getLogger(__name__)
+        
+        try:
+            # Validate input data
+            if optimized_data is None:
+                logger.error("No optimized data provided")
+                return
+                
+            # Check for required keys
+            required_keys = ['node_positions', 'node_colors', 'node_sizes', 'edge_connections', 'edge_colors']
+            missing_keys = [key for key in required_keys if key not in optimized_data]
+            if missing_keys:
+                logger.error(f"Missing required keys in optimized data: {missing_keys}")
+                return
+            
+            # Extract data from the optimized data dictionary
+            node_positions = optimized_data['node_positions']
+            node_colors = optimized_data['node_colors']
+            node_sizes = optimized_data['node_sizes']
+            edge_connections = optimized_data['edge_connections']
+            edge_colors = optimized_data['edge_colors']
+            edge_importance = optimized_data.get('edge_importance', None)
+            is_simplified = optimized_data.get('is_simplified', False)
+            
+            if is_simplified:
+                logger.info(f"Rendering simplified network: {len(node_positions)} nodes, {len(edge_connections)} edges")
+            
+            # Update node manager with the optimized data
+            self.node_manager.update_with_optimized_data(
+                node_positions=node_positions,
+                node_colors=node_colors,
+                node_sizes=node_sizes,
+                visible=show_nodes
+            )
+            
+            # Update edge manager with the optimized data
+            self.edge_manager.update_with_optimized_data(
+                edge_connections=edge_connections,
+                edge_colors=edge_colors,
+                edge_importance=edge_importance,
+                show_intralayer=show_intralayer
+            )
+            
+            # Update label manager
+            if show_labels:
+                # For labels, we need to use the original node IDs
+                # We can get these from the data manager
+                if hasattr(self.data_manager, 'node_ids') and self.data_manager.node_ids is not None:
+                    # Get visible node indices
+                    if hasattr(self.data_manager, 'current_node_mask') and self.data_manager.current_node_mask is not None:
+                        visible_indices = np.where(self.data_manager.current_node_mask)[0]
+                        visible_node_ids = [self.data_manager.node_ids[i] for i in visible_indices if i < len(self.data_manager.node_ids)]
+                        self.label_manager.update_labels(
+                            node_positions=node_positions,
+                            node_ids=visible_node_ids,
+                            bottom_only=bottom_labels_only
+                        )
+            else:
+                self.label_manager.hide_labels()
+            
+            # Update stats bars if needed
+            if show_stats_bars and hasattr(self.data_manager, 'get_interlayer_edge_counts'):
+                try:
+                    interlayer_edge_counts = self.data_manager.get_interlayer_edge_counts()
+                    if hasattr(self, 'stats_manager'):
+                        self.stats_manager.update_stats_bars(
+                            node_positions=node_positions,
+                            interlayer_edge_counts=interlayer_edge_counts
+                        )
+                except Exception as e:
+                    logger.error(f"Error updating stats bars: {e}")
+                    if hasattr(self, 'stats_manager'):
+                        self.stats_manager.hide_stats_bars()
+            else:
+                if hasattr(self, 'stats_manager'):
+                    self.stats_manager.hide_stats_bars()
+            
+            # Update the canvas
+            self.canvas.update()
+            
+            logger.debug(f"Updated visualization with optimized data: {len(node_positions)} nodes, {len(edge_connections)} edges")
+        except Exception as e:
+            logger.error(f"Error updating visualization with optimized data: {e}")
+            import traceback
+            traceback.print_exc()

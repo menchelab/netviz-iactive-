@@ -10,6 +10,7 @@ from .layer_coupling_panel import LayerCouplingPanel
 from .critical_structure_panel import CriticalStructurePanel
 from .hyperbolic_embedding_panel import HyperbolicEmbeddingPanel
 from .chart_grid_panel import ChartGridPanel
+from .layer_cluster_overlap_panel import LayerClusterOverlapPanel
 
 
 class NetworkStatsPanel(QWidget):
@@ -41,6 +42,9 @@ class NetworkStatsPanel(QWidget):
 
         # Create chart grid panel
         self.chart_grid_panel = ChartGridPanel()
+        
+        # Create layer-cluster overlap panel
+        self.layer_cluster_overlap_panel = LayerClusterOverlapPanel()
 
         # Add panels to tabs
         self.tab_widget.addTab(self.main_stats_panel, "stats")
@@ -56,6 +60,9 @@ class NetworkStatsPanel(QWidget):
 
         # Add chart grid tab
         self.tab_widget.addTab(self.chart_grid_panel, "multi")
+        
+        # Add layer-cluster overlap tab
+        self.tab_widget.addTab(self.layer_cluster_overlap_panel, "L-C Overlap")
 
     def update_stats(self, data_manager):
         # Update each panel
@@ -72,3 +79,6 @@ class NetworkStatsPanel(QWidget):
 
         # Update chart grid panel
         self.chart_grid_panel.update_stats(data_manager)
+        
+        # Update layer-cluster overlap panel
+        self.layer_cluster_overlap_panel.update_stats(data_manager)

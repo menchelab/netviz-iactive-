@@ -20,6 +20,7 @@ dependencies = [
     "python-louvain",
     "scikit-learn",
     "scipy",
+    "squarify>=0.4.4",
     "tqdm",
     "uunet>=2.2.1",
     "vispy",

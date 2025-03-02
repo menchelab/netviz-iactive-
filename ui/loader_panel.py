@@ -84,3 +84,58 @@ class LoaderPanel(QWidget):
         default_index = AVAILABLE_LAYOUTS_LOADER.index("kamada_kawai")
         combo.setCurrentIndex(default_index)
         return combo
+
+    def get_selected_disease(self):
+        """Get the currently selected disease"""
+        return self.disease_combo.currentText()
+        
+    def get_prefilter_options(self):
+        """
+        Get prefiltering options for large networks.
+        
+        Returns:
+        --------
+        dict or None
+            Dictionary with prefiltering options if any are set, or None if no prefiltering is needed.
+            Can include:
+            - 'layers': list of layer names to include
+            - 'clusters': list of cluster names to include
+            - 'max_nodes': maximum number of nodes to include
+        """
+        # Check if prefiltering is enabled
+        if hasattr(self, 'prefilter_checkbox') and self.prefilter_checkbox.isChecked():
+            options = {}
+            
+            # Get selected layers if available
+            if hasattr(self, 'layer_list') and self.layer_list.count() > 0:
+                selected_layers = []
+                for i in range(self.layer_list.count()):
+                    item = self.layer_list.item(i)
+                    if item.checkState() == Qt.Checked:
+                        selected_layers.append(item.text())
+                if selected_layers:
+                    options['layers'] = selected_layers
+            
+            # Get selected clusters if available
+            if hasattr(self, 'cluster_list') and self.cluster_list.count() > 0:
+                selected_clusters = []
+                for i in range(self.cluster_list.count()):
+                    item = self.cluster_list.item(i)
+                    if item.checkState() == Qt.Checked:
+                        selected_clusters.append(item.text())
+                if selected_clusters:
+                    options['clusters'] = selected_clusters
+            
+            # Get max nodes if available
+            if hasattr(self, 'max_nodes_spinbox') and self.max_nodes_spinbox.value() > 0:
+                options['max_nodes'] = self.max_nodes_spinbox.value()
+            
+            return options if options else None
+        
+        return None
+        
+    def set_loading(self, is_loading):
+        """Set the loading state of the panel"""
+        if hasattr(self, 'load_button'):
+            self.load_button.setEnabled(not is_loading)
+            self.load_button.setText("Loading..." if is_loading else "Load Network")

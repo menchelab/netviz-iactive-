@@ -145,11 +145,11 @@ class LayerCouplingPanel(BaseStatsPanel):
             # Unpack stored data
             data_manager, medium_font, large_font = self._current_data
 
-            # Get filtered data from the data manager
+            # Get filtered data directly from the data manager
+            # This is more efficient than accessing raw properties and filtering manually
             layers = data_manager.layers
             visible_layer_indices = data_manager.visible_layers
-            layer_colors = data_manager.layer_colors
-
+            
             # Check if we have valid data
             if (
                 not layers
@@ -162,11 +162,8 @@ class LayerCouplingPanel(BaseStatsPanel):
                 return
 
             # Filter layers based on visibility
-            filtered_layers = []
-            for i in visible_layer_indices:
-                if i < len(layers):  # Ensure index is valid
-                    filtered_layers.append(layers[i])
-
+            filtered_layers = [layers[i] for i in visible_layer_indices]
+            layer_colors = data_manager.layer_colors
             filtered_colors = {
                 layer: layer_colors.get(layer, "skyblue") for layer in filtered_layers
             }
@@ -178,9 +175,8 @@ class LayerCouplingPanel(BaseStatsPanel):
                 return
 
             # Get the filtered layer connections that respect all visibility settings
-            # (layers, clusters, and origins)
             try:
-                # Use the new filter_to_visible parameter to get properly sized matrix
+                # Use the filter_to_visible parameter to get properly sized matrix
                 filtered_connections = data_manager.get_layer_connections(
                     filter_to_visible=True
                 )
@@ -219,77 +215,29 @@ class LayerCouplingPanel(BaseStatsPanel):
                     self.clear_visualization("Dimension mismatch in coupling analysis")
                     return
             except Exception as e:
-                print(f"Error calculating structural coupling: {e}")
-                self.clear_visualization(f"Error calculating coupling: {str(e)}")
+                print(f"Error calculating coupling: {e}")
+                self.clear_visualization("Error in coupling calculation")
                 return
 
-            # Create coupling visualizations
-            try:
-                self.create_coupling_visualizations(
-                    coupling_matrix,
-                    filtered_layers,
-                    medium_font,
-                    large_font,
-                    filtered_colors,
-                )
-            except Exception as e:
-                print(f"Error creating coupling visualizations: {e}")
-                self.coupling_heatmap_ax.text(
-                    0.5,
-                    0.5,
-                    "Error creating coupling heatmap",
-                    ha="center",
-                    va="center",
-                    fontsize=12,
-                )
-                self.coupling_heatmap_ax.axis("off")
+            # Create the visualizations
+            self.create_coupling_matrix_visualization(
+                coupling_matrix, filtered_layers, filtered_colors
+            )
+            self.create_hierarchical_clustering_visualization(
+                coupling_matrix, filtered_layers, filtered_colors
+            )
+            self.create_network_visualization(
+                coupling_matrix, filtered_layers, filtered_colors
+            )
 
-                self.coupling_bar_ax.text(
-                    0.5,
-                    0.5,
-                    "Error creating coupling bar chart",
-                    ha="center",
-                    va="center",
-                    fontsize=12,
-                )
-                self.coupling_bar_ax.axis("off")
-
-            # Create hierarchical organization visualizations
-            try:
-                self.create_hierarchical_visualizations(
-                    coupling_matrix,
-                    filtered_layers,
-                    medium_font,
-                    large_font,
-                    filtered_colors,
-                )
-            except Exception as e:
-                print(f"Error creating hierarchical visualizations: {e}")
-                self.dendrogram_ax.text(
-                    0.5,
-                    0.5,
-                    "Error creating dendrogram",
-                    ha="center",
-                    va="center",
-                    fontsize=12,
-                )
-                self.dendrogram_ax.axis("off")
-
-                self.circular_ax.text(
-                    0.5,
-                    0.5,
-                    "Error creating circular layout",
-                    ha="center",
-                    va="center",
-                    fontsize=12,
-                )
-                self.circular_ax.axis("off")
-
-            self.figure.tight_layout(pad=1.0)
+            # Adjust layout and draw
+            self.figure.tight_layout()
             self.canvas.draw()
 
         except Exception as e:
-            print(f"Error updating Layer Coupling visualization: {e}")
+            print(f"Error in update_visualization: {e}")
+            import traceback
+            traceback.print_exc()
             self.clear_visualization(f"Error updating visualization: {str(e)}")
             return
 
@@ -410,8 +358,8 @@ class LayerCouplingPanel(BaseStatsPanel):
 
         return coupling_matrix
 
-    def create_coupling_visualizations(
-        self, coupling_matrix, layers, medium_font, large_font, layer_colors
+    def create_coupling_matrix_visualization(
+        self, coupling_matrix, layers, filtered_colors
     ):
         """Create visualizations for structural coupling index"""
         # Check if we have valid data
@@ -481,8 +429,8 @@ class LayerCouplingPanel(BaseStatsPanel):
                         sorted_scores.append(coupling_scores[i])
 
                         # Add appropriate color
-                        if layer_colors and layers[i] in layer_colors:
-                            bar_colors.append(layer_colors[layers[i]])
+                        if filtered_colors and layers[i] in filtered_colors:
+                            bar_colors.append(filtered_colors[layers[i]])
                         else:
                             bar_colors.append("skyblue")
 
@@ -532,7 +480,7 @@ class LayerCouplingPanel(BaseStatsPanel):
                 self.coupling_bar_ax.axis("off")
 
         except Exception as e:
-            print(f"Error creating coupling visualizations: {e}")
+            print(f"Error creating coupling matrix visualization: {e}")
             self.coupling_heatmap_ax.text(
                 0.5,
                 0.5,
@@ -553,8 +501,8 @@ class LayerCouplingPanel(BaseStatsPanel):
             )
             self.coupling_bar_ax.axis("off")
 
-    def create_hierarchical_visualizations(
-        self, coupling_matrix, layers, medium_font, large_font, layer_colors
+    def create_hierarchical_clustering_visualization(
+        self, coupling_matrix, layers, filtered_colors
     ):
         """Create visualizations for hierarchical layer organization"""
         try:
@@ -652,8 +600,8 @@ class LayerCouplingPanel(BaseStatsPanel):
                 # Prepare node colors
                 node_colors = []
                 for i in range(len(layers)):
-                    if i < len(layers) and layer_colors and layers[i] in layer_colors:
-                        node_colors.append(layer_colors[layers[i]])
+                    if i < len(layers) and filtered_colors and layers[i] in filtered_colors:
+                        node_colors.append(filtered_colors[layers[i]])
                     else:
                         node_colors.append("skyblue")
 
@@ -759,7 +707,7 @@ class LayerCouplingPanel(BaseStatsPanel):
                     raise
 
         except Exception as e:
-            print(f"Warning: Error creating hierarchical visualizations: {e}")
+            print(f"Warning: Error creating hierarchical clustering visualization: {e}")
             self.dendrogram_ax.text(
                 0.5,
                 0.5,
@@ -774,6 +722,71 @@ class LayerCouplingPanel(BaseStatsPanel):
                 0.5,
                 0.5,
                 "Circular layout failed",
+                ha="center",
+                va="center",
+                fontsize=12,
+            )
+            self.circular_ax.axis("off")
+
+    def create_network_visualization(
+        self, coupling_matrix, layers, filtered_colors
+    ):
+        """Create network visualization for layer connections"""
+        try:
+            # Create a graph from the coupling matrix
+            G = nx.Graph()
+            for i in range(len(layers)):
+                G.add_node(i, name=layers[i])
+
+            for i in range(len(layers)):
+                for j in range(i + 1, len(layers)):
+                    if coupling_matrix[i, j] > 0:
+                        G.add_edge(i, j, weight=coupling_matrix[i, j])
+
+            # Create a circular layout for the network
+            pos = nx.circular_layout(G)
+
+            # Draw the network
+            nx.draw_networkx_nodes(
+                G,
+                pos,
+                node_size=300,
+                node_color=[filtered_colors.get(layer, "skyblue") for layer in G.nodes()],
+                alpha=0.8,
+                ax=self.circular_ax,
+            )
+
+            nx.draw_networkx_edges(
+                G,
+                pos,
+                width=1,
+                edge_color=[
+                    plt.cm.plasma(coupling_matrix[i, j] / coupling_matrix.max())
+                    for i, j, d in G.edges(data=True)
+                ],
+                alpha=0.5,
+                ax=self.circular_ax,
+            )
+
+            # Draw labels
+            labels = {}
+            for i in range(len(layers)):
+                if i in pos:  # Only add labels for nodes in the layout
+                    labels[i] = layers[i]
+
+            nx.draw_networkx_labels(
+                G, pos, labels=labels, font_size=8, ax=self.circular_ax
+            )
+
+            self.circular_ax.set_title("Layer Network", **large_font)
+            self.circular_ax.axis("off")
+
+        except Exception as e:
+            print(f"Error creating network visualization: {e}")
+            self.circular_ax.text(
+                0.5,
+                0.5,
+                "Network visualization failed",
                 ha="center",
                 va="center",
                 fontsize=12,

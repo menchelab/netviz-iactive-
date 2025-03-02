@@ -101,109 +101,95 @@ class MainStatsPanel(BaseStatsPanel):
         small_font = {"fontsize": 6}
         medium_font = {"fontsize": 7}
 
-        # Get data from manager
-        node_positions = data_manager.node_positions
-        link_pairs = data_manager.link_pairs
-        node_ids = data_manager.node_ids
+        # Get filtered data from the data manager using optimized methods
+        # This is more efficient than accessing raw properties and filtering manually
+        filtered_data = data_manager.get_filtered_data_for_vispy()
+        
+        # Extract the data we need for visualization
+        node_positions = filtered_data['node_positions']
+        node_colors = filtered_data['node_colors']
+        edge_connections = filtered_data['edge_connections']
+        
+        # Get additional data needed for statistics
         layers = data_manager.layers
-        node_clusters = data_manager.node_clusters
-        node_mask = data_manager.current_node_mask
-        edge_mask = data_manager.current_edge_mask
         visible_layer_indices = data_manager.visible_layers
         layer_colors = data_manager.layer_colors
-
+        
         # Get layer connections from data manager (already filtered)
         layer_connections = data_manager.get_layer_connections(filter_to_visible=True)
+        
+        # Get NetworkX graph for analysis (already filtered)
+        G = data_manager.get_networkx_graph(visible_only=True)
+        
+        # Get interlayer edge counts for statistics
+        interlayer_edge_counts = data_manager.get_interlayer_edge_counts()
 
-        # Get visible nodes and edges
-        visible_nodes = [i for i, mask in enumerate(node_mask) if mask]
-        visible_edges = [i for i, mask in enumerate(edge_mask) if mask]
-        visible_links = [link_pairs[i] for i in visible_edges]
-
-        # Calculate nodes per layer
-        nodes_per_layer = len(node_positions) // len(layers)
-
-        # Get visible layers list for filtered views
-        visible_layers = [layers[i] for i in visible_layer_indices] if visible_layer_indices else []
-
-        # Create mapping from original layer indices to filtered indices
-        layer_index_map = {orig_idx: new_idx for new_idx, orig_idx in enumerate(visible_layer_indices)} if visible_layer_indices else {}
-
-        # --- LEFT COLUMN CHARTS ---
-
-        # 1. Layer connectivity matrix
-        im, layer_connections = create_layer_connectivity_chart(
+        # Create layer connectivity chart
+        create_layer_connectivity_chart(
             self.layer_connectivity_ax,
-            visible_links,
-            nodes_per_layer,
-            visible_layers,  # Use visible layers instead of all layers
-            small_font,
-            medium_font,
-            layer_index_map,  # Pass the mapping
+            edge_connections,  # visible_links
+            data_manager.nodes_per_layer,  # nodes_per_layer
+            [layers[i] for i in visible_layer_indices],  # layers
+            small_font,  # small_font
+            medium_font,  # medium_font
+            {i: idx for idx, i in enumerate(visible_layer_indices)}  # layer_index_map
         )
-        cbar = self.left_figure.colorbar(
-            im, ax=self.layer_connectivity_ax, fraction=0.046, pad=0.02
-        )
-        cbar.ax.tick_params(labelsize=6)  # Smaller colorbar ticks
 
-        # 2. Cluster distribution
-        visible_node_ids = [node_ids[i] for i in visible_nodes]
+        # Create cluster distribution chart
+        # Extract cluster information from the NetworkX graph
+        node_ids = [data["id"] for _, data in G.nodes(data=True)]
+        node_clusters_dict = {data["id"]: data["cluster"] for _, data in G.nodes(data=True)}
         create_cluster_distribution_chart(
             self.cluster_distribution_ax,
-            visible_node_ids,
-            node_clusters,
+            node_ids,
+            node_clusters_dict,
             small_font,
             medium_font,
-            data_manager.cluster_colors,
+            {cluster: data_manager.cluster_colors.get(cluster, "#CCCCCC") for cluster in data_manager.unique_clusters}
         )
 
-        # 3. Layer activity chart
-        create_layer_activity_chart(
-            self.layer_activity_ax,
-            visible_links,
-            nodes_per_layer,
-            visible_layers,  # Use visible layers instead of all layers
-            small_font,
-            medium_font,
-            layer_index_map,  # Pass the mapping
-        )
-
-        # --- RIGHT COLUMN CHARTS ---
-
-        # 1. Betweenness centrality analysis
+        # Create betweenness centrality chart
         create_betweenness_centrality_chart(
             self.betweenness_centrality_ax,
             layer_connections,
-            visible_layers,  # Already filtered list of layers
-            list(range(len(visible_layers))),  # Use sequential indices since data is already filtered
+            layers,
+            visible_layer_indices,
             small_font,
-            medium_font,
+            medium_font
         )
 
-        # 2. Interlayer graph visualization
+        # Create interlayer graph
         create_interlayer_graph(
             self.interlayer_graph_ax,
             layer_connections,
-            visible_layers,  # Already filtered list of layers
+            [layers[i] for i in visible_layer_indices],
             small_font,
             medium_font,
-            list(range(len(visible_layers))),  # Use sequential indices since data is already filtered
-            layer_colors,
+            layer_colors={layers[i]: layer_colors.get(layers[i], "#CCCCCC") for i in visible_layer_indices}
         )
 
-        # 3. Layer similarity dendrogram
+        # Create layer activity chart
+        create_layer_activity_chart(
+            self.layer_activity_ax,
+            edge_connections,  # visible_links
+            data_manager.nodes_per_layer,  # nodes_per_layer
+            [layers[i] for i in visible_layer_indices],  # layers
+            small_font,
+            medium_font,
+            {i: idx for idx, i in enumerate(visible_layer_indices)}  # layer_index_map
+        )
+
+        # Create layer similarity chart
         create_layer_similarity_chart(
             self.layer_similarity_ax,
             layer_connections,
-            visible_layers,  # Use visible layers instead of all layers
+            [layers[i] for i in visible_layer_indices],
             small_font,
-            medium_font,
+            medium_font
         )
 
-        # Apply tight layout to all figures
-        self.left_figure.tight_layout(pad=0.5, h_pad=0.5, w_pad=0.5)
-        self.right_figure.tight_layout(pad=0.5, h_pad=0.5, w_pad=0.5)
-
-        # Draw all canvases
+        # Adjust layout and draw
+        self.left_figure.tight_layout()
+        self.right_figure.tight_layout()
         self.left_canvas.draw()
         self.right_canvas.draw()

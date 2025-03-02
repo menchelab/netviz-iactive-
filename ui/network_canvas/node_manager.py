@@ -85,3 +85,60 @@ class NodeManager:
             rgba = hex_to_rgba(color_hex, alpha=1.0)
             self.canvas.layer_colors_rgba[layer_name] = rgba
             logger.debug(f"Layer {layer_name}: {color_hex} -> {rgba}")
+
+    def update_with_optimized_data(self, node_positions, node_colors, node_sizes, visible=True):
+        """
+        Update nodes with optimized data from NetworkDataManager.
+        
+        Parameters:
+        -----------
+        node_positions : numpy.ndarray
+            Array of node positions (x, y, z)
+        node_colors : numpy.ndarray
+            Array of node colors (RGBA)
+        node_sizes : numpy.ndarray
+            Array of node sizes
+        visible : bool
+            Whether to show the nodes
+        """
+        logger = logging.getLogger(__name__)
+        
+        try:
+            # Validate input data
+            if node_positions is None or len(node_positions) == 0:
+                logger.warning("No node positions provided")
+                self.canvas.scatter.visible = False
+                return
+                
+            if node_colors is None or len(node_colors) != len(node_positions):
+                logger.warning(f"Invalid node colors: expected {len(node_positions)}, got {len(node_colors) if node_colors is not None else 0}")
+                # Use default colors if none provided
+                node_colors = np.ones((len(node_positions), 4))
+                
+            if node_sizes is None or len(node_sizes) != len(node_positions):
+                logger.warning(f"Invalid node sizes: expected {len(node_positions)}, got {len(node_sizes) if node_sizes is not None else 0}")
+                # Use default size if none provided
+                node_sizes = np.ones(len(node_positions)) * 3
+            
+            # Update the node visual with the optimized data
+            self.canvas.scatter.set_data(
+                pos=node_positions,
+                size=node_sizes,
+                face_color=node_colors,
+                edge_width=0,
+                edge_color=None
+            )
+            
+            # Set visibility
+            self.canvas.scatter.visible = visible
+            
+            # Store the data for later use
+            self.canvas.node_positions = node_positions
+            self.canvas.node_colors_rgba = node_colors
+            self.canvas.node_sizes = node_sizes
+            
+            logger.debug(f"Updated nodes with optimized data: {len(node_positions)} nodes")
+        except Exception as e:
+            logger.error(f"Error updating nodes with optimized data: {e}")
+            import traceback
+            traceback.print_exc()
