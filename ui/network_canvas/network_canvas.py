@@ -9,12 +9,12 @@ from .node_manager import NodeManager
 from .edge_manager import EdgeManager
 from .label_manager import LabelManager
 from .visibility_manager import VisibilityManager
-from utils.animation import CameraAnimator
+from utils.anim.animation_manager import AnimationManager
 
+logger = logging.getLogger(__name__)
 
 class NetworkCanvas:
     def __init__(self, parent=None, data_manager=None):
-        logger = logging.getLogger(__name__)
         logger.info("Creating canvas...")
 
         # Store reference to data manager
@@ -48,8 +48,8 @@ class NetworkCanvas:
             "scale_factor": self.view.camera.scale_factor,
         }
 
-        # Initialize camera animator
-        self.camera_animator = CameraAnimator(self.view)
+        # Initialize animation manager
+        self.animation_manager = AnimationManager(self.view)
 
         # Create visuals
         self.scatter = Markers()
@@ -107,21 +107,21 @@ class NetworkCanvas:
             self._reset_camera_and_rotation()
         # Camera animation keys
         elif event.key == " ":  # Spacebar - Cosmic Zoom
-            self.camera_animator.cosmic_zoom()
+            self.animation_manager.play_animation(AnimationManager.COSMIC_ZOOM)
         elif event.key == "u":  # Orbit Flyby
-            self.camera_animator.orbit_flyby()
+            self.animation_manager.play_animation(AnimationManager.ORBIT_FLYBY)
         elif event.key == "i":  # Spiral Dive
-            self.camera_animator.spiral_dive()
+            self.animation_manager.play_animation(AnimationManager.SPIRAL_DIVE)
         elif event.key == "o":  # Bounce Zoom
-            self.camera_animator.bounce_zoom()
+            self.animation_manager.play_animation(AnimationManager.BOUNCE_ZOOM)
         elif event.key == "j":  # Swing Around
-            self.camera_animator.swing_around()
+            self.animation_manager.play_animation(AnimationManager.SWING_AROUND)
         elif event.key == "k":  # Pulse Zoom
-            self.camera_animator.pulse_zoom()
+            self.animation_manager.play_animation(AnimationManager.PULSE_ZOOM)
         elif event.key == "l":  # Matrix Effect
-            self.camera_animator.matrix_effect()
+            self.animation_manager.play_animation(AnimationManager.MATRIX_EFFECT)
         elif event.key == "m":  # Slow Matrix Effect
-            self.camera_animator.matrix_effect_slow()
+            self.animation_manager.play_animation(AnimationManager.MATRIX_EFFECT_SLOW)
         # Arrow keys and WASD for rotation
         elif event.key in ("Left", "a"):
             self._rotate_z(-move_amount)  # Rotate left around z-axis
