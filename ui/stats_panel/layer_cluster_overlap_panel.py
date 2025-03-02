@@ -87,7 +87,7 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         controls_layout = QHBoxLayout()
         controls_layout.setContentsMargins(5, 5, 5, 0)
         self.enable_checkbox = QCheckBox("Enable Charts")
-        self.enable_checkbox.setChecked(True)
+        self.enable_checkbox.setChecked(False)
         self.enable_checkbox.stateChanged.connect(self.on_state_changed)
         controls_layout.addWidget(self.enable_checkbox)
 
@@ -106,8 +106,8 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         controls_layout.addSpacing(10)
         controls_layout.addWidget(QLabel("Aspect:"))
         self.aspect_ratio_combo = QComboBox()
-        self.aspect_ratio_combo.addItems(["0.75", "1.0", "1.25", "1.5", "2.0"])
-        self.aspect_ratio_combo.setCurrentText("1.0")
+        self.aspect_ratio_combo.addItems(["0.25", "0.5", "0.75", "1.0", "1.25", "1.5", "2.0"])
+        self.aspect_ratio_combo.setCurrentText("0.75")
         self.aspect_ratio_combo.currentTextChanged.connect(self.on_layout_changed)
         controls_layout.addWidget(self.aspect_ratio_combo)
 
@@ -295,7 +295,7 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         lc14_count_type_label = QLabel("Count Type:")
         self.lc14_count_type_combo = QComboBox()
         self.lc14_count_type_combo.addItem("Nodes")
-        self.lc14_count_type_combo.addItem("Intralayer Edges")
+        self.lc14_count_type_combo.addItem("Interlayer Edges")
         self.lc14_count_type_combo.currentIndexChanged.connect(
             self.on_lc14_count_type_changed
         )
@@ -2953,12 +2953,17 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
 
     def update_lc14_treemap(self, data_manager):
         """Update the LC14 treemap visualization"""
+        import logging
+        logger = logging.getLogger(__name__)
+        
         # Get the current count type
         count_type = (
             "nodes"
             if self.lc14_count_type_combo.currentText() == "Nodes"
-            else "intralayer_edges"
+            else "interlayer_edges"
         )
+        
+        logger.info(f"Updating LC14 treemap with count_type: {count_type}")
 
         # Clear the figure
         self.treemap_ax.clear()
@@ -2968,20 +2973,57 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         node_clusters = data_manager.node_clusters
         nodes_per_layer = data_manager.nodes_per_layer
         layers = data_manager.layers
+        
+        logger.info(f"Data manager info: nodes_per_layer={nodes_per_layer}, layers={layers}")
+        logger.info(f"Number of node_ids: {len(node_ids)}")
+        logger.info(f"Number of node_clusters: {len(node_clusters)}")
 
         # Get visible links (edge connections)
         visible_links = []
         if hasattr(data_manager, "visible_links"):
             visible_links = data_manager.visible_links
+            logger.info("Using data_manager.visible_links")
         elif hasattr(data_manager, "edge_connections"):
             visible_links = data_manager.edge_connections
+            logger.info("Using data_manager.edge_connections")
+        
+        # If visible_links is still empty, try to get link_pairs directly
+        if not visible_links and hasattr(data_manager, "link_pairs"):
+            visible_links = data_manager.link_pairs
+            logger.info("Using data_manager.link_pairs as visible_links is empty")
+            
+            # If we have a current_edge_mask, apply it to filter the links
+            if hasattr(data_manager, "current_edge_mask") and data_manager.current_edge_mask is not None:
+                # Filter links using the edge mask
+                visible_links = [link for i, link in enumerate(visible_links) if data_manager.current_edge_mask[i]]
+                logger.info(f"Filtered visible_links using current_edge_mask, now have {len(visible_links)} links")
+        
+        logger.info(f"Number of visible_links: {len(visible_links)}")
+        if visible_links and len(visible_links) > 0:
+            sample_size = min(5, len(visible_links))
+            logger.info(f"Sample of visible_links: {visible_links[:sample_size]}")
+            
+        # No need to convert visible_links anymore - the treemap function now handles both formats
+        # (node indices and node IDs)
 
         # Get visible layer indices
         visible_layer_indices = []
         if hasattr(data_manager, "get_visible_layer_indices"):
             visible_layer_indices = data_manager.get_visible_layer_indices()
+            logger.info("Using data_manager.get_visible_layer_indices()")
         elif hasattr(data_manager, "visible_layer_indices"):
             visible_layer_indices = data_manager.visible_layer_indices
+            logger.info("Using data_manager.visible_layer_indices")
+        elif hasattr(data_manager, "visible_layers"):
+            visible_layer_indices = data_manager.visible_layers
+            logger.info("Using data_manager.visible_layers")
+        
+        logger.info(f"Visible layer indices: {visible_layer_indices}")
+        
+        # Check if we have cluster colors
+        if hasattr(data_manager, "cluster_colors"):
+            logger.info(f"Number of cluster colors: {len(data_manager.cluster_colors)}")
+            logger.info(f"Sample of cluster colors: {list(data_manager.cluster_colors.items())[:3]}")
 
         # Get font sizes
         small_font = {"fontsize": 8}
@@ -2989,6 +3031,8 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
 
         # Create the treemap
         from charts.layer_cluster.lc14_treemap import create_layer_cluster_treemap
+        
+        logger.info("Calling create_layer_cluster_treemap")
 
         create_layer_cluster_treemap(
             self.treemap_ax,
@@ -3007,6 +3051,8 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         # Draw the canvas
         self.treemap_figure.tight_layout()
         self.treemap_canvas.draw()
+        
+        logger.info("Finished updating LC14 treemap")
 
     def on_flow_ideas_state_changed(self, state):
         """Handle enable/disable state change for flow ideas visualization"""

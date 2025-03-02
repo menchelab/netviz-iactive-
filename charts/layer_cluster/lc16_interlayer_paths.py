@@ -36,7 +36,15 @@ def create_lc16_ui_elements(parent=None):
     
     # Create a dropdown for visualization style
     viz_style_combo = QComboBox()
-    viz_style_combo.addItems(["Standard", "Simplified", "Detailed", "Layer-Focused", "Expanded Layers"])
+    viz_style_combo.addItems([
+        "Expanded Layers", 
+        "Layer-Focused", 
+        "Circle", 
+        "Force-Directed", 
+        "Hierarchical", 
+        "Radial", 
+        "Standard"
+    ])
     viz_style_combo.setToolTip("Select a visualization style for the network")
     
     # Create checkboxes for various options - reduced set
@@ -632,7 +640,15 @@ def _create_links_table(ax, G, normalized_betweenness, node_betweenness, pos):
     
     # Style the table
     table.auto_set_font_size(False)
-    table.set_fontsize(8)
+    table.set_fontsize(7)  # Smaller font size
+    
+    # Set column widths - make first column wider
+    col_widths = [0.15, 0.15, 0.25, 0.2, 0.25]
+    for (row, col), cell in table.get_celld().items():
+        if col < len(col_widths):
+            cell.set_width(col_widths[col])
+    
+    # Style the cells
     for key, cell in table.get_celld().items():
         cell.set_linewidth(0.5)
         if key[0] == 0:  # Header row
@@ -701,49 +717,50 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
     elif viz_style == "Expanded Layers":
         # Create a layout that maximizes distance between layers
         pos = _create_expanded_layers_layout(G, layer_nodes)
-    elif viz_style == "Classic Circle":
+    elif viz_style == "Circle":
         # Use a circular layout
         pos = nx.circular_layout(G, scale=0.9)
-    elif viz_style == "Simplified":
-        # Use a simpler spring layout with fewer iterations
-        pos = nx.spring_layout(G, k=0.3, iterations=30, seed=42)
-    elif viz_style == "Detailed":
-        # Use a more detailed layout with community detection
-        try:
-            # Try to use community detection for better grouping
-            from community import best_partition
-            partition = best_partition(G)
-            # Add community information to nodes
-            for node, community in partition.items():
-                G.nodes[node]['community'] = community
+    elif viz_style == "Force-Directed":
+        # Use a spring layout with more iterations for better results
+        pos = nx.spring_layout(G, k=0.3, iterations=100, seed=42)
+    elif viz_style == "Hierarchical":
+        # Create a hierarchical layout based on layers
+        pos = {}
+        unique_layers = sorted(layer_nodes.keys())
+        num_layers = len(unique_layers)
+        
+        # Place nodes in a hierarchical structure
+        for i, layer_idx in enumerate(unique_layers):
+            nodes = layer_nodes[layer_idx]
+            num_nodes = len(nodes)
             
-            # Position nodes using the community structure
-            pos = nx.spring_layout(G, k=0.3, iterations=100, seed=42)
+            # Calculate y position based on layer
+            y = 1.0 - (i / max(1, num_layers - 1)) * 2.0
             
-            # Adjust positions to group by community
-            community_centers = defaultdict(lambda: [0, 0])
-            community_counts = Counter()
+            # Place nodes horizontally
+            for j, node in enumerate(nodes):
+                x = (j / max(1, num_nodes - 1)) * 2.0 - 1.0
+                pos[node] = np.array([x, y])
+    elif viz_style == "Radial":
+        # Create a radial layout with layers as rings
+        pos = {}
+        unique_layers = sorted(layer_nodes.keys())
+        num_layers = len(unique_layers)
+        
+        # Place nodes in concentric circles
+        for i, layer_idx in enumerate(unique_layers):
+            nodes = layer_nodes[layer_idx]
+            num_nodes = len(nodes)
             
-            for node, position in pos.items():
-                community = G.nodes[node].get('community', 0)
-                community_centers[community][0] += position[0]
-                community_centers[community][1] += position[1]
-                community_counts[community] += 1
+            # Calculate radius based on layer (inner to outer)
+            radius = 0.2 + (i / max(1, num_layers)) * 0.8
             
-            # Calculate average position for each community
-            for community in community_centers:
-                if community_counts[community] > 0:
-                    community_centers[community][0] /= community_counts[community]
-                    community_centers[community][1] /= community_counts[community]
-            
-            # Adjust node positions to be closer to their community center
-            for node in pos:
-                community = G.nodes[node].get('community', 0)
-                pos[node][0] = 0.8 * pos[node][0] + 0.2 * community_centers[community][0]
-                pos[node][1] = 0.8 * pos[node][1] + 0.2 * community_centers[community][1]
-        except ImportError:
-            # Fall back to standard layout if community detection is not available
-            pos = nx.kamada_kawai_layout(G)
+            # Place nodes in a circle
+            for j, node in enumerate(nodes):
+                angle = 2 * np.pi * j / max(1, num_nodes)
+                x = radius * np.cos(angle)
+                y = radius * np.sin(angle)
+                pos[node] = np.array([x, y])
     else:  # Standard
         # Use the Kamada-Kawai layout which tends to show structure well
         try:
@@ -816,16 +833,19 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
         if color_by_centrality:
             # Color by betweenness centrality (red = high, blue = low)
             color = plt.cm.RdYlBu_r(betweenness)
+            linestyle = '-'  # Solid line for all edges when coloring by centrality
         else:
             # Color by edge type (blue for interlayer, red for intralayer)
             if edge_type == "interlayer":
                 color = plt.cm.Blues(0.5 + 0.5 * betweenness)  # Blue for interlayer
+                linestyle = '--'  # Dashed line for interlayer edges
             else:
                 color = plt.cm.Reds(0.5 + 0.5 * betweenness)   # Red for intralayer
+                linestyle = '-'   # Solid line for intralayer edges
         
         # Draw the edge
         network_ax.plot([pos[u][0], pos[v][0]], [pos[u][1], pos[v][1]], 
-               linewidth=width, color=color, alpha=0.8,
+               linewidth=width, color=color, alpha=0.8, linestyle=linestyle,
                zorder=1)  # Higher zorder to draw on top of background edges
         
         # Add edge label only for the most significant bottlenecks
@@ -855,14 +875,14 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
     
     if show_nodes:
         # Determine node size scaling based on network size and visualization style
-        if viz_style == "Simplified":
+        if viz_style == "Force-Directed":
             base_size = max(30, 300 / np.sqrt(len(G)))
-        elif viz_style == "Detailed":
+        elif viz_style == "Hierarchical" or viz_style == "Radial":
             base_size = max(70, 600 / np.sqrt(len(G)))
         elif viz_style == "Expanded Layers":
             # Larger nodes for expanded layers layout
             base_size = max(80, 700 / np.sqrt(len(G)))
-        else:  # Standard, Layer-Focused, or Classic Circle
+        else:  # Standard, Layer-Focused, or Circle
             base_size = max(50, 500 / np.sqrt(len(G)))
         
         # First draw all nodes with minimal styling to show the structure
@@ -940,13 +960,11 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
         cbar.set_label('Edge Betweenness Centrality')
     else:
         # Add a legend for edge types
-        inter_line = plt.Line2D([0], [0], color=plt.cm.Blues(0.8), linewidth=3, label='Interlayer Edge (E)')
-        intra_line = plt.Line2D([0], [0], color=plt.cm.Reds(0.8), linewidth=3, label='Intralayer Edge (A)')
+        inter_line = plt.Line2D([0], [0], color=plt.cm.Blues(0.8), linestyle='--', linewidth=3, label='Interlayer')
+        intra_line = plt.Line2D([0], [0], color=plt.cm.Reds(0.8), linestyle='-', linewidth=3, label='Intralayer')
         network_ax.legend(handles=[inter_line, intra_line], loc='upper right', framealpha=0.9)
     
-    # Add a title with the visualization style
-    title = f'Critical Connections in Duplicated Network ({viz_style})'
-    network_ax.set_title(title, fontsize=12)
+    # Remove titles - no title for the visualization
     
     # Remove axis ticks and spines for a cleaner look
     network_ax.set_xticks([])
