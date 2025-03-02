@@ -356,18 +356,42 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
     def on_layout_changed(self, _):
         """Handle layout algorithm or aspect ratio change"""
         if hasattr(self, "_current_data") and self.enable_checkbox.isChecked():
-            # Only update the relevant tabs to avoid redrawing everything
-            if self.tab_widget.currentIndex() == 3:  # LC4 tab
-                self.update_lc4_network_diagram(self._current_data)
-            elif self.tab_widget.currentIndex() == 15:  # LC16 tab
-                self.update_lc16_path_analysis(self._current_data)
-            elif self.tab_widget.currentIndex() == 16:  # LC17 tab
-                self.update_lc17_bridge_analysis(self._current_data)
-            elif self.tab_widget.currentIndex() == 11:  # LC12 tab
-                self.update_lc12_similarity_matrix(self._current_data)
-            elif self.tab_widget.currentIndex() == 18:  # LC20 tab
-                self.update_lc20_interlayer_path_similarity(self._current_data)
-            
+            try:
+                # Determine which control was changed and update the corresponding visualization
+                sender = self.sender()
+                
+                # Update based on which control was changed
+                if sender == self.layout_algorithm_combo or sender == self.aspect_ratio_combo:
+                    self.update_lc4_network_diagram(self._current_data)
+                elif sender == self.path_analysis_combo:
+                    self.update_lc16_path_analysis(self._current_data)
+                elif sender == self.bridge_analysis_combo:
+                    self.update_lc17_bridge_analysis(self._current_data)
+                elif sender == self.similarity_metric_combo or sender == self.edge_type_combo:
+                    self.update_lc12_similarity_matrix(self._current_data)
+                elif sender == self.path_similarity_cluster_combo:
+                    self.update_lc20_interlayer_path_similarity(self._current_data)
+                else:
+                    # If we can't determine the sender, update based on current tab
+                    current_tab = self.tab_widget.currentIndex()
+                    
+                    # Map tab indices to update methods
+                    tab_to_update = {
+                        3: self.update_lc4_network_diagram,  # LC4: Network & Similarity
+                        11: self.update_lc12_similarity_matrix,  # LC12: Enhanced Similarity Analysis
+                        14: self.update_lc16_path_analysis,  # LC16: Interlayer Path Analysis
+                        15: self.update_lc17_bridge_analysis,  # LC17: Cluster Bridging Analysis
+                        17: self.update_lc20_interlayer_path_similarity  # LC20: Interlayer Path Similarity
+                    }
+                    
+                    # Call the appropriate update method if the current tab is in our map
+                    if current_tab in tab_to_update:
+                        tab_to_update[current_tab](self._current_data)
+            except Exception as e:
+                logging.error(f"Error in on_layout_changed: {str(e)}")
+                import traceback
+                logging.error(traceback.format_exc())
+
     def update_lc4_network_diagram(self, data_manager):
         """Update only the LC4 network diagram with the current layout settings"""
         if not hasattr(self, "network_figure") or not self.enable_checkbox.isChecked():
@@ -2340,7 +2364,30 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         
         # Get the selected cluster
         cluster_selection = self.path_similarity_cluster_combo.currentText()
-        selected_cluster = None if cluster_selection == "All Clusters" else int(cluster_selection.split(" ")[1])
+        try:
+            # Handle different possible formats of cluster selection text
+            if cluster_selection == "All Clusters":
+                selected_cluster = None
+            else:
+                # Try to extract the cluster number, handling different formats
+                parts = cluster_selection.split()
+                if len(parts) > 1 and parts[0].lower() == "cluster":
+                    selected_cluster = int(parts[1])
+                elif len(parts) > 1:
+                    # Try to find a number in the parts
+                    for part in parts:
+                        if part.isdigit():
+                            selected_cluster = int(part)
+                            break
+                    else:
+                        selected_cluster = None
+                else:
+                    # If it's just a number
+                    selected_cluster = int(cluster_selection) if cluster_selection.isdigit() else None
+        except (ValueError, IndexError):
+            # If parsing fails, default to All Clusters
+            logging.warning(f"Could not parse cluster selection: {cluster_selection}, defaulting to All Clusters")
+            selected_cluster = None
         
         # Define font sizes
         small_font = {"fontsize": 9}
