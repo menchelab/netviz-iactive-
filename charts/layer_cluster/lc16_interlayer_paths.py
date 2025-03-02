@@ -29,6 +29,9 @@ def create_interlayer_path_analysis(
     using the naming convention <layer>_<node>. This creates a network where the duplicated nodes
     connect interlayer and intralayer edges.
     
+    For interlayer edges, all possible connections are created between duplicated nodes.
+    For intralayer edges, only existing edges from the original network are added.
+    
     The analysis focuses on:
     1. Path lengths: The shortest paths between layers
     2. Betweenness: Which nodes serve as bridges between layers
@@ -128,6 +131,14 @@ def create_interlayer_path_analysis(
         
         logging.info(f"Created {len(G.nodes)} duplicated nodes from {len(node_layers)} original nodes")
         
+        # Store original network edges for reference
+        original_edges = set()
+        for source_idx, target_idx in visible_links:
+            source_id = node_idx_to_id[source_idx]
+            target_id = node_idx_to_id[target_idx]
+            original_edges.add((source_id, target_id))
+            original_edges.add((target_id, source_id))  # Add both directions since it's an undirected graph
+        
         # Classify and add edges
         interlayer_edges = []
         intralayer_edges = []
@@ -148,11 +159,12 @@ def create_interlayer_path_analysis(
             
             # Check if this is an intralayer or interlayer edge
             if source_layer == target_layer:
-                # Intralayer edge
+                # Intralayer edge - only add if it exists in the original network
+                # (which it does since we're iterating through visible_links)
                 G.add_edge(source_node, target_node, edge_type="intralayer")
                 intralayer_edges.append((source_node, target_node))
             else:
-                # Interlayer edge
+                # Interlayer edge - add between the duplicated nodes
                 G.add_edge(source_node, target_node, edge_type="interlayer")
                 interlayer_edges.append((source_node, target_node))
         

@@ -929,7 +929,8 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
             analysis_type
         )
         
-        # Draw the canvas
+        # Redraw the figure to show the changes
+        self.path_analysis_figure.tight_layout()
         self.path_analysis_canvas.draw()
 
     def update_lc17_bridge_analysis(self, data_manager):
