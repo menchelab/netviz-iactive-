@@ -8,6 +8,69 @@ from matplotlib.cm import ScalarMappable
 from matplotlib.colors import Normalize
 import matplotlib.patches as patches
 import matplotlib.colors as mcolors
+from PyQt5.QtWidgets import (QComboBox, QCheckBox, QLabel, QHBoxLayout, 
+                            QVBoxLayout, QGroupBox, QWidget, QGridLayout)
+from PyQt5.QtCore import Qt
+
+def create_lc16_ui_elements(parent=None):
+    """
+    Create UI elements for the LC16 interlayer path analysis visualization.
+    
+    Parameters:
+    -----------
+    parent : QWidget, optional
+        The parent widget for the UI elements
+        
+    Returns:
+    --------
+    dict
+        A dictionary containing the UI elements and layouts
+    """
+    # Create a group box to contain all the UI elements
+    group_box = QGroupBox("LC16 Visualization Options")
+    
+    # Create a grid layout for the UI elements
+    grid_layout = QGridLayout()
+    
+    # Create a dropdown for visualization style
+    viz_style_label = QLabel("LC16 Visualization:")
+    viz_style_combo = QComboBox()
+    viz_style_combo.addItems(["Standard", "Simplified", "Detailed", "Classic Circle"])
+    viz_style_combo.setToolTip("Select a visualization style for the bottleneck analysis")
+    
+    # Create checkboxes for various options
+    show_labels_checkbox = QCheckBox("Labels")
+    show_labels_checkbox.setChecked(True)
+    show_labels_checkbox.setToolTip("Show node and edge labels")
+    
+    show_nodes_checkbox = QCheckBox("Nodes")
+    show_nodes_checkbox.setChecked(True)
+    show_nodes_checkbox.setToolTip("Show nodes in the visualization")
+    
+    color_by_centrality_checkbox = QCheckBox("Color by Centrality")
+    color_by_centrality_checkbox.setChecked(False)
+    color_by_centrality_checkbox.setToolTip("Color edges by betweenness centrality instead of edge type")
+    
+    # Add the UI elements to the grid layout
+    grid_layout.addWidget(viz_style_label, 0, 0)
+    grid_layout.addWidget(viz_style_combo, 0, 1)
+    grid_layout.addWidget(show_labels_checkbox, 1, 0)
+    grid_layout.addWidget(show_nodes_checkbox, 1, 1)
+    grid_layout.addWidget(color_by_centrality_checkbox, 2, 0, 1, 2)
+    
+    # Set the layout for the group box
+    group_box.setLayout(grid_layout)
+    
+    # Create a dictionary to store the UI elements
+    ui_elements = {
+        "group": group_box,
+        "viz_style_combo": viz_style_combo,
+        "show_labels_checkbox": show_labels_checkbox,
+        "show_nodes_checkbox": show_nodes_checkbox,
+        "color_by_centrality_checkbox": color_by_centrality_checkbox
+    }
+    
+    return ui_elements
 
 def create_interlayer_path_analysis(
     ax,
@@ -21,7 +84,11 @@ def create_interlayer_path_analysis(
     analysis_type="path_length",  # Options: "path_length", "betweenness", "bottleneck"
     medium_fontsize=12,
     small_fontsize=9,
-    selected_cluster=None  # New parameter to filter by cluster
+    selected_cluster=None,  # New parameter to filter by cluster
+    viz_style="Standard",  # Visualization style: "Standard", "Simplified", "Detailed", "Classic Circle"
+    show_labels=True,      # Whether to show node and edge labels
+    show_nodes=True,       # Whether to show nodes
+    color_by_centrality=False  # Whether to color edges by centrality instead of type
 ):
     """
     Analyze and visualize interlayer paths between layers, regardless of cluster.
@@ -65,6 +132,14 @@ def create_interlayer_path_analysis(
         Font size for small text
     selected_cluster : int, optional
         If specified, only include nodes from this cluster in the analysis
+    viz_style : str, optional
+        Visualization style to use: "Standard", "Simplified", "Detailed", or "Classic Circle"
+    show_labels : bool, optional
+        Whether to show node and edge labels
+    show_nodes : bool, optional
+        Whether to show nodes
+    color_by_centrality : bool, optional
+        Whether to color edges by centrality instead of type
     """
     try:
         # Ensure visible_layer_indices is defined
@@ -229,7 +304,9 @@ def create_interlayer_path_analysis(
         elif analysis_type == "betweenness":
             _analyze_betweenness(ax, G, visible_layer_indices, layers, node_clusters, cluster_colors)
         elif analysis_type == "bottleneck":
-            _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cluster_colors)
+            _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cluster_colors,
+                                viz_style=viz_style, show_labels=show_labels, show_nodes=show_nodes,
+                                color_by_centrality=color_by_centrality)
         else:
             ax.text(0.5, 0.5, f"Unknown analysis type: {analysis_type}", 
                    ha='center', va='center')
@@ -435,10 +512,11 @@ def _analyze_betweenness(ax, G, visible_layer_indices, layers, node_clusters, cl
     
     logger.info(f"Created betweenness visualization with {len(unique_layers)} layers")
 
-def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cluster_colors):
+def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cluster_colors,
+                         viz_style="Standard", show_labels=True, show_nodes=True, color_by_centrality=False):
     """Analyze and visualize bottleneck connections in the duplicated node network"""
     logger = logging.getLogger(__name__)
-    logger.info("Analyzing bottleneck connections in the duplicated node network")
+    logger.info(f"Analyzing bottleneck connections in the duplicated node network with style: {viz_style}")
     
     # Calculate edge betweenness centrality to identify bottlenecks
     edge_betweenness = nx.edge_betweenness_centrality(G, weight='weight')
@@ -456,15 +534,57 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
         layer_nodes[layer].append(node)
         cluster_nodes[cluster].append(node)
     
-    # Create a layout that better shows the network structure
-    # Use a combination of layout algorithms for better results
-    
-    # First, try a kamada_kawai layout which tends to show structure well
-    try:
-        pos = nx.kamada_kawai_layout(G)
-    except:
-        # Fall back to spring layout if kamada_kawai fails
-        pos = nx.spring_layout(G, k=0.3, iterations=50, seed=42)
+    # Create a layout based on the selected visualization style
+    if viz_style == "Classic Circle":
+        # Use a circular layout
+        pos = nx.circular_layout(G, scale=0.9)
+    elif viz_style == "Simplified":
+        # Use a simpler spring layout with fewer iterations
+        pos = nx.spring_layout(G, k=0.3, iterations=30, seed=42)
+    elif viz_style == "Detailed":
+        # Use a more detailed layout with community detection
+        try:
+            # Try to use community detection for better grouping
+            from community import best_partition
+            partition = best_partition(G)
+            # Add community information to nodes
+            for node, community in partition.items():
+                G.nodes[node]['community'] = community
+            
+            # Position nodes using the community structure
+            pos = nx.spring_layout(G, k=0.3, iterations=100, seed=42)
+            
+            # Adjust positions to group by community
+            community_centers = defaultdict(lambda: [0, 0])
+            community_counts = Counter()
+            
+            for node, position in pos.items():
+                community = G.nodes[node].get('community', 0)
+                community_centers[community][0] += position[0]
+                community_centers[community][1] += position[1]
+                community_counts[community] += 1
+            
+            # Calculate average position for each community
+            for community in community_centers:
+                if community_counts[community] > 0:
+                    community_centers[community][0] /= community_counts[community]
+                    community_centers[community][1] /= community_counts[community]
+            
+            # Adjust node positions to be closer to their community center
+            for node in pos:
+                community = G.nodes[node].get('community', 0)
+                pos[node][0] = 0.8 * pos[node][0] + 0.2 * community_centers[community][0]
+                pos[node][1] = 0.8 * pos[node][1] + 0.2 * community_centers[community][1]
+        except ImportError:
+            # Fall back to standard layout if community detection is not available
+            pos = nx.kamada_kawai_layout(G)
+    else:  # Standard
+        # Use the Kamada-Kawai layout which tends to show structure well
+        try:
+            pos = nx.kamada_kawai_layout(G)
+        except:
+            # Fall back to spring layout if kamada_kawai fails
+            pos = nx.spring_layout(G, k=0.3, iterations=50, seed=42)
     
     # Scale the layout to fill the available space
     pos_array = np.array(list(pos.values()))
@@ -496,7 +616,7 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
     
     # 2. Draw the significant edges with width and color based on betweenness
     for edge, betweenness in normalized_betweenness.items():
-        if betweenness < 0.1:  # Skip low betweenness edges for clarity
+        if betweenness < 0.1 and viz_style != "Detailed":  # Skip low betweenness edges for clarity, except in detailed mode
             continue
             
         u, v = edge
@@ -505,11 +625,16 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
         # Calculate edge width based on betweenness
         width = 0.5 + 4 * betweenness
         
-        # Calculate edge color based on type and betweenness
-        if edge_type == "interlayer":
-            color = plt.cm.Blues(0.5 + 0.5 * betweenness)  # Blue for interlayer
+        # Calculate edge color based on configuration
+        if color_by_centrality:
+            # Color by betweenness centrality (red = high, blue = low)
+            color = plt.cm.RdYlBu_r(betweenness)
         else:
-            color = plt.cm.Reds(0.5 + 0.5 * betweenness)   # Red for intralayer
+            # Color by edge type (blue for interlayer, red for intralayer)
+            if edge_type == "interlayer":
+                color = plt.cm.Blues(0.5 + 0.5 * betweenness)  # Blue for interlayer
+            else:
+                color = plt.cm.Reds(0.5 + 0.5 * betweenness)   # Red for intralayer
         
         # Draw the edge
         ax.plot([pos[u][0], pos[v][0]], [pos[u][1], pos[v][1]], 
@@ -517,7 +642,7 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
                zorder=1)  # Higher zorder to draw on top of background edges
         
         # Add edge label only for the most significant bottlenecks
-        if betweenness > 0.7:
+        if show_labels and betweenness > 0.7:
             # Position the label at the middle of the edge
             x = (pos[u][0] + pos[v][0]) / 2
             y = (pos[u][1] + pos[v][1]) / 2
@@ -541,88 +666,96 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
                    bbox=dict(facecolor='white', alpha=0.9, edgecolor='gray', pad=1, boxstyle='round'),
                    zorder=3)
     
-    # 3. Draw nodes with size based on betweenness and color based on cluster
-    node_betweenness = nx.betweenness_centrality(G, weight='weight')
-    max_betweenness = max(node_betweenness.values()) if node_betweenness else 1.0
-    
-    # Determine node size scaling based on network size
-    base_size = max(50, 500 / np.sqrt(len(G)))
-    
-    # First draw all nodes with minimal styling to show the structure
-    for node in G.nodes:
-        cluster = G.nodes[node]['cluster']
+    if show_nodes:
+        # 3. Draw nodes with size based on betweenness and color based on cluster
+        node_betweenness = nx.betweenness_centrality(G, weight='weight')
+        max_betweenness = max(node_betweenness.values()) if node_betweenness else 1.0
         
-        # Get node color based on cluster
-        if cluster_colors and cluster in cluster_colors:
-            color = cluster_colors[cluster]
-        else:
-            color = plt.cm.tab10(cluster % 10)
+        # Determine node size scaling based on network size and visualization style
+        if viz_style == "Simplified":
+            base_size = max(30, 300 / np.sqrt(len(G)))
+        elif viz_style == "Detailed":
+            base_size = max(70, 600 / np.sqrt(len(G)))
+        else:  # Standard or Classic Circle
+            base_size = max(50, 500 / np.sqrt(len(G)))
+        
+        # First draw all nodes with minimal styling to show the structure
+        for node in G.nodes:
+            cluster = G.nodes[node]['cluster']
             
-        # Draw all nodes with a small size for context
-        ax.scatter(pos[node][0], pos[node][1], 
-                  s=base_size * 0.5, color=color, alpha=0.3, edgecolor='none',
-                  zorder=1.5)  # Draw between edges and significant nodes
-    
-    # Then draw significant nodes with more emphasis
-    for node in G.nodes:
-        betweenness = node_betweenness.get(node, 0)
-        if betweenness < 0.1:  # Skip low betweenness nodes for clarity
-            continue
-            
-        # Get node attributes
-        layer = G.nodes[node]['layer']
-        cluster = G.nodes[node]['cluster']
-        original_id = G.nodes[node].get('original_id', node)
-        
-        # Calculate node size based on betweenness
-        size = base_size + 300 * (betweenness / max_betweenness)
-        
-        # Get node color based on cluster
-        if cluster_colors and cluster in cluster_colors:
-            color = cluster_colors[cluster]
-        else:
-            color = plt.cm.tab10(cluster % 10)
-        
-        # Draw the significant node
-        ax.scatter(pos[node][0], pos[node][1], 
-                  s=size, color=color, edgecolor='black', linewidth=0.8,
-                  zorder=2)  # Higher zorder to draw on top of edges
-        
-        # Add node label for significant nodes
-        if betweenness > 0.3:
-            # Extract layer and original node ID from the node name
-            node_parts = node.split('_', 1)
-            if len(node_parts) == 2:
-                layer_str, orig_id = node_parts
+            # Get node color based on cluster
+            if cluster_colors and cluster in cluster_colors:
+                color = cluster_colors[cluster]
             else:
-                layer_str, orig_id = str(layer), str(original_id)
+                color = plt.cm.tab10(cluster % 10)
                 
-            # Create label
-            label = f"L{layer_str}_N{orig_id}"
-            if betweenness > 0.5:
-                label += f"\nBC={betweenness:.2f}"
+            # Draw all nodes with a small size for context
+            ax.scatter(pos[node][0], pos[node][1], 
+                      s=base_size * 0.5, color=color, alpha=0.3, edgecolor='none',
+                      zorder=1.5)  # Draw between edges and significant nodes
+        
+        # Then draw significant nodes with more emphasis
+        for node in G.nodes:
+            betweenness = node_betweenness.get(node, 0)
+            if betweenness < 0.1 and viz_style != "Detailed":  # Skip low betweenness nodes for clarity, except in detailed mode
+                continue
                 
-            ax.text(pos[node][0], pos[node][1], 
-                   label, 
-                   fontsize=8,
-                   ha='center', va='center',
-                   bbox=dict(facecolor='white', alpha=0.9, edgecolor='gray', pad=1, boxstyle='round'),
-                   zorder=4)  # Highest zorder to draw on top of everything
+            # Get node attributes
+            layer = G.nodes[node]['layer']
+            cluster = G.nodes[node]['cluster']
+            original_id = G.nodes[node].get('original_id', node)
+            
+            # Calculate node size based on betweenness
+            size = base_size + 300 * (betweenness / max_betweenness)
+            
+            # Get node color based on cluster
+            if cluster_colors and cluster in cluster_colors:
+                color = cluster_colors[cluster]
+            else:
+                color = plt.cm.tab10(cluster % 10)
+            
+            # Draw the significant node
+            ax.scatter(pos[node][0], pos[node][1], 
+                      s=size, color=color, edgecolor='black', linewidth=0.8,
+                      zorder=2)  # Higher zorder to draw on top of edges
+            
+            # Add node label for significant nodes
+            if show_labels and betweenness > 0.3:
+                # Extract layer and original node ID from the node name
+                node_parts = node.split('_', 1)
+                if len(node_parts) == 2:
+                    layer_str, orig_id = node_parts
+                else:
+                    layer_str, orig_id = str(layer), str(original_id)
+                    
+                # Create label
+                label = f"L{layer_str}_N{orig_id}"
+                if betweenness > 0.5:
+                    label += f"\nBC={betweenness:.2f}"
+                    
+                ax.text(pos[node][0], pos[node][1], 
+                       label, 
+                       fontsize=8,
+                       ha='center', va='center',
+                       bbox=dict(facecolor='white', alpha=0.9, edgecolor='gray', pad=1, boxstyle='round'),
+                       zorder=4)  # Highest zorder to draw on top of everything
     
-    # Add a legend for edge types
-    inter_line = plt.Line2D([0], [0], color=plt.cm.Blues(0.8), linewidth=3, label='Interlayer Edge')
-    intra_line = plt.Line2D([0], [0], color=plt.cm.Reds(0.8), linewidth=3, label='Intralayer Edge')
+    # Add a legend based on the coloring mode
+    if color_by_centrality:
+        # Create a colormap for edge betweenness
+        sm = ScalarMappable(cmap=plt.cm.RdYlBu_r, norm=Normalize(0, 1))
+        sm.set_array([])
+        cbar = plt.colorbar(sm, ax=ax, shrink=0.8)
+        cbar.set_label('Edge Betweenness Centrality')
+    else:
+        # Add a legend for edge types
+        inter_line = plt.Line2D([0], [0], color=plt.cm.Blues(0.8), linewidth=3, label='Interlayer Edge')
+        intra_line = plt.Line2D([0], [0], color=plt.cm.Reds(0.8), linewidth=3, label='Intralayer Edge')
+        ax.legend(handles=[inter_line, intra_line], loc='upper right', framealpha=0.9)
     
-    ax.legend(handles=[inter_line, intra_line], loc='upper right', framealpha=0.9)
-    
-    # Add a colorbar for edge betweenness
-    sm = ScalarMappable(cmap=plt.cm.Reds, norm=Normalize(0, 1))
-    sm.set_array([])
-    cbar = plt.colorbar(sm, ax=ax, shrink=0.8)
-    cbar.set_label('Edge Betweenness Centrality')
-    
-    # Add a title
-    ax.set_title('Critical Connections in Duplicated Network', fontsize=12)
+    # Add a title with the visualization style
+    title = f'Critical Connections in Duplicated Network ({viz_style})'
+    ax.set_title(title, fontsize=12)
     
     # Remove axis ticks and spines for a cleaner look
     ax.set_xticks([])
@@ -636,4 +769,60 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
     # Add a subtle grid for better orientation
     ax.grid(alpha=0.1)
     
-    logger.info(f"Created bottleneck visualization with {len(G.nodes)} nodes and {len(G.edges)} edges") 
+    logger.info(f"Created bottleneck visualization with {len(G.nodes)} nodes and {len(G.edges)} edges")
+
+def integrate_lc16_ui_with_panel(panel, parent_layout, analysis_combo=None, cluster_combo=None):
+    """
+    Integrate the LC16 UI elements with the visualization panel.
+    
+    Parameters:
+    -----------
+    panel : QWidget
+        The panel to integrate the UI elements with
+    parent_layout : QLayout
+        The layout to add the UI elements to
+    analysis_combo : QComboBox, optional
+        An existing analysis type combo box to connect with the UI elements
+    cluster_combo : QComboBox, optional
+        An existing cluster selection combo box to connect with the UI elements
+        
+    Returns:
+    --------
+    dict
+        A dictionary containing the UI elements and layouts
+    """
+    # Create the UI elements
+    ui_elements = create_lc16_ui_elements(panel)
+    
+    # Add the group box to the parent layout
+    parent_layout.addWidget(ui_elements["group"])
+    
+    # Connect signals to slots if the panel has an update method
+    if hasattr(panel, "update_lc16_path_analysis") and callable(panel.update_lc16_path_analysis):
+        # Connect the UI elements to the update method
+        ui_elements["viz_style_combo"].currentIndexChanged.connect(
+            lambda: panel.update_lc16_path_analysis(panel._current_data) if hasattr(panel, "_current_data") else None
+        )
+        ui_elements["show_labels_checkbox"].stateChanged.connect(
+            lambda: panel.update_lc16_path_analysis(panel._current_data) if hasattr(panel, "_current_data") else None
+        )
+        ui_elements["show_nodes_checkbox"].stateChanged.connect(
+            lambda: panel.update_lc16_path_analysis(panel._current_data) if hasattr(panel, "_current_data") else None
+        )
+        ui_elements["color_by_centrality_checkbox"].stateChanged.connect(
+            lambda: panel.update_lc16_path_analysis(panel._current_data) if hasattr(panel, "_current_data") else None
+        )
+        
+        # Connect the analysis combo box if provided
+        if analysis_combo is not None:
+            analysis_combo.currentIndexChanged.connect(
+                lambda: panel.update_lc16_path_analysis(panel._current_data) if hasattr(panel, "_current_data") else None
+            )
+            
+        # Connect the cluster combo box if provided
+        if cluster_combo is not None:
+            cluster_combo.currentIndexChanged.connect(
+                lambda: panel.update_lc16_path_analysis(panel._current_data) if hasattr(panel, "_current_data") else None
+            )
+    
+    return ui_elements 
