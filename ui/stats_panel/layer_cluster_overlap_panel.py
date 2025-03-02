@@ -2081,7 +2081,7 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         
         # LC16: Interlayer Path Analysis tooltip
         path_analysis_tooltip = """
-        <h3>LC16: Combined Interlayer-Intralayer Path Analysis</h3>
+        <h3>LC16: Interlayer Path Analysis with Duplicated Nodes</h3>
 
         <p><b>Data Source:</b></p>
         <ul>
@@ -2100,32 +2100,32 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         <p><b>Calculation Method:</b></p>
         <ol>
             <li>Filter visible links using current_node_mask</li>
-            <li>Classify edges as interlayer (connecting different layers) or intralayer (within same layer)</li>
-            <li>Identify common nodes that connect both interlayer and intralayer edges</li>
-            <li>Create a combined graph that includes all visible edges, with special marking for common nodes</li>
-            <li>For each analysis type, calculate the corresponding path metrics across the combined network</li>
-            <li>Visualize results showing how interlayer and intralayer edges interact through common nodes</li>
+            <li>Duplicate each node for each layer it appears in, using the naming convention <layer>_<node></li>
+            <li>Create intralayer edges between duplicated nodes within the same layer</li>
+            <li>Create interlayer edges between duplicated nodes in different layers</li>
+            <li>Build a comprehensive network where duplicated nodes naturally connect interlayer and intralayer edges</li>
+            <li>For each analysis type, calculate the corresponding path metrics across this duplicated node network</li>
         </ol>
 
         <p><b>Visualization:</b></p>
         <ul>
-            <li><b>Path Length:</b> Heatmap showing average shortest path lengths between layers in the combined network</li>
-            <li><b>Betweenness:</b> Bar chart showing betweenness centrality of all nodes vs. common nodes by layer</li>
-            <li><b>Bottleneck:</b> Network diagram highlighting critical connections in the combined network, with interlayer edges in blue, intralayer edges in red, and common nodes in yellow</li>
+            <li><b>Path Length:</b> Heatmap showing average shortest path lengths between layers in the duplicated node network</li>
+            <li><b>Betweenness:</b> Bar chart showing betweenness centrality of nodes by layer in the duplicated node network</li>
+            <li><b>Bottleneck:</b> Network diagram highlighting critical connections in the duplicated node network, with interlayer edges in blue and intralayer edges in red</li>
         </ul>
 
         <p><b>Interpretation:</b></p>
         <ul>
-            <li><b>Path Length:</b> Each cell (i,j) shows the average shortest path length from nodes in layer i to nodes in layer j through the combined network. Lower values (blue) indicate closer connectivity.</li>
-            <li><b>Betweenness:</b> Shows which layers contain nodes that serve as important bridges in the network, with separate bars for all nodes and common nodes. Higher values indicate layers with more critical nodes.</li>
-            <li><b>Bottleneck:</b> Identifies critical connections in the combined network, highlighting common nodes that bridge interlayer and intralayer edges. Edge thickness and color intensity indicate importance.</li>
+            <li><b>Path Length:</b> Each cell (i,j) shows the average shortest path length from nodes in layer i to nodes in layer j through the duplicated node network. Lower values (blue) indicate closer connectivity.</li>
+            <li><b>Betweenness:</b> Shows which layers contain nodes that serve as important bridges in the network. Higher values indicate layers with more critical nodes.</li>
+            <li><b>Bottleneck:</b> Identifies critical connections in the duplicated node network, with node labels showing the layer and original node ID (L<layer>_N<node>). Edge thickness and color intensity indicate importance.</li>
         </ul>
 
         <p><b>Applications:</b></p>
         <ul>
-            <li>Understand how interlayer and intralayer edges interact through common nodes</li>
-            <li>Identify critical nodes that serve as bridges between different types of connections</li>
-            <li>Discover bottlenecks in the combined network that may affect information flow</li>
+            <li>Understand how information flows between layers through both interlayer and intralayer connections</li>
+            <li>Identify critical nodes that serve as bridges between different layers</li>
+            <li>Discover bottlenecks in the network that may affect information flow</li>
             <li>Analyze the overall structure of the network considering both types of connections</li>
             <li>Find potential vulnerabilities where removing a small number of nodes could significantly impact connectivity</li>
         </ul>

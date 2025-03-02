@@ -25,8 +25,9 @@ def create_interlayer_path_analysis(
     """
     Analyze and visualize interlayer paths between layers, regardless of cluster.
     
-    This visualization builds a custom network that connects all visible interlayer edges 
-    with all visible intralayer edges over common nodes, showing how layers are connected.
+    This visualization builds a custom network by duplicating each node for each layer it's in,
+    using the naming convention <layer>_<node>. This creates a network where the duplicated nodes
+    connect interlayer and intralayer edges.
     
     The analysis focuses on:
     1. Path lengths: The shortest paths between layers
@@ -38,13 +39,14 @@ def create_interlayer_path_analysis(
     ax : matplotlib.axes.Axes
         The axis to draw the visualization on
     visible_links : list
-        List of (source_id, target_id) tuples representing visible edges
+        List of (source_idx, target_idx) tuples representing visible edges
     node_ids : list
         List of all node IDs in the network
     node_clusters : dict
         Dictionary mapping node IDs to cluster assignments
-    nodes_per_layer : dict
-        Dictionary mapping layer indices to lists of node IDs
+    nodes_per_layer : dict or int
+        Dictionary mapping layer indices to lists of node IDs, or an integer representing
+        the number of nodes per layer if all layers have the same number of nodes
     layers : list
         List of layer names
     visible_layer_indices : list
@@ -60,76 +62,101 @@ def create_interlayer_path_analysis(
     """
     try:
         # Ensure visible_layer_indices is defined
-        visible_layers = visible_layer_indices if visible_layer_indices is not None else []
+        visible_layers = visible_layer_indices if visible_layer_indices is not None else list(range(len(layers)))
         
         logging.info(f"Creating custom network for interlayer path analysis with {len(visible_links)} visible links")
         
-        # Check if nodes_per_layer is an integer and convert it to a dictionary if needed
-        if isinstance(nodes_per_layer, int):
-            # Create a dictionary with the same number of nodes for each layer
-            nodes_per_layer_dict = {}
-            for layer_idx in visible_layers:
-                if layer_idx < len(layers):
-                    nodes_per_layer_dict[layer_idx] = list(range(layer_idx * nodes_per_layer, (layer_idx + 1) * nodes_per_layer))
-        else:
-            nodes_per_layer_dict = nodes_per_layer
-        
-        # Create a graph from the visible links
+        # Create a new graph with duplicated nodes
         G = nx.Graph()
         
-        # Add nodes with attributes
-        for node_id in node_ids:
-            if node_id in node_clusters:
-                # Find which layer this node belongs to
-                layer_idx = None
-                for layer_idx, nodes in nodes_per_layer_dict.items():
-                    if node_id in nodes:
-                        break
-                
-                if layer_idx is not None:
-                    G.add_node(node_id, 
-                              cluster=node_clusters[node_id], 
-                              layer=layer_idx)
+        # Check if nodes_per_layer is an integer or a dictionary
+        if isinstance(nodes_per_layer, int):
+            # If it's an integer, create a dictionary mapping layer indices to node ranges
+            nodes_per_layer_dict = {}
+            for layer_idx in range(len(layers)):
+                start_idx = layer_idx * nodes_per_layer
+                end_idx = start_idx + nodes_per_layer
+                nodes_per_layer_dict[layer_idx] = [node_ids[i] for i in range(start_idx, end_idx) if i < len(node_ids)]
+        else:
+            # If it's already a dictionary, use it directly
+            nodes_per_layer_dict = nodes_per_layer
+            
+        # Create a mapping from node index to node ID
+        node_idx_to_id = {i: node_id for i, node_id in enumerate(node_ids)}
         
-        # Classify edges as interlayer or intralayer
+        # Create a mapping from node index to layer
+        node_idx_to_layer = {}
+        for i, node_id in enumerate(node_ids):
+            if isinstance(nodes_per_layer, int):
+                layer_idx = i // nodes_per_layer
+            else:
+                # Find which layer this node belongs to
+                for layer_idx, node_list in nodes_per_layer_dict.items():
+                    if node_id in node_list:
+                        node_idx_to_layer[i] = layer_idx
+                        break
+            
+            if isinstance(nodes_per_layer, int):
+                node_idx_to_layer[i] = layer_idx
+        
+        # Map to track which layers each node appears in
+        node_layers = defaultdict(list)
+        
+        # First, identify which layers each node appears in
+        for layer_idx, node_list in nodes_per_layer_dict.items():
+            if layer_idx in visible_layers:
+                for node_id in node_list:
+                    if node_id in node_ids:
+                        node_layers[node_id].append(layer_idx)
+        
+        # Create duplicated nodes for each layer a node appears in
+        node_mapping = {}  # Maps original node ID to list of duplicated node IDs
+        
+        for node_id, layers_list in node_layers.items():
+            node_mapping[node_id] = []
+            for layer_idx in layers_list:
+                # Create a new node ID in the format <layer>_<node>
+                new_node_id = f"{layer_idx}_{node_id}"
+                node_mapping[node_id].append(new_node_id)
+                
+                # Add the node to the graph with attributes
+                cluster = node_clusters.get(node_id, 0)  # Default to cluster 0 if not found
+                G.add_node(new_node_id, 
+                          original_id=node_id,
+                          cluster=cluster, 
+                          layer=layer_idx)
+        
+        logging.info(f"Created {len(G.nodes)} duplicated nodes from {len(node_layers)} original nodes")
+        
+        # Classify and add edges
         interlayer_edges = []
         intralayer_edges = []
         
-        for source_id, target_id in visible_links:
-            if source_id in G.nodes and target_id in G.nodes:
-                source_layer = G.nodes[source_id]['layer']
-                target_layer = G.nodes[target_id]['layer']
-                
-                if source_layer == target_layer:
-                    intralayer_edges.append((source_id, target_id))
-                else:
-                    interlayer_edges.append((source_id, target_id))
+        # Process visible links (which are node indices, not IDs)
+        for source_idx, target_idx in visible_links:
+            # Convert indices to node IDs
+            source_id = node_idx_to_id[source_idx]
+            target_id = node_idx_to_id[target_idx]
+            
+            # Get the layers for these nodes
+            source_layer = node_idx_to_layer[source_idx]
+            target_layer = node_idx_to_layer[target_idx]
+            
+            # Create the duplicated node IDs
+            source_node = f"{source_layer}_{source_id}"
+            target_node = f"{target_layer}_{target_id}"
+            
+            # Check if this is an intralayer or interlayer edge
+            if source_layer == target_layer:
+                # Intralayer edge
+                G.add_edge(source_node, target_node, edge_type="intralayer")
+                intralayer_edges.append((source_node, target_node))
+            else:
+                # Interlayer edge
+                G.add_edge(source_node, target_node, edge_type="interlayer")
+                interlayer_edges.append((source_node, target_node))
         
-        logging.info(f"Classified {len(interlayer_edges)} interlayer edges and {len(intralayer_edges)} intralayer edges")
-        
-        # Add all edges to the graph
-        for source_id, target_id in interlayer_edges + intralayer_edges:
-            G.add_edge(source_id, target_id)
-        
-        # Find common nodes that connect interlayer and intralayer edges
-        common_nodes = set()
-        
-        # Nodes that are part of interlayer edges
-        interlayer_nodes = set()
-        for source_id, target_id in interlayer_edges:
-            interlayer_nodes.add(source_id)
-            interlayer_nodes.add(target_id)
-        
-        # Nodes that are part of intralayer edges
-        intralayer_nodes = set()
-        for source_id, target_id in intralayer_edges:
-            intralayer_nodes.add(source_id)
-            intralayer_nodes.add(target_id)
-        
-        # Find common nodes
-        common_nodes = interlayer_nodes.intersection(intralayer_nodes)
-        
-        logging.info(f"Found {len(common_nodes)} common nodes connecting interlayer and intralayer edges")
+        logging.info(f"Added {len(interlayer_edges)} interlayer edges and {len(intralayer_edges)} intralayer edges")
         
         # If no visible layer indices provided, use all layers
         if visible_layer_indices is None:
@@ -151,7 +178,6 @@ def create_interlayer_path_analysis(
         
         # Add node attributes for visualization
         for node in G.nodes:
-            G.nodes[node]['is_common'] = node in common_nodes
             if node in G.nodes and 'layer' in G.nodes[node]:
                 layer_idx = G.nodes[node]['layer']
                 if layer_idx < len(layers):
@@ -159,24 +185,31 @@ def create_interlayer_path_analysis(
                 else:
                     G.nodes[node]['layer_name'] = f"Layer {layer_idx}"
         
+        # Check if we have any nodes or edges
+        if len(G.nodes) == 0 or len(G.edges) == 0:
+            ax.text(0.5, 0.5, "No nodes or edges found for analysis", 
+                   ha='center', va='center')
+            ax.axis('off')
+            return ax
+        
         # Perform the selected analysis
         if analysis_type == "path_length":
-            _analyze_path_lengths(ax, G, visible_layer_indices, layers, node_clusters, cluster_colors, common_nodes)
+            _analyze_path_lengths(ax, G, visible_layer_indices, layers, node_clusters, cluster_colors)
         elif analysis_type == "betweenness":
-            _analyze_betweenness(ax, G, visible_layer_indices, layers, node_clusters, cluster_colors, common_nodes)
+            _analyze_betweenness(ax, G, visible_layer_indices, layers, node_clusters, cluster_colors)
         elif analysis_type == "bottleneck":
-            _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cluster_colors, common_nodes)
+            _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cluster_colors)
         else:
             ax.text(0.5, 0.5, f"Unknown analysis type: {analysis_type}", 
                    ha='center', va='center')
             
         # Set title based on analysis type
         title_map = {
-            "path_length": "Interlayer-Intralayer Path Analysis",
-            "betweenness": "Node Betweenness in Combined Network",
-            "bottleneck": "Critical Connections in Combined Network"
+            "path_length": "Interlayer Path Analysis (Duplicated Nodes)",
+            "betweenness": "Node Betweenness in Duplicated Network",
+            "bottleneck": "Critical Connections in Duplicated Network"
         }
-        ax.set_title(title_map.get(analysis_type, f"Combined Network Analysis: {analysis_type}"))
+        ax.set_title(title_map.get(analysis_type, f"Duplicated Network Analysis: {analysis_type}"))
         
         # Remove spines
         for spine in ax.spines.values():
@@ -190,12 +223,12 @@ def create_interlayer_path_analysis(
                ha='center', va='center')
         return ax
 
-def _analyze_path_lengths(ax, G, visible_layer_indices, layers, node_clusters, cluster_colors, common_nodes=None):
+def _analyze_path_lengths(ax, G, visible_layer_indices, layers, node_clusters, cluster_colors):
     """
-    Analyze and visualize the shortest paths between layers in the combined network.
+    Analyze and visualize the shortest paths between layers in the duplicated node network.
     """
     logger = logging.getLogger(__name__)
-    logger.info("Analyzing path lengths in the combined interlayer-intralayer network")
+    logger.info("Analyzing path lengths in the duplicated node network")
     
     # Group nodes by layer
     layer_nodes = defaultdict(list)
@@ -314,45 +347,34 @@ def _analyze_path_lengths(ax, G, visible_layer_indices, layers, node_clusters, c
     ax.set_ylabel("Source Layer")
     
     # Add title
-    ax.set_title("Average Shortest Path Length Between Layers\n(Combined Interlayer-Intralayer Network)", fontsize=12)
+    ax.set_title("Average Shortest Path Length Between Layers\n(Using Duplicated Nodes Network)", fontsize=12)
 
-def _analyze_betweenness(ax, G, visible_layer_indices, layers, node_clusters, cluster_colors, common_nodes=None):
-    """Analyze and visualize betweenness centrality of nodes as bridges between layers in the combined network"""
+def _analyze_betweenness(ax, G, visible_layer_indices, layers, node_clusters, cluster_colors):
+    """Analyze and visualize betweenness centrality of nodes in the duplicated node network"""
     logger = logging.getLogger(__name__)
-    logger.info("Analyzing betweenness centrality in the combined interlayer-intralayer network")
+    logger.info("Analyzing betweenness centrality in the duplicated node network")
     
     # Calculate betweenness centrality for all nodes
     betweenness = nx.betweenness_centrality(G, weight='weight')
     
     # Group betweenness by layer
     layer_betweenness = defaultdict(float)
-    common_node_betweenness = defaultdict(float)
     
     for node, bc in betweenness.items():
         layer = G.nodes[node]['layer']
         layer_betweenness[layer] += bc
-        
-        # Track betweenness of common nodes separately
-        if common_nodes and node in common_nodes:
-            common_node_betweenness[layer] += bc
     
     # Get unique layers
     unique_layers = sorted(layer_betweenness.keys())
     
     # Create a visualization of the betweenness values
-    # We'll use a grouped bar plot with layers on the x-axis and betweenness values on the y-axis
+    # We'll use a bar plot with layers on the x-axis and betweenness values on the y-axis
     
     # Set up the bar positions
     x = np.arange(len(unique_layers))
-    width = 0.35
     
     # Create the bars
-    ax.bar(x - width/2, [layer_betweenness[layer] for layer in unique_layers], 
-           width, label='All Nodes', color='skyblue')
-    
-    if common_nodes:
-        ax.bar(x + width/2, [common_node_betweenness[layer] for layer in unique_layers], 
-               width, label='Common Nodes', color='orange')
+    ax.bar(x, [layer_betweenness[layer] for layer in unique_layers], color='skyblue')
     
     # Set ticks and labels
     ax.set_xticks(x)
@@ -368,21 +390,18 @@ def _analyze_betweenness(ax, G, visible_layer_indices, layers, node_clusters, cl
     ax.set_xticklabels(layer_labels, rotation=45, ha="right")
     ax.set_ylabel('Betweenness Centrality')
     
-    # Add a legend
-    ax.legend()
-    
     # Add a title
-    ax.set_title('Node Betweenness Centrality by Layer\n(Combined Interlayer-Intralayer Network)', fontsize=12)
+    ax.set_title('Node Betweenness Centrality by Layer\n(Using Duplicated Nodes Network)', fontsize=12)
     
     # Adjust layout
     plt.tight_layout()
     
     logger.info(f"Created betweenness visualization with {len(unique_layers)} layers")
 
-def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cluster_colors, common_nodes=None):
-    """Analyze and visualize bottleneck connections in the combined interlayer-intralayer network"""
+def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cluster_colors):
+    """Analyze and visualize bottleneck connections in the duplicated node network"""
     logger = logging.getLogger(__name__)
-    logger.info("Analyzing bottleneck connections in the combined interlayer-intralayer network")
+    logger.info("Analyzing bottleneck connections in the duplicated node network")
     
     # Calculate edge betweenness centrality to identify bottlenecks
     edge_betweenness = nx.edge_betweenness_centrality(G, weight='weight')
@@ -396,18 +415,18 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
     pos = nx.spring_layout(G, seed=42)
     
     # Draw the graph
-    # 1. Draw edges with width and color based on betweenness
+    # 1. Draw edges with width and color based on betweenness and edge type
     for edge, betweenness in normalized_betweenness.items():
         u, v = edge
         
-        # Determine if this is an interlayer edge
-        is_interlayer = G.nodes[u]['layer'] != G.nodes[v]['layer']
+        # Get edge type (interlayer or intralayer)
+        edge_type = G.edges[u, v].get('edge_type', 'unknown')
         
         # Calculate edge width based on betweenness
         width = 1 + 5 * betweenness
         
         # Calculate edge color based on type and betweenness
-        if is_interlayer:
+        if edge_type == "interlayer":
             color = plt.cm.Blues(betweenness)  # Blue for interlayer
         else:
             color = plt.cm.Reds(betweenness)   # Red for intralayer
@@ -434,9 +453,9 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
                 offset_x = offset_y = 0
             
             # Add the label
-            edge_type = "Inter" if is_interlayer else "Intra"
+            edge_label = "Inter" if edge_type == "interlayer" else "Intra"
             ax.text(x + offset_x, y + offset_y, 
-                   f"{edge_type}\nBC={betweenness:.2f}", 
+                   f"{edge_label}\nBC={betweenness:.2f}", 
                    fontsize=8, 
                    ha='center', va='center',
                    bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', pad=1),
@@ -450,48 +469,35 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
         # Get node attributes
         layer = G.nodes[node]['layer']
         cluster = G.nodes[node]['cluster']
-        is_common = G.nodes[node].get('is_common', False)
+        original_id = G.nodes[node].get('original_id', node)
         
         # Calculate node size based on betweenness
         betweenness = node_betweenness.get(node, 0)
         size = 100 + 500 * (betweenness / max_betweenness)
         
-        # Get node color based on layer
-        if layer < len(layers):
-            layer_name = layers[layer]
+        # Get node color based on cluster
+        if cluster_colors and cluster in cluster_colors:
+            color = cluster_colors[cluster]
         else:
-            layer_name = f"Layer {layer}"
-            
-        # Use a different color for common nodes
-        if is_common:
-            color = 'yellow'  # Highlight common nodes
-            edgecolor = 'red'
-            linewidth = 2
-        else:
-            # Use cluster colors
-            if cluster_colors and cluster in cluster_colors:
-                color = cluster_colors[cluster]
-            else:
-                # Use a default colormap if cluster colors not provided
-                color = plt.cm.tab10(cluster % 10)
-            edgecolor = 'black'
-            linewidth = 1
+            # Use a default colormap if cluster colors not provided
+            color = plt.cm.tab10(cluster % 10)
         
         # Draw the node
         ax.scatter(pos[node][0], pos[node][1], 
-                  s=size, color=color, edgecolor=edgecolor, linewidth=linewidth,
+                  s=size, color=color, edgecolor='black', linewidth=1,
                   zorder=2)  # Middle zorder to draw between edges and labels
         
         # Add node label for significant nodes
-        if betweenness > 0.1 or is_common:
-            label = f"L{layer}C{cluster}"
-            if is_common:
-                label += "\n(Common)"
-            if betweenness > 0.1:
-                label += f"\nBC={betweenness:.2f}"
+        if betweenness > 0.1:
+            # Extract layer and original node ID from the node name
+            node_parts = node.split('_', 1)
+            if len(node_parts) == 2:
+                layer_str, orig_id = node_parts
+            else:
+                layer_str, orig_id = str(layer), str(original_id)
                 
             ax.text(pos[node][0], pos[node][1], 
-                   label, 
+                   f"L{layer_str}_N{orig_id}\nBC={betweenness:.2f}", 
                    fontsize=8, 
                    ha='center', va='center',
                    zorder=4)  # Highest zorder to draw on top of everything
@@ -499,10 +505,8 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
     # Add a legend for edge types
     inter_line = plt.Line2D([0], [0], color=plt.cm.Blues(0.7), linewidth=3, label='Interlayer Edge')
     intra_line = plt.Line2D([0], [0], color=plt.cm.Reds(0.7), linewidth=3, label='Intralayer Edge')
-    common_node = plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='yellow', 
-                            markeredgecolor='red', markersize=10, label='Common Node')
     
-    ax.legend(handles=[inter_line, intra_line, common_node], loc='upper right')
+    ax.legend(handles=[inter_line, intra_line], loc='upper right')
     
     # Add a colorbar for edge betweenness
     sm = ScalarMappable(cmap=plt.cm.Reds, norm=Normalize(0, 1))
@@ -511,7 +515,7 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
     cbar.set_label('Edge Betweenness Centrality')
     
     # Add a title
-    ax.set_title('Critical Connections in Combined Network\n(Interlayer + Intralayer over Common Nodes)', fontsize=12)
+    ax.set_title('Critical Connections in Network\n(Using Duplicated Nodes <layer>_<node>)', fontsize=12)
     
     # Remove axis ticks
     ax.set_xticks([])
