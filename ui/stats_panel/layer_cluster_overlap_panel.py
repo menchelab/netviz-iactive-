@@ -2102,9 +2102,9 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         <ol>
             <li>Filter visible links using current_node_mask</li>
             <li>Duplicate each node for each layer it appears in, using the naming convention <layer>_<node></li>
-            <li>Create intralayer edges between duplicated nodes within the same layer</li>
-            <li>Create interlayer edges between duplicated nodes in different layers</li>
-            <li>Build a comprehensive network where duplicated nodes naturally connect interlayer and intralayer edges</li>
+            <li>Create intralayer edges only between duplicated nodes that have existing connections in the original network</li>
+            <li>Create interlayer edges between duplicated nodes in different layers when they represent the same original nodes</li>
+            <li>Build a comprehensive network where duplicated nodes connect interlayer and intralayer edges</li>
             <li>For each analysis type, calculate the corresponding path metrics across this duplicated node network</li>
         </ol>
 
@@ -2135,7 +2135,7 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         
         # LC17: Cluster Bridging Analysis tooltip
         bridge_analysis_tooltip = """
-        <h3>LC17: Cluster Bridging Analysis</h3>
+        <h3>LC17: Cluster Bridging Analysis with Duplicated Nodes</h3>
         
         <p><b>Data Source:</b></p>
         <ul>
@@ -2154,30 +2154,34 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         <p><b>Calculation Method:</b></p>
         <ol>
             <li>Filter visible links using current_node_mask</li>
-            <li>For each analysis type, calculate the corresponding bridging metric for all pairs of layers</li>
-            <li>Visualize results as a heatmap where cells (i,j) show the bridging metric between layers i and j</li>
+            <li>Duplicate each node for each layer it appears in, using the naming convention <layer>_<node></li>
+            <li>Create intralayer edges only between duplicated nodes that have existing connections in the original network</li>
+            <li>Create interlayer edges between duplicated nodes in different layers when they represent the same original nodes</li>
+            <li>Build a comprehensive network where duplicated nodes connect interlayer and intralayer edges</li>
+            <li>For each analysis type, calculate the corresponding bridging metric across this duplicated node network</li>
         </ol>
         
         <p><b>Visualization:</b></p>
         <ul>
-            <li><b>Bridge Score:</b> Heatmap showing bridge score for all layer pairs</li>
-            <li><b>Flow Efficiency:</b> Heatmap showing flow efficiency for all layer pairs</li>
-            <li><b>Layer Span:</b> Heatmap showing layer span for all layer pairs</li>
+            <li><b>Bridge Score:</b> Bar chart showing how well each cluster connects different layers through both interlayer and intralayer edges</li>
+            <li><b>Flow Efficiency:</b> Heatmap showing how efficiently information can flow between layers through each cluster in the duplicated node network</li>
+            <li><b>Layer Span:</b> Stacked bar chart showing the distribution of each cluster's nodes across different layers</li>
         </ul>
         
         <p><b>Interpretation:</b></p>
         <ul>
-            <li>Bridge Score: Higher values indicate stronger bridges between layers</li>
-            <li>Flow Efficiency: Higher values indicate more efficient flow between layers</li>
-            <li>Layer Span: Higher values indicate layers that span more clusters</li>
+            <li><b>Bridge Score:</b> Higher values indicate clusters that more effectively bridge between layers through both interlayer and intralayer connections. The score is calculated as the ratio of interlayer to total connections within a cluster.</li>
+            <li><b>Flow Efficiency:</b> Each cell (i,j) shows the best cluster for efficient information flow between layers i and j. Higher values (brighter colors) indicate more efficient pathways through the duplicated node network.</li>
+            <li><b>Layer Span:</b> Shows how each cluster's nodes are distributed across layers. Clusters with higher span values bridge more layers. The stacked bars show the proportion of each cluster's nodes in each layer.</li>
         </ul>
         
         <p><b>Applications:</b></p>
         <ul>
-            <li>Identify clusters that serve as bridges between layers</li>
-            <li>Discover efficient interlayer communication pathways</li>
+            <li>Identify clusters that serve as effective bridges between layers</li>
+            <li>Discover efficient interlayer communication pathways through the duplicated node network</li>
             <li>Analyze how information might flow between layers through specific clusters</li>
             <li>Compare interlayer connectivity patterns across different layers</li>
+            <li>Find clusters that span multiple layers and may play important roles in cross-layer interactions</li>
         </ul>
         """
         self.tab_widget.setTabToolTip(16, bridge_analysis_tooltip)

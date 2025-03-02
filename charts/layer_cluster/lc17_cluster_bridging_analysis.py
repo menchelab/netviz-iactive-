@@ -13,6 +13,13 @@ def create_cluster_bridging_analysis(ax, visible_links, node_ids, node_clusters,
     """
     Create a visualization of how clusters bridge between different layers in the network.
     
+    This visualization builds a custom network by duplicating each node for each layer it's in,
+    using the naming convention <layer>_<node>. This creates a network where the duplicated nodes
+    connect interlayer and intralayer edges.
+    
+    For interlayer edges, all possible connections are created between duplicated nodes.
+    For intralayer edges, only existing edges from the original network are added.
+    
     Parameters:
     -----------
     ax : matplotlib.axes.Axes
@@ -48,53 +55,113 @@ def create_cluster_bridging_analysis(ax, visible_links, node_ids, node_clusters,
         # Filter to show only visible layers
         logging.info(f"Filtering bridging analysis to show only {len(visible_layer_indices)} visible layers")
         
-        # Build a multilayer network
+        # Build a multilayer network with duplicated nodes
         G = nx.Graph()
         
-        # Track nodes by layer and cluster
+        # Check if nodes_per_layer is an integer or a dictionary
+        if isinstance(nodes_per_layer, int):
+            # If it's an integer, create a dictionary mapping layer indices to node ranges
+            nodes_per_layer_dict = {}
+            for layer_idx in range(len(layers)):
+                start_idx = layer_idx * nodes_per_layer
+                end_idx = start_idx + nodes_per_layer
+                nodes_per_layer_dict[layer_idx] = [node_ids[i] for i in range(start_idx, end_idx) if i < len(node_ids)]
+        else:
+            # If it's already a dictionary, use it directly
+            nodes_per_layer_dict = nodes_per_layer
+        
+        # Create a mapping from node index to node ID
+        node_idx_to_id = {i: node_id for i, node_id in enumerate(node_ids)}
+        
+        # Create a mapping from node ID to node index
+        node_id_to_idx = {node_id: i for i, node_id in enumerate(node_ids)}
+        
+        # Track which layers each node appears in
+        node_layers = defaultdict(list)
+        
+        # First, identify which layers each node appears in
+        for layer_idx, node_list in nodes_per_layer_dict.items():
+            if layer_idx in visible_layer_indices:
+                for node_id in node_list:
+                    if node_id in node_ids:
+                        node_layers[node_id].append(layer_idx)
+        
+        # Track nodes by layer and cluster for analysis
         nodes_by_layer = defaultdict(list)
         nodes_by_cluster = defaultdict(list)
         
-        # Add nodes with attributes
-        for node_id in node_ids:
-            if isinstance(nodes_per_layer, dict):
-                # Find which layer this node belongs to
-                node_layer = None
-                for layer_idx, layer_nodes in nodes_per_layer.items():
-                    if node_id in layer_nodes and layer_idx in visible_layer_indices:
-                        node_layer = layer_idx
-                        break
-                
-                if node_layer is None:
-                    continue  # Skip nodes not in visible layers
-            else:
-                # Assuming nodes_per_layer is an integer (nodes per layer)
-                layer_size = nodes_per_layer
-                # Ensure node_id is an integer before division
-                if isinstance(node_id, str):
-                    try:
-                        node_id_int = int(node_id)
-                    except ValueError:
-                        continue  # Skip if node_id can't be converted to int
-                else:
-                    node_id_int = node_id
-                    
-                node_layer = node_id_int // layer_size
-                if node_layer not in visible_layer_indices:
-                    continue  # Skip nodes not in visible layers
-            
+        # Create duplicated nodes for each layer a node appears in
+        duplicated_nodes = {}  # Maps original node ID to list of duplicated node IDs
+        
+        for node_id, layers_list in node_layers.items():
+            duplicated_nodes[node_id] = []
             cluster = node_clusters.get(node_id)
             if cluster is None:
                 continue  # Skip nodes without cluster assignment
-            
-            G.add_node(node_id, layer=node_layer, cluster=cluster)
-            nodes_by_layer[node_layer].append(node_id)
-            nodes_by_cluster[cluster].append(node_id)
+                
+            for layer_idx in layers_list:
+                # Create a new node ID in the format <layer>_<node>
+                new_node_id = f"{layer_idx}_{node_id}"
+                duplicated_nodes[node_id].append(new_node_id)
+                
+                # Add the node to the graph with attributes
+                G.add_node(new_node_id, 
+                          original_id=node_id,
+                          cluster=cluster, 
+                          layer=layer_idx)
+                          
+                # Track nodes by layer and cluster for analysis
+                nodes_by_layer[layer_idx].append(new_node_id)
+                nodes_by_cluster[cluster].append(new_node_id)
         
-        # Add edges
-        for source, target in visible_links:
-            if source in G.nodes and target in G.nodes:
-                G.add_edge(source, target)
+        logging.info(f"Created {len(G.nodes)} duplicated nodes from {len(node_layers)} original nodes")
+        
+        # Store original network edges
+        original_edges = set()
+        for source_idx, target_idx in visible_links:
+            source_id = node_idx_to_id[source_idx]
+            target_id = node_idx_to_id[target_idx]
+            original_edges.add((source_id, target_id))
+            original_edges.add((target_id, source_id))  # Add both directions since it's an undirected graph
+        
+        # Add intralayer edges (only for existing edges in the original network)
+        intralayer_edges = []
+        for (source_id, target_id) in original_edges:
+            # Find the layer(s) where both nodes exist
+            common_layers = set(node_layers[source_id]) & set(node_layers[target_id])
+            
+            for layer_idx in common_layers:
+                # Create the duplicated node IDs
+                source_node = f"{layer_idx}_{source_id}"
+                target_node = f"{layer_idx}_{target_id}"
+                
+                # Add the intralayer edge
+                G.add_edge(source_node, target_node, edge_type="intralayer")
+                intralayer_edges.append((source_node, target_node))
+        
+        # Add interlayer edges (between all duplicated nodes of the same original node)
+        interlayer_edges = []
+        for source_idx, target_idx in visible_links:
+            source_id = node_idx_to_id[source_idx]
+            target_id = node_idx_to_id[target_idx]
+            
+            # Get the layers for these nodes
+            source_layers = node_layers[source_id]
+            target_layers = node_layers[target_id]
+            
+            # Connect nodes across different layers
+            for source_layer in source_layers:
+                for target_layer in target_layers:
+                    if source_layer != target_layer:  # Only connect across different layers
+                        # Create the duplicated node IDs
+                        source_node = f"{source_layer}_{source_id}"
+                        target_node = f"{target_layer}_{target_id}"
+                        
+                        # Add the interlayer edge
+                        G.add_edge(source_node, target_node, edge_type="interlayer")
+                        interlayer_edges.append((source_node, target_node))
+        
+        logging.info(f"Added {len(interlayer_edges)} interlayer edges and {len(intralayer_edges)} intralayer edges")
         
         # Get unique clusters
         unique_clusters = sorted(set(node_clusters.values()))
@@ -102,7 +169,7 @@ def create_cluster_bridging_analysis(ax, visible_links, node_ids, node_clusters,
         
         # Perform the selected analysis
         if analysis_type == 'bridge_score':
-            _analyze_bridge_scores(ax, G, unique_clusters, nodes_by_cluster, nodes_by_layer, 
+            _analyze_bridge_score(ax, G, unique_clusters, nodes_by_cluster, nodes_by_layer, 
                                   cluster_colors, layers, visible_layer_indices)
         elif analysis_type == 'flow_efficiency':
             _analyze_flow_efficiency(ax, G, unique_clusters, nodes_by_cluster, nodes_by_layer, 
@@ -123,11 +190,11 @@ def create_cluster_bridging_analysis(ax, visible_links, node_ids, node_clusters,
                ha='center', va='center')
 
 
-def _analyze_bridge_scores(ax, G, unique_clusters, nodes_by_cluster, nodes_by_layer, 
-                          cluster_colors, layers, visible_layer_indices):
+def _analyze_bridge_score(ax, G, unique_clusters, nodes_by_cluster, nodes_by_layer, 
+                         cluster_colors, layers, visible_layer_indices):
     """
     Analyze and visualize bridge scores for clusters.
-    Bridge score measures how effectively a cluster connects different layers.
+    Bridge score measures how well a cluster connects different layers.
     """
     # Calculate bridge scores for each cluster
     bridge_scores = {}
@@ -142,7 +209,12 @@ def _analyze_bridge_scores(ax, G, unique_clusters, nodes_by_cluster, nodes_by_la
         total_connections = 0
         
         for node in cluster_nodes:
+            if node not in G.nodes:
+                continue
+                
+            # Extract layer from the duplicated node name (format: <layer>_<node>)
             node_layer = G.nodes[node]['layer']
+            
             for neighbor in G.neighbors(node):
                 if G.nodes[neighbor]['cluster'] == cluster:  # Only count connections within the same cluster
                     neighbor_layer = G.nodes[neighbor]['layer']
@@ -167,7 +239,7 @@ def _analyze_bridge_scores(ax, G, unique_clusters, nodes_by_cluster, nodes_by_la
     ax.set_yticks(y_pos)
     ax.set_yticklabels([f"Cluster {c}" for c in sorted_clusters])
     ax.set_xlabel("Bridge Score (higher = better bridging)")
-    ax.set_xlim(0, max(scores) * 1.1)
+    ax.set_xlim(0, max(scores) * 1.1 if scores else 0.1)
     
     # Add value labels
     for i, bar in enumerate(bars):
@@ -204,13 +276,15 @@ def _analyze_flow_efficiency(ax, G, unique_clusters, nodes_by_cluster, nodes_by_
         
         # For each pair of layers, calculate average shortest path length
         for i, layer1 in enumerate(visible_layer_indices):
+            # Get nodes in this cluster and layer (format: <layer>_<node>)
             nodes1 = [n for n in cluster_nodes if G.nodes[n]['layer'] == layer1]
             
             for j, layer2 in enumerate(visible_layer_indices):
-                if i == j:  # Same layer, set to 0 (perfect efficiency)
+                if i == j:  # Same layer, set to 1.0 (perfect efficiency)
                     flow_matrix[c_idx, i, j] = 1.0
                     continue
                     
+                # Get nodes in this cluster and layer
                 nodes2 = [n for n in cluster_nodes if G.nodes[n]['layer'] == layer2]
                 
                 # Skip if either layer has no nodes in this cluster
@@ -298,7 +372,8 @@ def _analyze_layer_span(ax, G, unique_clusters, nodes_by_cluster, nodes_by_layer
         # Count nodes by layer
         layer_counts = Counter()
         for node in cluster_nodes:
-            layer_counts[G.nodes[node]['layer']] += 1
+            if node in G.nodes:
+                layer_counts[G.nodes[node]['layer']] += 1
         
         # Calculate percentage distribution
         total_nodes = sum(layer_counts.values())

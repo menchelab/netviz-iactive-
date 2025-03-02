@@ -83,26 +83,14 @@ def create_interlayer_path_analysis(
         else:
             # If it's already a dictionary, use it directly
             nodes_per_layer_dict = nodes_per_layer
-            
+        
         # Create a mapping from node index to node ID
         node_idx_to_id = {i: node_id for i, node_id in enumerate(node_ids)}
         
-        # Create a mapping from node index to layer
-        node_idx_to_layer = {}
-        for i, node_id in enumerate(node_ids):
-            if isinstance(nodes_per_layer, int):
-                layer_idx = i // nodes_per_layer
-            else:
-                # Find which layer this node belongs to
-                for layer_idx, node_list in nodes_per_layer_dict.items():
-                    if node_id in node_list:
-                        node_idx_to_layer[i] = layer_idx
-                        break
-            
-            if isinstance(nodes_per_layer, int):
-                node_idx_to_layer[i] = layer_idx
+        # Create a mapping from node ID to node index
+        node_id_to_idx = {node_id: i for i, node_id in enumerate(node_ids)}
         
-        # Map to track which layers each node appears in
+        # Track which layers each node appears in
         node_layers = defaultdict(list)
         
         # First, identify which layers each node appears in
@@ -113,14 +101,14 @@ def create_interlayer_path_analysis(
                         node_layers[node_id].append(layer_idx)
         
         # Create duplicated nodes for each layer a node appears in
-        node_mapping = {}  # Maps original node ID to list of duplicated node IDs
+        duplicated_nodes = {}  # Maps original node ID to list of duplicated node IDs
         
         for node_id, layers_list in node_layers.items():
-            node_mapping[node_id] = []
+            duplicated_nodes[node_id] = []
             for layer_idx in layers_list:
                 # Create a new node ID in the format <layer>_<node>
                 new_node_id = f"{layer_idx}_{node_id}"
-                node_mapping[node_id].append(new_node_id)
+                duplicated_nodes[node_id].append(new_node_id)
                 
                 # Add the node to the graph with attributes
                 cluster = node_clusters.get(node_id, 0)  # Default to cluster 0 if not found
@@ -131,7 +119,7 @@ def create_interlayer_path_analysis(
         
         logging.info(f"Created {len(G.nodes)} duplicated nodes from {len(node_layers)} original nodes")
         
-        # Store original network edges for reference
+        # Store original network edges
         original_edges = set()
         for source_idx, target_idx in visible_links:
             source_id = node_idx_to_id[source_idx]
@@ -139,34 +127,42 @@ def create_interlayer_path_analysis(
             original_edges.add((source_id, target_id))
             original_edges.add((target_id, source_id))  # Add both directions since it's an undirected graph
         
-        # Classify and add edges
-        interlayer_edges = []
+        # Add intralayer edges (only for existing edges in the original network)
         intralayer_edges = []
+        for (source_id, target_id) in original_edges:
+            # Find the layer(s) where both nodes exist
+            common_layers = set(node_layers[source_id]) & set(node_layers[target_id])
+            
+            for layer_idx in common_layers:
+                # Create the duplicated node IDs
+                source_node = f"{layer_idx}_{source_id}"
+                target_node = f"{layer_idx}_{target_id}"
+                
+                # Add the intralayer edge
+                G.add_edge(source_node, target_node, edge_type="intralayer")
+                intralayer_edges.append((source_node, target_node))
         
-        # Process visible links (which are node indices, not IDs)
+        # Add interlayer edges (between all duplicated nodes of the same original node)
+        interlayer_edges = []
         for source_idx, target_idx in visible_links:
-            # Convert indices to node IDs
             source_id = node_idx_to_id[source_idx]
             target_id = node_idx_to_id[target_idx]
             
             # Get the layers for these nodes
-            source_layer = node_idx_to_layer[source_idx]
-            target_layer = node_idx_to_layer[target_idx]
+            source_layers = node_layers[source_id]
+            target_layers = node_layers[target_id]
             
-            # Create the duplicated node IDs
-            source_node = f"{source_layer}_{source_id}"
-            target_node = f"{target_layer}_{target_id}"
-            
-            # Check if this is an intralayer or interlayer edge
-            if source_layer == target_layer:
-                # Intralayer edge - only add if it exists in the original network
-                # (which it does since we're iterating through visible_links)
-                G.add_edge(source_node, target_node, edge_type="intralayer")
-                intralayer_edges.append((source_node, target_node))
-            else:
-                # Interlayer edge - add between the duplicated nodes
-                G.add_edge(source_node, target_node, edge_type="interlayer")
-                interlayer_edges.append((source_node, target_node))
+            # Connect nodes across different layers
+            for source_layer in source_layers:
+                for target_layer in target_layers:
+                    if source_layer != target_layer:  # Only connect across different layers
+                        # Create the duplicated node IDs
+                        source_node = f"{source_layer}_{source_id}"
+                        target_node = f"{target_layer}_{target_id}"
+                        
+                        # Add the interlayer edge
+                        G.add_edge(source_node, target_node, edge_type="interlayer")
+                        interlayer_edges.append((source_node, target_node))
         
         logging.info(f"Added {len(interlayer_edges)} interlayer edges and {len(intralayer_edges)} intralayer edges")
         
