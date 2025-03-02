@@ -27,16 +27,17 @@ def create_lc16_ui_elements(parent=None):
         A dictionary containing the UI elements and layouts
     """
     # Create a group box to contain all the UI elements
-    group_box = QGroupBox("LC16 Visualization Options")
+    group_box = QGroupBox()
     
     # Create a grid layout for the UI elements
     grid_layout = QGridLayout()
+    grid_layout.setContentsMargins(5, 5, 5, 5)
+    grid_layout.setSpacing(5)
     
     # Create a dropdown for visualization style
-    viz_style_label = QLabel("LC16 Visualization:")
     viz_style_combo = QComboBox()
-    viz_style_combo.addItems(["Standard", "Simplified", "Detailed", "Classic Circle", "Layer-Focused"])
-    viz_style_combo.setToolTip("Select a visualization style for the bottleneck analysis")
+    viz_style_combo.addItems(["Standard", "Simplified", "Detailed", "Layer-Focused", "Expanded Layers"])
+    viz_style_combo.setToolTip("Select a visualization style for the network")
     
     # Create checkboxes for various options
     show_labels_checkbox = QCheckBox("Labels")
@@ -47,50 +48,34 @@ def create_lc16_ui_elements(parent=None):
     show_nodes_checkbox.setChecked(True)
     show_nodes_checkbox.setToolTip("Show nodes in the visualization")
     
-    color_by_centrality_checkbox = QCheckBox("Color by Centrality")
+    color_by_centrality_checkbox = QCheckBox("Color by BC")
     color_by_centrality_checkbox.setChecked(False)
     color_by_centrality_checkbox.setToolTip("Color edges by betweenness centrality instead of edge type")
     
     # Add new UI elements for improved visualization
-    hide_unconnected_checkbox = QCheckBox("Hide Unconnected Nodes")
+    hide_unconnected_checkbox = QCheckBox("Hide Unconnected")
     hide_unconnected_checkbox.setChecked(False)
     hide_unconnected_checkbox.setToolTip("Hide nodes with no significant connections to improve layout")
     
-    emphasize_layers_checkbox = QCheckBox("Emphasize Layer Labels")
+    emphasize_layers_checkbox = QCheckBox("Layer Labels")
     emphasize_layers_checkbox.setChecked(True)
     emphasize_layers_checkbox.setToolTip("Add prominent layer labels to the visualization")
     
-    # Create a slider or dropdown for node size scaling
-    node_size_label = QLabel("Node Size:")
-    node_size_combo = QComboBox()
-    node_size_combo.addItems(["Small", "Medium", "Large", "Dynamic"])
-    node_size_combo.setCurrentText("Medium")
-    node_size_combo.setToolTip("Adjust the size of nodes in the visualization")
+    # Add the UI elements to the grid layout - more compact arrangement
+    grid_layout.addWidget(viz_style_combo, 0, 0, 1, 2)
     
-    # Create a dropdown for layout spacing
-    layout_spacing_label = QLabel("Layout Spacing:")
-    layout_spacing_combo = QComboBox()
-    layout_spacing_combo.addItems(["Compact", "Standard", "Expanded"])
-    layout_spacing_combo.setCurrentText("Standard")
-    layout_spacing_combo.setToolTip("Adjust the spacing between nodes in the layout")
+    # First row of checkboxes
+    checkbox_layout1 = QHBoxLayout()
+    checkbox_layout1.addWidget(show_labels_checkbox)
+    checkbox_layout1.addWidget(show_nodes_checkbox)
+    checkbox_layout1.addWidget(emphasize_layers_checkbox)
+    grid_layout.addLayout(checkbox_layout1, 1, 0, 1, 2)
     
-    # Add the UI elements to the grid layout
-    grid_layout.addWidget(viz_style_label, 0, 0)
-    grid_layout.addWidget(viz_style_combo, 0, 1)
-    
-    grid_layout.addWidget(show_labels_checkbox, 1, 0)
-    grid_layout.addWidget(show_nodes_checkbox, 1, 1)
-    
-    grid_layout.addWidget(color_by_centrality_checkbox, 2, 0)
-    grid_layout.addWidget(hide_unconnected_checkbox, 2, 1)
-    
-    grid_layout.addWidget(emphasize_layers_checkbox, 3, 0)
-    
-    grid_layout.addWidget(node_size_label, 4, 0)
-    grid_layout.addWidget(node_size_combo, 4, 1)
-    
-    grid_layout.addWidget(layout_spacing_label, 5, 0)
-    grid_layout.addWidget(layout_spacing_combo, 5, 1)
+    # Second row of checkboxes
+    checkbox_layout2 = QHBoxLayout()
+    checkbox_layout2.addWidget(color_by_centrality_checkbox)
+    checkbox_layout2.addWidget(hide_unconnected_checkbox)
+    grid_layout.addLayout(checkbox_layout2, 2, 0, 1, 2)
     
     # Set the layout for the group box
     group_box.setLayout(grid_layout)
@@ -104,8 +89,9 @@ def create_lc16_ui_elements(parent=None):
         "color_by_centrality_checkbox": color_by_centrality_checkbox,
         "hide_unconnected_checkbox": hide_unconnected_checkbox,
         "emphasize_layers_checkbox": emphasize_layers_checkbox,
-        "node_size_combo": node_size_combo,
-        "layout_spacing_combo": layout_spacing_combo
+        # Remove node_size and layout_spacing options
+        "node_size": "Medium",  # Default value
+        "layout_spacing": "Standard"  # Default value
     }
     
     return ui_elements
@@ -585,11 +571,18 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
     # Filter out unconnected nodes if requested
     if hide_unconnected:
         # Define a threshold for "significant" connections
-        betweenness_threshold = 0.05  # Nodes with betweenness < 5% of max are considered unconnected
+        betweenness_threshold = 0.15  # Increased threshold - nodes with betweenness < 15% of max are considered unconnected
         
         # Create a subgraph with only the connected nodes
         connected_nodes = [node for node, bc in node_betweenness.items() 
                           if bc > max_node_betweenness * betweenness_threshold]
+        
+        # If we filtered too aggressively and have very few nodes left, adjust the threshold
+        if len(connected_nodes) < len(G.nodes) * 0.2:  # If we filtered out more than 80% of nodes
+            betweenness_threshold = 0.05  # Use a lower threshold
+            connected_nodes = [node for node, bc in node_betweenness.items() 
+                              if bc > max_node_betweenness * betweenness_threshold]
+        
         G = G.subgraph(connected_nodes).copy()
         
         logger.info(f"Filtered graph to {len(G.nodes)} connected nodes from original {len(node_betweenness)} nodes")
@@ -607,6 +600,9 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
     if viz_style == "Layer-Focused":
         # Create a layout that emphasizes layers
         pos = _create_layer_focused_layout(G, layer_nodes)
+    elif viz_style == "Expanded Layers":
+        # Create a layout that maximizes distance between layers
+        pos = _create_expanded_layers_layout(G, layer_nodes)
     elif viz_style == "Classic Circle":
         # Use a circular layout
         pos = nx.circular_layout(G, scale=0.9)
@@ -739,33 +735,25 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
             else:
                 offset_x = offset_y = 0
             
-            # Add the label with simplified text
-            edge_label = "Inter" if edge_type == "interlayer" else "Intra"
+            # Add the label with simplified text - just the betweenness value
             ax.text(x + offset_x, y + offset_y, 
-                   f"{edge_label}\nBC={betweenness:.2f}", 
-                   fontsize=8,
+                   f"{betweenness:.2f}", 
+                   fontsize=7,
                    ha='center', va='center',
-                   bbox=dict(facecolor='white', alpha=0.9, edgecolor='gray', pad=1, boxstyle='round'),
-                   zorder=3)
+                   bbox=dict(facecolor='white', alpha=0.7, edgecolor='gray', pad=0.3, boxstyle='round'),
+                   zorder=4)
     
     if show_nodes:
-        # Determine node size scaling based on network size, visualization style, and user preference
-        if node_size == "Small":
-            size_factor = 0.6
-        elif node_size == "Large":
-            size_factor = 1.5
-        elif node_size == "Dynamic":
-            # Dynamic sizing will be handled differently
-            size_factor = 1.0
-        else:  # Medium (default)
-            size_factor = 1.0
-            
+        # Determine node size scaling based on network size and visualization style
         if viz_style == "Simplified":
-            base_size = max(30, 300 / np.sqrt(len(G))) * size_factor
+            base_size = max(30, 300 / np.sqrt(len(G)))
         elif viz_style == "Detailed":
-            base_size = max(70, 600 / np.sqrt(len(G))) * size_factor
-        else:  # Standard or Classic Circle
-            base_size = max(50, 500 / np.sqrt(len(G))) * size_factor
+            base_size = max(70, 600 / np.sqrt(len(G)))
+        elif viz_style == "Expanded Layers":
+            # Larger nodes for expanded layers layout
+            base_size = max(80, 700 / np.sqrt(len(G)))
+        else:  # Standard, Layer-Focused, or Classic Circle
+            base_size = max(50, 500 / np.sqrt(len(G)))
         
         # First draw all nodes with minimal styling to show the structure
         for node in G.nodes:
@@ -785,8 +773,8 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
         # Then draw significant nodes with more emphasis
         for node in G.nodes:
             betweenness = node_betweenness.get(node, 0)
-            if betweenness < 0.1 and viz_style != "Detailed" and node_size != "Dynamic":
-                # Skip low betweenness nodes for clarity, except in detailed mode or with dynamic sizing
+            if betweenness < 0.1 and viz_style != "Detailed":
+                # Skip low betweenness nodes for clarity, except in detailed mode
                 continue
                 
             # Get node attributes
@@ -794,13 +782,8 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
             cluster = G.nodes[node]['cluster']
             original_id = G.nodes[node].get('original_id', node)
             
-            # Calculate node size based on betweenness and user preference
-            if node_size == "Dynamic":
-                # Dynamic sizing: size directly proportional to betweenness
-                size = base_size * 0.5 + base_size * 2 * (betweenness / max_node_betweenness)
-            else:
-                # Standard sizing with a boost based on betweenness
-                size = base_size + 300 * (betweenness / max_node_betweenness) * size_factor
+            # Calculate node size based on betweenness - dynamic sizing
+            size = base_size * 0.5 + base_size * 2 * (betweenness / max_node_betweenness)
             
             # Get node color based on cluster
             if cluster_colors and cluster in cluster_colors:
@@ -814,7 +797,7 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
                       zorder=2)  # Higher zorder to draw on top of edges
             
             # Add node label for significant nodes
-            if show_labels and (betweenness > 0.3 or node_size == "Dynamic"):
+            if show_labels and (betweenness > 0.3 or viz_style == "Expanded Layers"):
                 # Extract layer and original node ID from the node name
                 node_parts = node.split('_', 1)
                 if len(node_parts) == 2:
@@ -822,16 +805,16 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
                 else:
                     layer_str, orig_id = str(layer), str(original_id)
                     
-                # Create label
-                label = f"L{layer_str}_N{orig_id}"
+                # Create label - more compact format
+                label = f"L{layer_str}N{orig_id}"
                 if betweenness > 0.5:
-                    label += f"\nBC={betweenness:.2f}"
+                    label += f"\n{betweenness:.2f}"
                     
                 ax.text(pos[node][0], pos[node][1], 
                        label, 
-                       fontsize=8,
+                       fontsize=7,
                        ha='center', va='center',
-                       bbox=dict(facecolor='white', alpha=0.9, edgecolor='gray', pad=1, boxstyle='round'),
+                       bbox=dict(facecolor='white', alpha=0.7, edgecolor='gray', pad=0.3, boxstyle='round'),
                        zorder=4)  # Highest zorder to draw on top of everything
     
     # Add layer labels if requested
@@ -913,6 +896,79 @@ def _create_layer_focused_layout(G, layer_nodes):
     
     return pos
 
+def _create_expanded_layers_layout(G, layer_nodes):
+    """
+    Create a layout that maximizes the distance between layers while keeping nodes
+    within the same layer close together.
+    
+    Parameters:
+    -----------
+    G : networkx.Graph
+        The graph to create a layout for
+    layer_nodes : dict
+        Dictionary mapping layer indices to lists of node IDs
+        
+    Returns:
+    --------
+    dict
+        Dictionary mapping node IDs to (x, y) positions
+    """
+    # Create a position dictionary
+    pos = {}
+    
+    # Get unique layers and sort them
+    unique_layers = sorted(layer_nodes.keys())
+    num_layers = len(unique_layers)
+    
+    # Calculate positions for each layer
+    for i, layer_idx in enumerate(unique_layers):
+        # Get nodes in this layer
+        nodes = layer_nodes[layer_idx]
+        num_nodes = len(nodes)
+        
+        if num_nodes == 0:
+            continue
+            
+        # Calculate the position for this layer
+        # Use a grid layout for each layer, positioned in a circle around the origin
+        angle = 2 * np.pi * i / num_layers
+        
+        # Distance from origin - increased for better separation
+        distance = 2.0
+        
+        # Center of the layer
+        center_x = distance * np.cos(angle)
+        center_y = distance * np.sin(angle)
+        
+        # Calculate grid dimensions
+        grid_size = max(1, int(np.ceil(np.sqrt(num_nodes))))
+        
+        # Size of the grid (smaller than the distance between layers)
+        grid_scale = 0.25
+        
+        # Place nodes in a grid around the layer center
+        for j, node in enumerate(nodes):
+            # Calculate grid position
+            grid_x = j % grid_size
+            grid_y = j // grid_size
+            
+            # Center the grid
+            grid_x -= (grid_size - 1) / 2
+            grid_y -= (grid_size - 1) / 2
+            
+            # Scale and position
+            x = center_x + grid_x * grid_scale
+            y = center_y + grid_y * grid_scale
+            
+            # Add some jitter to avoid perfect grid alignment
+            jitter = 0.05
+            x += np.random.uniform(-jitter, jitter)
+            y += np.random.uniform(-jitter, jitter)
+            
+            pos[node] = np.array([x, y])
+    
+    return pos
+
 def _add_layer_labels(ax, G, pos, layer_nodes, layers):
     """
     Add prominent layer labels to the visualization.
@@ -956,14 +1012,14 @@ def _add_layer_labels(ax, G, pos, layer_nodes, layers):
         if layer_idx < len(layers):
             layer_name = layers[layer_idx]
         else:
-            layer_name = f"Layer {layer_idx}"
+            layer_name = f"L{layer_idx}"
             
-        # Add a background box for the label
+        # Add a background box for the label - more compact and transparent
         ax.text(center_x, center_y, layer_name,
-               fontsize=10, fontweight='bold',
+               fontsize=9, fontweight='bold',
                ha='center', va='center',
-               bbox=dict(facecolor='white', alpha=0.8, edgecolor='gray', 
-                        boxstyle='round,pad=0.5'),
+               bbox=dict(facecolor='white', alpha=0.6, edgecolor='gray', 
+                        boxstyle='round,pad=0.3'),
                zorder=5)  # Highest zorder to draw on top of everything
 
 def integrate_lc16_ui_with_panel(panel, parent_layout, analysis_combo=None, cluster_combo=None):
@@ -1015,12 +1071,6 @@ def integrate_lc16_ui_with_panel(panel, parent_layout, analysis_combo=None, clus
         ui_elements["emphasize_layers_checkbox"].stateChanged.connect(
             lambda: panel.update_lc16_path_analysis(panel._current_data) if hasattr(panel, "_current_data") else None
         )
-        ui_elements["node_size_combo"].currentIndexChanged.connect(
-            lambda: panel.update_lc16_path_analysis(panel._current_data) if hasattr(panel, "_current_data") else None
-        )
-        ui_elements["layout_spacing_combo"].currentIndexChanged.connect(
-            lambda: panel.update_lc16_path_analysis(panel._current_data) if hasattr(panel, "_current_data") else None
-        )
         
         # Connect the analysis combo box if provided
         if analysis_combo is not None:
@@ -1070,8 +1120,8 @@ def get_lc16_visualization_settings(panel):
         # Get the new UI element states
         settings["hide_unconnected"] = ui_elements["hide_unconnected_checkbox"].isChecked()
         settings["emphasize_layers"] = ui_elements["emphasize_layers_checkbox"].isChecked()
-        settings["node_size"] = ui_elements["node_size_combo"].currentText()
-        settings["layout_spacing"] = ui_elements["layout_spacing_combo"].currentText()
+        settings["node_size"] = ui_elements["node_size"]
+        settings["layout_spacing"] = ui_elements["layout_spacing"]
     else:
         # Default settings if UI elements are not available
         settings["viz_style"] = "Standard"
