@@ -246,11 +246,36 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         # LC15: Flow Visualization Ideas
         self.flow_ideas_figure = Figure(figsize=(12, 10), dpi=100)
         self.flow_ideas_canvas = FigureCanvas(self.flow_ideas_figure)
+        
+        # Create a container widget for the LC15 tab
+        lc15_container = QWidget()
+        lc15_layout = QVBoxLayout(lc15_container)
+        
+        # Add enable/disable checkbox for LC15
+        lc15_controls_layout = QHBoxLayout()
+        self.flow_ideas_enable_checkbox = QCheckBox("Enable")
+        self.flow_ideas_enable_checkbox.setChecked(False)  # Disabled by default
+        self.flow_ideas_enable_checkbox.stateChanged.connect(self.on_flow_ideas_state_changed)
+        lc15_controls_layout.addWidget(self.flow_ideas_enable_checkbox)
+        lc15_controls_layout.addStretch()
+        lc15_layout.addLayout(lc15_controls_layout)
+        
+        # Add the canvas to the LC15 tab
+        lc15_layout.addWidget(self.flow_ideas_canvas)
+        
         self.flow_ideas_ax1 = self.flow_ideas_figure.add_subplot(221)  # Top-left
         self.flow_ideas_ax2 = self.flow_ideas_figure.add_subplot(222)  # Top-right
         self.flow_ideas_ax3 = self.flow_ideas_figure.add_subplot(223)  # Bottom-left
         self.flow_ideas_ax4 = self.flow_ideas_figure.add_subplot(224)  # Bottom-right
-
+        
+        # Show disabled message initially
+        for ax in [self.flow_ideas_ax1, self.flow_ideas_ax2, self.flow_ideas_ax3, self.flow_ideas_ax4]:
+            ax.clear()
+            ax.text(0.5, 0.5, "Flow ideas visualization disabled", ha="center", va="center", fontsize=12)
+            ax.set_xticks([])
+            ax.set_yticks([])
+        self.flow_ideas_canvas.draw()
+        
         # Create figures for the new LC16 and LC17 tabs
         self.path_analysis_figure = Figure(figsize=(12, 10), dpi=100)
         self.path_analysis_canvas = FigureCanvas(self.path_analysis_figure)
@@ -263,36 +288,57 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         self.interlayer_path_similarity_canvas = FigureCanvas(self.interlayer_path_similarity_figure)
 
         # Add each canvas to a tab
-        self.tab_widget.addTab(self.heatmap_canvas, "LC1: Heatmap")
-        self.tab_widget.addTab(self.distribution_canvas, "LC2: Distribution")
-        self.tab_widget.addTab(self.layer_distribution_canvas, "LC3: Layer Distribution")
-        self.tab_widget.addTab(self.network_canvas, "LC4: Network & Similarity")
-        self.tab_widget.addTab(self.cluster_network_canvas, "LC5: Cluster Networks")
-        self.tab_widget.addTab(self.sankey_canvas, "LC6: Sankey")
-        self.tab_widget.addTab(self.connectivity_canvas, "LC7: Connectivity Matrix")
-        self.tab_widget.addTab(self.chord_canvas, "LC8: Chord Diagram")
-        self.tab_widget.addTab(self.density_canvas, "LC9: Density Heatmap")
-        self.tab_widget.addTab(self.cooccurrence_canvas, "LC10: Co-occurrence Network")
-        self.tab_widget.addTab(self.normalized_canvas, "LC11: Normalized Heatmap")
-        self.tab_widget.addTab(self.similarity_canvas, "LC12: Enhanced Similarity Analysis")
-        self.tab_widget.addTab(self.bubble_canvas, "LC13: Bubble Chart")
-        self.tab_widget.addTab(self.lc14_container, "LC14: Treemap")
-        self.tab_widget.addTab(self.path_analysis_canvas, "LC16: Interlayer Path Analysis")
-        self.tab_widget.addTab(self.bridge_analysis_canvas, "LC17: Cluster Bridging Analysis")
-        self.tab_widget.addTab(self.flow_ideas_canvas, "LC15: Flow Ideas")
-        self.tab_widget.addTab(self.interlayer_path_similarity_canvas, "LC20: Interlayer Path Similarity")
+        self.tab_widget.addTab(self.heatmap_canvas, "LC1")
+        self.tab_widget.addTab(self.distribution_canvas, "LC2")
+        self.tab_widget.addTab(self.layer_distribution_canvas, "LC3")
+        self.tab_widget.addTab(self.network_canvas, "LC4")
+        self.tab_widget.addTab(self.cluster_network_canvas, "LC5")
+        self.tab_widget.addTab(self.sankey_canvas, "LC6")
+        self.tab_widget.addTab(self.connectivity_canvas, "LC7")
+        self.tab_widget.addTab(self.chord_canvas, "LC8")
+        self.tab_widget.addTab(self.density_canvas, "LC9")
+        self.tab_widget.addTab(self.cooccurrence_canvas, "LC10")
+        self.tab_widget.addTab(self.normalized_canvas, "LC11")
+        self.tab_widget.addTab(self.similarity_canvas, "LC12:")
+        self.tab_widget.addTab(self.bubble_canvas, "LC13")
+        self.tab_widget.addTab(self.lc14_container, "LC14")
+        self.tab_widget.addTab(lc15_container, "LC15")
+        self.tab_widget.addTab(self.path_analysis_canvas, "LC16")
+        self.tab_widget.addTab(self.bridge_analysis_canvas, "LC17")
+        self.tab_widget.addTab(self.interlayer_path_similarity_canvas, "LC20")
 
         # LC4A: Enhanced Network Diagram
         self.enhanced_network_figure = Figure(figsize=(8, 6), dpi=100)
         self.enhanced_network_canvas = FigureCanvas(self.enhanced_network_figure)
         self.enhanced_network_ax = self.enhanced_network_figure.add_subplot(111)
         
+        # Show disabled message initially
+        self.enhanced_network_ax.text(
+            0.5, 0.5, 
+            "Enhanced network diagram disabled", 
+            ha="center", va="center", 
+            fontsize=12
+        )
+        self.enhanced_network_canvas.draw()
+        
         # Create a container widget for the LC4A tab
         lc4a_container = QWidget()
         lc4a_layout = QVBoxLayout(lc4a_container)
         
+        # Add enable/disable checkbox for LC4A
+        lc4a_controls_layout = QHBoxLayout()
+        self.enhanced_network_enable_checkbox = QCheckBox("Enable")
+        self.enhanced_network_enable_checkbox.setChecked(False)  # Disabled by default
+        self.enhanced_network_enable_checkbox.stateChanged.connect(self.on_enhanced_network_state_changed)
+        lc4a_controls_layout.addWidget(self.enhanced_network_enable_checkbox)
+        lc4a_controls_layout.addStretch()
+        lc4a_layout.addLayout(lc4a_controls_layout)
+        
         # Add the enhanced network controls to the LC4A tab
         lc4a_layout.addWidget(self.enhanced_network_ui["group"])
+        
+        # Initially disable the controls since the checkbox is unchecked by default
+        self.enhanced_network_ui["group"].setEnabled(False)
         
         # Add the canvas to the LC4A tab
         lc4a_layout.addWidget(self.enhanced_network_canvas)
@@ -377,11 +423,25 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
                     
                     # Map tab indices to update methods
                     tab_to_update = {
-                        3: self.update_lc4_network_diagram,  # LC4: Network & Similarity
-                        11: self.update_lc12_similarity_matrix,  # LC12: Enhanced Similarity Analysis
-                        14: self.update_lc16_path_analysis,  # LC16: Interlayer Path Analysis
-                        15: self.update_lc17_bridge_analysis,  # LC17: Cluster Bridging Analysis
-                        17: self.update_lc20_interlayer_path_similarity  # LC20: Interlayer Path Similarity
+                        0: self.update_lc1_heatmap,  # LC1: Overlap Heatmap
+                        1: self.update_lc2_distribution,  # LC2: Cluster-Layer Distribution
+                        2: self.update_lc3_layer_distribution,  # LC3: Layer-Cluster Distribution
+                        3: self.update_lc4_network_diagram,  # LC4: Network Diagram
+                        4: self.update_lc5_cluster_network,  # LC5: Cluster Network
+                        5: self.update_lc6_sankey,  # LC6: Sankey Diagram
+                        6: self.update_lc7_connectivity,  # LC7: Connectivity Matrix
+                        7: self.update_lc8_chord,  # LC8: Chord Diagram
+                        8: self.update_lc9_density,  # LC9: Density Heatmap
+                        9: self.update_lc10_cooccurrence,  # LC10: Co-occurrence Network
+                        10: self.update_lc11_normalized,  # LC11: Normalized Heatmap
+                        11: self.update_lc12_similarity_matrix,  # LC12: Similarity Matrix
+                        12: self.update_lc13_bubble,  # LC13: Bubble Chart
+                        13: self.update_lc14_treemap,  # LC14: Treemap
+                        14: self.update_flow_ideas,  # LC15: Flow Ideas
+                        15: self.update_lc16_path_analysis,  # LC16: Interlayer Path Analysis
+                        16: self.update_lc17_bridge_analysis,  # LC17: Cluster Bridging Analysis
+                        17: self.update_lc20_interlayer_path_similarity,  # LC20: Interlayer Path Similarity
+                        18: self.update_enhanced_network  # LC4A: Enhanced Network Diagram
                     }
                     
                     # Call the appropriate update method if the current tab is in our map
@@ -803,70 +863,9 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         # LC14: Create treemap
         self.update_lc14_treemap(data_manager)
         
-        # LC15: Create four different flow visualization ideas
-        # Idea 1: Circular flow diagram
-        self._create_circular_flow_diagram(
-            self.flow_ideas_ax1,
-            edge_connections,
-            node_ids,
-            node_clusters,
-            nodes_per_layer,
-            layers,
-            small_font,
-            medium_font,
-            visible_layer_indices,
-            data_manager.cluster_colors
-        )
-        self.flow_ideas_ax1.set_title("Idea 1: Circular Flow Diagram", fontsize=medium_font["fontsize"])
+        # LC15: Update flow ideas visualization
+        self.update_flow_ideas(data_manager)
         
-        # Idea 2: Force-directed graph with layers as regions
-        self._create_force_directed_regions(
-            self.flow_ideas_ax2,
-            edge_connections,
-            node_ids,
-            node_clusters,
-            nodes_per_layer,
-            layers,
-            small_font,
-            medium_font,
-            visible_layer_indices,
-            data_manager.cluster_colors
-        )
-        self.flow_ideas_ax2.set_title("Idea 2: Force-Directed Regions", fontsize=medium_font["fontsize"])
-        
-        # Idea 3: Alluvial diagram
-        self._create_alluvial_diagram(
-            self.flow_ideas_ax3,
-            edge_connections,
-            node_ids,
-            node_clusters,
-            nodes_per_layer,
-            layers,
-            small_font,
-            medium_font,
-            visible_layer_indices,
-            data_manager.cluster_colors
-        )
-        self.flow_ideas_ax3.set_title("Idea 3: Alluvial Diagram", fontsize=medium_font["fontsize"])
-        
-        # Idea 4: Radial network
-        self._create_radial_network(
-            self.flow_ideas_ax4,
-            edge_connections,
-            node_ids,
-            node_clusters,
-            nodes_per_layer,
-            layers,
-            small_font,
-            medium_font,
-            visible_layer_indices,
-            data_manager.cluster_colors
-        )
-        self.flow_ideas_ax4.set_title("Idea 4: Radial Network", fontsize=medium_font["fontsize"])
-        
-        self.flow_ideas_figure.tight_layout()
-        self.flow_ideas_canvas.draw()
-
         # Adjust layout and draw
         self.heatmap_figure.tight_layout()
         self.distribution_figure.tight_layout()
@@ -882,7 +881,6 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         self.similarity_figure.tight_layout()
         self.bubble_figure.tight_layout()
         self.treemap_figure.tight_layout()
-        self.flow_ideas_figure.tight_layout()
         
         self.heatmap_canvas.draw()
         self.distribution_canvas.draw()
@@ -898,8 +896,7 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         self.similarity_canvas.draw()
         self.bubble_canvas.draw()
         self.treemap_canvas.draw()
-        self.flow_ideas_canvas.draw() 
-
+        
         # Update LC16: Interlayer Path Analysis
         self.update_lc16_path_analysis(data_manager)
         
@@ -1283,6 +1280,8 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         import matplotlib.pyplot as plt
         from matplotlib.path import Path
         from matplotlib.patches import PathPatch
+        from matplotlib.colors import to_rgba
+        import matplotlib.cm as cm
         from collections import defaultdict
         
         # Clear the axis
@@ -1328,107 +1327,152 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
             x_pos = (i + 1) * x_step
             layer_positions[layer_idx] = x_pos
         
-        # Draw the alluvial diagram
+        # Calculate y positions for each cluster in each layer
+        cluster_y_positions = {}
+        for layer_idx in visible_layers:
+            y_pos = 0.1  # Start from the bottom with some margin
+            cluster_y_positions[layer_idx] = {}
+            
+            # Sort clusters by count for better visualization
+            layer_clusters = [(cluster, cluster_layer_counts[cluster][layer_idx]) 
+                             for cluster in unique_clusters if layer_idx in cluster_layer_counts[cluster]]
+            layer_clusters.sort(key=lambda x: x[1], reverse=True)
+            
+            for cluster, count in layer_clusters:
+                height = 0.8 * (count / layer_totals[layer_idx]) if layer_totals[layer_idx] > 0 else 0
+                cluster_y_positions[layer_idx][cluster] = (y_pos, height)
+                y_pos += height
+        
+        # Draw the alluvial diagram with enhanced visuals
         for cluster in unique_clusters:
             # Get a color for this cluster
-            color = cluster_colors.get(cluster, "gray") if cluster_colors else "gray"
-            
-            # Track y positions for this cluster in each layer
-            y_positions = {}
-            
-            # Calculate y positions
-            for layer_idx in visible_layers:
-                if layer_idx in cluster_layer_counts[cluster]:
-                    count = cluster_layer_counts[cluster][layer_idx]
-                    total = layer_totals[layer_idx]
-                    
-                    # Calculate the height of this cluster in this layer
-                    height = count / total if total > 0 else 0
-                    
-                    # Calculate the y position (centered)
-                    y_pos = 0.5 - height / 2
-                    
-                    y_positions[layer_idx] = (y_pos, height)
+            base_color = cluster_colors.get(cluster, "gray") if cluster_colors else "gray"
             
             # Draw flows between consecutive layers
             for i in range(len(visible_layers) - 1):
                 layer1 = visible_layers[i]
                 layer2 = visible_layers[i + 1]
                 
-                if layer1 in y_positions and layer2 in y_positions:
+                if (layer1 in cluster_y_positions and cluster in cluster_y_positions[layer1] and
+                    layer2 in cluster_y_positions and cluster in cluster_y_positions[layer2]):
+                    
                     x1 = layer_positions[layer1]
-                    y1, h1 = y_positions[layer1]
+                    y1, h1 = cluster_y_positions[layer1][cluster]
                     
                     x2 = layer_positions[layer2]
-                    y2, h2 = y_positions[layer2]
+                    y2, h2 = cluster_y_positions[layer2][cluster]
                     
-                    # Create a path for the flow
+                    # Create a path for the flow with curved edges
+                    control_x = (x1 + x2) / 2
+                    
+                    # Create a gradient effect
+                    rgba_color = to_rgba(base_color)
+                    
+                    # Create a path with Bezier curves for smoother flow
                     verts = [
-                        (x1, y1),  # Start at top-left
-                        (x1, y1 + h1),  # Bottom-left
-                        (x2, y2 + h2),  # Bottom-right
-                        (x2, y2),  # Top-right
-                        (x1, y1)   # Back to start
+                        (x1, y1),                      # Start at top-left
+                        (control_x, y1),               # Control point
+                        (x2, y2),                      # Top-right
+                        (x2, y2 + h2),                 # Bottom-right
+                        (control_x, y1 + h1),          # Control point
+                        (x1, y1 + h1),                 # Bottom-left
+                        (x1, y1)                       # Back to start
                     ]
                     
                     codes = [
                         Path.MOVETO,
+                        Path.CURVE3,
                         Path.LINETO,
                         Path.LINETO,
+                        Path.CURVE3,
                         Path.LINETO,
                         Path.CLOSEPOLY
                     ]
                     
                     path = Path(verts, codes)
                     patch = PathPatch(
-                        path, facecolor=color, edgecolor='black',
-                        alpha=0.7, linewidth=0.5
+                        path, facecolor=base_color, edgecolor='white',
+                        alpha=0.8, linewidth=0.5
                     )
                     ax.add_patch(patch)
             
-            # Draw rectangles for each layer
+            # Draw rectangles for each layer with enhanced styling
             for layer_idx in visible_layers:
-                if layer_idx in y_positions:
+                if layer_idx in cluster_y_positions and cluster in cluster_y_positions[layer_idx]:
                     x = layer_positions[layer_idx]
-                    y, height = y_positions[layer_idx]
+                    y, height = cluster_y_positions[layer_idx][cluster]
                     
+                    # Add a slight 3D effect with a gradient
                     rect = plt.Rectangle(
-                        (x - 0.02, y), 0.04, height,
-                        facecolor=color, edgecolor='black',
-                        alpha=0.8, linewidth=0.5
+                        (x - 0.03, y), 0.06, height,
+                        facecolor=base_color, edgecolor='white',
+                        alpha=0.9, linewidth=1.0
                     )
                     ax.add_patch(rect)
+                    
+                    # Add count labels if the rectangle is large enough
+                    if height > 0.05:
+                        count = cluster_layer_counts[cluster][layer_idx]
+                        ax.text(
+                            x, y + height/2,
+                            str(count),
+                            ha='center', va='center',
+                            fontsize=9,
+                            fontweight='bold',
+                            color='white'
+                        )
         
-        # Add layer labels
+        # Add layer labels with better styling
         for layer_idx, x_pos in layer_positions.items():
             if layer_idx < len(layers):
+                # Create a background for the label
+                rect = plt.Rectangle(
+                    (x_pos - 0.05, 0.02), 0.1, 0.06,
+                    facecolor='lightgray', edgecolor='gray',
+                    alpha=0.8, linewidth=1.0, zorder=10
+                )
+                ax.add_patch(rect)
+                
                 ax.text(
                     x_pos, 0.05,
                     layers[layer_idx],
                     ha='center', va='center',
-                    fontsize=8,
+                    fontsize=9,
                     fontweight='bold',
-                    rotation=90
+                    zorder=11
                 )
         
-        # Create a legend for clusters
+        # Create a more attractive legend for clusters
         legend_elements = []
-        for cluster in unique_clusters[:5]:  # Limit to top 5
+        for i, cluster in enumerate(unique_clusters[:5]):  # Limit to top 5
             color = cluster_colors.get(cluster, "gray") if cluster_colors else "gray"
             legend_elements.append(
                 plt.Line2D([0], [0], 
                           marker='s', 
                           color='w',
                           markerfacecolor=color,
-                          markersize=8,
+                          markersize=10,
                           label=f"Cluster {cluster}")
             )
         
-        # Add the legend
-        ax.legend(
+        # Add the legend with better styling
+        legend = ax.legend(
             handles=legend_elements,
             loc='upper right',
-            fontsize=8
+            fontsize=9,
+            framealpha=0.9,
+            edgecolor='gray'
+        )
+        legend.set_zorder(20)  # Make sure legend is on top
+        
+        # Add a title explaining the visualization
+        ax.text(
+            0.5, 0.95,
+            "Node Distribution Across Layers by Cluster",
+            ha='center', va='center',
+            fontsize=10,
+            fontweight='bold',
+            bbox=dict(facecolor='white', alpha=0.8, edgecolor='gray')
         )
         
         # Set axis limits
@@ -1438,6 +1482,9 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         # Remove axis ticks and labels
         ax.set_xticks([])
         ax.set_yticks([])
+        
+        # Add a subtle grid for better orientation
+        ax.grid(True, linestyle='--', alpha=0.2)
     
     def _create_radial_network(self, ax, edge_connections, node_ids, node_clusters, nodes_per_layer, layers, small_font, medium_font, visible_layer_indices, cluster_colors):
         """
@@ -1445,7 +1492,9 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         """
         import numpy as np
         import matplotlib.pyplot as plt
-        from matplotlib.patches import Wedge, ConnectionPatch
+        from matplotlib.patches import Wedge, ConnectionPatch, FancyBboxPatch
+        from matplotlib.colors import to_rgba, LinearSegmentedColormap
+        import matplotlib.cm as cm
         from collections import defaultdict
         
         # Clear the axis
@@ -1493,17 +1542,65 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
             radius = max_radius - i * radius_step
             layer_radii[layer_idx] = radius
         
-        # Draw the radial network
+        # Add a subtle background gradient for visual appeal
+        background = np.linspace(0, 1, 100)
+        background = np.vstack((background, background))
+        ax.imshow(background, cmap=plt.cm.Blues, alpha=0.1, aspect='auto', 
+                 extent=[-1, 1, -1, 1], origin='lower')
+        
+        # Draw connecting lines between layers first (as background)
+        for cluster_idx, cluster in enumerate(unique_clusters):
+            # Calculate angle range for this cluster
+            angle_per_cluster = 360 / len(unique_clusters)
+            center_angle = cluster_idx * angle_per_cluster + angle_per_cluster / 2
+            center_angle_rad = np.radians(center_angle)
+            
+            # Draw lines connecting layers for this cluster
+            prev_layer = None
+            prev_radius = None
+            prev_count = None
+            
+            for layer_idx in visible_layers:
+                if layer_idx in cluster_layer_counts[cluster]:
+                    count = cluster_layer_counts[cluster][layer_idx]
+                    radius = layer_radii[layer_idx]
+                    
+                    if prev_layer is not None:
+                        # Draw a connecting line
+                        x1 = prev_radius * np.cos(center_angle_rad)
+                        y1 = prev_radius * np.sin(center_angle_rad)
+                        x2 = radius * np.cos(center_angle_rad)
+                        y2 = radius * np.sin(center_angle_rad)
+                        
+                        # Line width based on count
+                        max_count = max(prev_count, count)
+                        line_width = 1 + 5 * (max_count / max(layer_totals.values()))
+                        
+                        # Draw the connecting line with gradient
+                        line = ConnectionPatch(
+                            (x1, y1), (x2, y2),
+                            coordsA="data", coordsB="data",
+                            axesA=ax, axesB=ax,
+                            color='gray', alpha=0.3,
+                            linewidth=line_width
+                        )
+                        ax.add_patch(line)
+                    
+                    prev_layer = layer_idx
+                    prev_radius = radius
+                    prev_count = count
+        
+        # Draw the radial network with enhanced visuals
         for cluster_idx, cluster in enumerate(unique_clusters):
             # Get a color for this cluster
-            color = cluster_colors.get(cluster, "gray") if cluster_colors else "gray"
+            base_color = cluster_colors.get(cluster, "gray") if cluster_colors else "gray"
             
             # Calculate angle range for this cluster
             angle_per_cluster = 360 / len(unique_clusters)
             start_angle = cluster_idx * angle_per_cluster
             end_angle = (cluster_idx + 1) * angle_per_cluster
             
-            # Draw wedges for each layer
+            # Draw wedges for each layer with enhanced styling
             for layer_idx in visible_layers:
                 if layer_idx in cluster_layer_counts[cluster]:
                     count = cluster_layer_counts[cluster][layer_idx]
@@ -1519,47 +1616,63 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
                     wedge_start = center_angle - angle_span / 2
                     wedge_end = center_angle + angle_span / 2
                     
-                    # Draw the wedge
+                    # Draw the wedge with enhanced styling
                     radius = layer_radii[layer_idx]
                     width = radius_step * 0.8
+                    
+                    # Create a slightly darker edge color for 3D effect
+                    edge_color = 'white'
                     
                     wedge = Wedge(
                         (0, 0), radius, wedge_start, wedge_end,
                         width=width,
-                        facecolor=color, edgecolor='black',
-                        alpha=0.8, linewidth=0.5
+                        facecolor=base_color, edgecolor=edge_color,
+                        alpha=0.9, linewidth=1.0
                     )
                     ax.add_patch(wedge)
                     
                     # Add a label if the wedge is large enough
-                    if angle_span > 10:
+                    if angle_span > 15:
                         # Calculate the position for the label
                         angle_rad = np.radians(center_angle)
                         label_radius = radius - width / 2
                         x = label_radius * np.cos(angle_rad)
                         y = label_radius * np.sin(angle_rad)
                         
+                        # Add a text label with count
                         ax.text(
                             x, y,
                             str(count),
                             ha='center', va='center',
-                            fontsize=8,
-                            fontweight='bold'
+                            fontsize=9,
+                            fontweight='bold',
+                            color='white',
+                            bbox=dict(facecolor='black', alpha=0.5, boxstyle='round,pad=0.2')
                         )
         
-        # Add layer labels
+        # Add layer labels with better styling
         for layer_idx, radius in layer_radii.items():
             if layer_idx < len(layers):
+                # Create a fancy box for the layer label
+                box = FancyBboxPatch(
+                    (-0.08, radius - 0.02), 0.16, 0.04,
+                    boxstyle=f"round,pad=0.3",
+                    facecolor='white', edgecolor='gray',
+                    alpha=0.9, zorder=10
+                )
+                ax.add_patch(box)
+                
+                # Add the layer text
                 ax.text(
                     0, radius,
                     layers[layer_idx],
                     ha='center', va='center',
-                    fontsize=8,
+                    fontsize=9,
                     fontweight='bold',
-                    bbox=dict(facecolor='white', alpha=0.7, edgecolor='none')
+                    zorder=11
                 )
         
-        # Create a legend for clusters
+        # Create a more attractive legend for clusters
         legend_elements = []
         for cluster in unique_clusters[:5]:  # Limit to top 5
             color = cluster_colors.get(cluster, "gray") if cluster_colors else "gray"
@@ -1568,15 +1681,28 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
                           marker='s', 
                           color='w',
                           markerfacecolor=color,
-                          markersize=8,
+                          markersize=10,
                           label=f"Cluster {cluster}")
             )
         
-        # Add the legend
-        ax.legend(
+        # Add the legend with better styling
+        legend = ax.legend(
             handles=legend_elements,
             loc='upper right',
-            fontsize=8
+            fontsize=9,
+            framealpha=0.9,
+            edgecolor='gray'
+        )
+        legend.set_zorder(20)  # Make sure legend is on top
+        
+        # Add a title explaining the visualization
+        ax.text(
+            0, 0.9,
+            "Radial Distribution of Clusters Across Layers",
+            ha='center', va='center',
+            fontsize=10,
+            fontweight='bold',
+            bbox=dict(facecolor='white', alpha=0.8, edgecolor='gray', boxstyle='round,pad=0.3')
         )
         
         # Set axis limits
@@ -1586,7 +1712,12 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         # Remove axis ticks and labels
         ax.set_xticks([])
         ax.set_yticks([])
-        ax.set_aspect('equal') 
+        ax.set_aspect('equal')
+        
+        # Add a subtle circular grid
+        for r in np.linspace(0.2, 0.8, 4):
+            circle = plt.Circle((0, 0), r, fill=False, color='gray', linestyle='--', alpha=0.2)
+            ax.add_patch(circle)
 
     def _create_tooltips(self):
         """Create detailed tooltips for each tab with technical details"""
@@ -2272,6 +2403,20 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         if not hasattr(self, "enhanced_network_figure") or not self.enable_checkbox.isChecked():
             return
             
+        # Check if the enhanced network is enabled
+        if not self.enhanced_network_enable_checkbox.isChecked():
+            # Clear the figure
+            self.enhanced_network_figure.clear()
+            self.enhanced_network_ax = self.enhanced_network_figure.add_subplot(111)
+            self.enhanced_network_ax.text(
+                0.5, 0.5, 
+                "Enhanced network diagram disabled", 
+                ha="center", va="center", 
+                fontsize=12
+            )
+            self.enhanced_network_canvas.draw()
+            return
+            
         # Clear the figure
         self.enhanced_network_figure.clear()
         
@@ -2290,7 +2435,7 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         layout_algorithm = self.layout_algorithm_combo.currentText().lower()
         aspect_ratio = float(self.aspect_ratio_combo.currentText())
         
-        # Use the update function from lc4a_network_diagram.py
+        #
         self.enhanced_network_ax = update_enhanced_network(
             self.enhanced_network_figure,
             self.enhanced_network_ax,
@@ -2300,6 +2445,14 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
             layout_algorithm,
             aspect_ratio
         )
+
+    def on_enhanced_network_state_changed(self, state):
+        """Handle enable/disable state change for enhanced network diagram"""
+        if hasattr(self, "_current_data") and self._current_data:
+            self.update_enhanced_network()
+            
+            # Enable or disable the controls based on the checkbox state
+            self.enhanced_network_ui["group"].setEnabled(state)
 
     def update_lc12_similarity_matrix(self, data_manager):
         """Update the LC12 similarity matrix with the selected metric and edge type"""
@@ -2496,3 +2649,151 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         # Draw the canvas
         self.treemap_figure.tight_layout()
         self.treemap_canvas.draw()
+
+    def on_flow_ideas_state_changed(self, state):
+        """Handle enable/disable state change for flow ideas visualization"""
+        if hasattr(self, "_current_data") and self._current_data:
+            if state:
+                # If enabled, update the flow ideas visualization
+                self.update_flow_ideas(self._current_data)
+            else:
+                # If disabled, show the disabled message
+                for ax in [self.flow_ideas_ax1, self.flow_ideas_ax2, self.flow_ideas_ax3, self.flow_ideas_ax4]:
+                    ax.clear()
+                    ax.text(0.5, 0.5, "Flow ideas visualization disabled", ha="center", va="center", fontsize=12)
+                    ax.set_xticks([])
+                    ax.set_yticks([])
+                self.flow_ideas_canvas.draw()
+
+    def update_flow_ideas(self, data_manager):
+        """Update the flow ideas visualization with the current data"""
+        if not hasattr(self, "flow_ideas_figure") or not self.enable_checkbox.isChecked() or not self.flow_ideas_enable_checkbox.isChecked():
+            return
+            
+        # Get visible links
+        visible_links = []
+        if data_manager.current_edge_mask is not None:
+            visible_links = [data_manager.link_pairs[i] for i in range(len(data_manager.link_pairs)) 
+                            if data_manager.current_edge_mask[i]]
+        
+        # Define font sizes
+        small_font = {"fontsize": 9}
+        medium_font = {"fontsize": 12}
+        
+        # Idea 1: Circular flow diagram
+        self._create_circular_flow_diagram(
+            self.flow_ideas_ax1,
+            visible_links,
+            data_manager.node_ids,
+            data_manager.node_clusters,
+            data_manager.nodes_per_layer,
+            data_manager.layers,
+            small_font,
+            medium_font,
+            data_manager.visible_layers,
+            data_manager.cluster_colors
+        )
+        self.flow_ideas_ax1.set_title("Idea 1: Circular Flow Diagram", fontsize=medium_font["fontsize"])
+        
+        # Idea 2: Force-directed graph with layers as regions
+        self._create_force_directed_regions(
+            self.flow_ideas_ax2,
+            visible_links,
+            data_manager.node_ids,
+            data_manager.node_clusters,
+            data_manager.nodes_per_layer,
+            data_manager.layers,
+            small_font,
+            medium_font,
+            data_manager.visible_layers,
+            data_manager.cluster_colors
+        )
+        self.flow_ideas_ax2.set_title("Idea 2: Force-Directed Regions", fontsize=medium_font["fontsize"])
+        
+        # Idea 3: Alluvial diagram
+        self._create_alluvial_diagram(
+            self.flow_ideas_ax3,
+            visible_links,
+            data_manager.node_ids,
+            data_manager.node_clusters,
+            data_manager.nodes_per_layer,
+            data_manager.layers,
+            small_font,
+            medium_font,
+            data_manager.visible_layers,
+            data_manager.cluster_colors
+        )
+        self.flow_ideas_ax3.set_title("Idea 3: Alluvial Diagram", fontsize=medium_font["fontsize"])
+        
+        # Idea 4: Radial network
+        self._create_radial_network(
+            self.flow_ideas_ax4,
+            visible_links,
+            data_manager.node_ids,
+            data_manager.node_clusters,
+            data_manager.nodes_per_layer,
+            data_manager.layers,
+            small_font,
+            medium_font,
+            data_manager.visible_layers,
+            data_manager.cluster_colors
+        )
+        self.flow_ideas_ax4.set_title("Idea 4: Radial Network", fontsize=medium_font["fontsize"])
+        
+        self.flow_ideas_figure.tight_layout()
+        self.flow_ideas_canvas.draw()
+
+    def update_lc1_heatmap(self, data_manager):
+        """Update the LC1 heatmap with the current data"""
+        # This is a stub method that can be implemented later
+        pass
+        
+    def update_lc2_distribution(self, data_manager):
+        """Update the LC2 distribution with the current data"""
+        # This is a stub method that can be implemented later
+        pass
+        
+    def update_lc3_layer_distribution(self, data_manager):
+        """Update the LC3 layer distribution with the current data"""
+        # This is a stub method that can be implemented later
+        pass
+        
+    def update_lc5_cluster_network(self, data_manager):
+        """Update the LC5 cluster network with the current data"""
+        # This is a stub method that can be implemented later
+        pass
+        
+    def update_lc6_sankey(self, data_manager):
+        """Update the LC6 sankey diagram with the current data"""
+        # This is a stub method that can be implemented later
+        pass
+        
+    def update_lc7_connectivity(self, data_manager):
+        """Update the LC7 connectivity matrix with the current data"""
+        # This is a stub method that can be implemented later
+        pass
+        
+    def update_lc8_chord(self, data_manager):
+        """Update the LC8 chord diagram with the current data"""
+        # This is a stub method that can be implemented later
+        pass
+        
+    def update_lc9_density(self, data_manager):
+        """Update the LC9 density heatmap with the current data"""
+        # This is a stub method that can be implemented later
+        pass
+        
+    def update_lc10_cooccurrence(self, data_manager):
+        """Update the LC10 cooccurrence network with the current data"""
+        # This is a stub method that can be implemented later
+        pass
+        
+    def update_lc11_normalized(self, data_manager):
+        """Update the LC11 normalized heatmap with the current data"""
+        # This is a stub method that can be implemented later
+        pass
+        
+    def update_lc13_bubble(self, data_manager):
+        """Update the LC13 bubble chart with the current data"""
+        # This is a stub method that can be implemented later
+        pass
