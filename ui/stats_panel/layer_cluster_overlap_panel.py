@@ -117,7 +117,7 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         
         # Add cluster selector for LC20
         controls_layout.addSpacing(20)
-        controls_layout.addWidget(QLabel("LC20 Cluster:"))
+        controls_layout.addWidget(QLabel("LC20/16 Cluster:"))
         self.path_similarity_cluster_combo = QComboBox()
         self.path_similarity_cluster_combo.addItem("All Clusters")
         self.path_similarity_cluster_combo.currentIndexChanged.connect(self.on_layout_changed)
@@ -416,7 +416,9 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
                 elif sender == self.similarity_metric_combo or sender == self.edge_type_combo:
                     self.update_lc12_similarity_matrix(self._current_data)
                 elif sender == self.path_similarity_cluster_combo:
+                    # Update both LC20 and LC16 when the cluster dropdown changes
                     self.update_lc20_interlayer_path_similarity(self._current_data)
+                    self.update_lc16_path_analysis(self._current_data)
                 else:
                     # If we can't determine the sender, update based on current tab
                     current_tab = self.tab_widget.currentIndex()
@@ -924,6 +926,14 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         # Get the selected analysis type
         analysis_type = self.path_analysis_combo.currentText().lower().replace(" ", "_")
         
+        # Get the selected cluster from the LC20 dropdown
+        selected_cluster = None
+        if hasattr(self, "path_similarity_cluster_combo"):
+            cluster_selection = self.path_similarity_cluster_combo.currentText()
+            if cluster_selection != "All Clusters":
+                # Extract the cluster number from "Cluster X"
+                selected_cluster = int(cluster_selection.split(" ")[1])
+        
         # Get visible links
         visible_links = []
         if data_manager.current_edge_mask is not None:
@@ -947,7 +957,8 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
             data_manager.layers,
             visible_layer_indices,
             data_manager.cluster_colors,
-            analysis_type
+            analysis_type,
+            selected_cluster=selected_cluster
         )
         
         # Redraw the figure to show the changes
@@ -2251,11 +2262,13 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         <p><b>Controls:</b></p>
         <ul>
             <li><b>LC16 Analysis:</b> Select an analysis type (Path Length, Betweenness, Bottleneck)</li>
+            <li><b>LC20 Cluster:</b> Filter the analysis to show only nodes and connections from a specific cluster</li>
         </ul>
 
         <p><b>Calculation Method:</b></p>
         <ol>
             <li>Filter visible links using current_node_mask</li>
+            <li>If a cluster is selected in the LC20 dropdown, filter nodes and edges to include only those from the selected cluster</li>
             <li>Duplicate each node for each layer it appears in, using the naming convention <layer>_<node></li>
             <li>Create intralayer edges only between duplicated nodes that have existing connections in the original network</li>
             <li>Create interlayer edges between duplicated nodes in different layers when they represent the same original nodes</li>
@@ -2284,6 +2297,7 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
             <li>Discover bottlenecks in the network that may affect information flow</li>
             <li>Analyze the overall structure of the network considering both types of connections</li>
             <li>Find potential vulnerabilities where removing a small number of nodes could significantly impact connectivity</li>
+            <li>Compare path characteristics between different clusters by using the cluster filter</li>
         </ul>
         """
         self.tab_widget.setTabToolTip(15, path_analysis_tooltip)

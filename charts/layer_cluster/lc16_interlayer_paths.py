@@ -20,7 +20,8 @@ def create_interlayer_path_analysis(
     cluster_colors=None,
     analysis_type="path_length",  # Options: "path_length", "betweenness", "bottleneck"
     medium_fontsize=12,
-    small_fontsize=9
+    small_fontsize=9,
+    selected_cluster=None  # New parameter to filter by cluster
 ):
     """
     Analyze and visualize interlayer paths between layers, regardless of cluster.
@@ -62,6 +63,8 @@ def create_interlayer_path_analysis(
         Font size for medium text
     small_fontsize : int, optional
         Font size for small text
+    selected_cluster : int, optional
+        If specified, only include nodes from this cluster in the analysis
     """
     try:
         # Ensure visible_layer_indices is defined
@@ -98,10 +101,15 @@ def create_interlayer_path_analysis(
             if layer_idx in visible_layers:
                 for node_id in node_list:
                     if node_id in node_ids:
+                        # If a cluster is selected, only include nodes from that cluster
+                        if selected_cluster is not None:
+                            node_cluster = node_clusters.get(node_id, None)
+                            if node_cluster != selected_cluster:
+                                continue
                         node_layers[node_id].append(layer_idx)
         
         # Create duplicated nodes for each layer a node appears in
-        duplicated_nodes = {}  # Maps original node ID to list of duplicated node IDs
+        duplicated_nodes = {}
         
         for node_id, layers_list in node_layers.items():
             duplicated_nodes[node_id] = []
@@ -124,6 +132,14 @@ def create_interlayer_path_analysis(
         for source_idx, target_idx in visible_links:
             source_id = node_idx_to_id[source_idx]
             target_id = node_idx_to_id[target_idx]
+            
+            # If a cluster is selected, only include edges where both nodes are in the selected cluster
+            if selected_cluster is not None:
+                source_cluster = node_clusters.get(source_id, None)
+                target_cluster = node_clusters.get(target_id, None)
+                if source_cluster != selected_cluster or target_cluster != selected_cluster:
+                    continue
+                    
             original_edges.add((source_id, target_id))
             original_edges.add((target_id, source_id))  # Add both directions since it's an undirected graph
         
@@ -147,6 +163,13 @@ def create_interlayer_path_analysis(
         for source_idx, target_idx in visible_links:
             source_id = node_idx_to_id[source_idx]
             target_id = node_idx_to_id[target_idx]
+            
+            # If a cluster is selected, only include edges where both nodes are in the selected cluster
+            if selected_cluster is not None:
+                source_cluster = node_clusters.get(source_id, None)
+                target_cluster = node_clusters.get(target_id, None)
+                if source_cluster != selected_cluster or target_cluster != selected_cluster:
+                    continue
             
             # Get the layers for these nodes
             source_layers = node_layers[source_id]
@@ -217,7 +240,13 @@ def create_interlayer_path_analysis(
             "betweenness": "Node Betweenness in Duplicated Network",
             "bottleneck": "Critical Connections in Duplicated Network"
         }
-        ax.set_title(title_map.get(analysis_type, f"Duplicated Network Analysis: {analysis_type}"))
+        title = title_map.get(analysis_type, f"Duplicated Network Analysis: {analysis_type}")
+        
+        # Add cluster information to the title if a cluster is selected
+        if selected_cluster is not None:
+            title += f" - Cluster {selected_cluster}"
+            
+        ax.set_title(title)
         
         # Remove spines
         for spine in ax.spines.values():
