@@ -106,7 +106,9 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         controls_layout.addSpacing(10)
         controls_layout.addWidget(QLabel("Aspect:"))
         self.aspect_ratio_combo = QComboBox()
-        self.aspect_ratio_combo.addItems(["0.25", "0.5", "0.75", "1.0", "1.25", "1.5", "2.0"])
+        self.aspect_ratio_combo.addItems(
+            ["0.25", "0.5", "0.75", "1.0", "1.25", "1.5", "2.0"]
+        )
         self.aspect_ratio_combo.setCurrentText("0.75")
         self.aspect_ratio_combo.currentTextChanged.connect(self.on_layout_changed)
         controls_layout.addWidget(self.aspect_ratio_combo)
@@ -122,7 +124,24 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         controls_layout.addWidget(QLabel("LC17 Analysis:"))
         self.bridge_analysis_combo = QComboBox()
         self.bridge_analysis_combo.addItems(
-            ["Bridge Score", "Flow Efficiency", "Layer Span", "Centrality Distribution", "Cluster Cohesion", "Information Flow"]
+            [
+                "Bridge Score",
+                "Flow Efficiency",
+                "Layer Span",
+                "Centrality Distribution",
+                "Cluster Cohesion",
+                "Information Flow",
+                "Structural Holes",
+                "Cross-Layer Influence",
+                "Cluster Resilience",
+                "Path Diversity",
+                "Boundary Spanning",
+                "Module Conservation",
+                "Functional Enrichment",
+                "Disease Association",
+                "Co-expression Correlation",
+                "Pathway Alignment",
+            ]
         )
         self.bridge_analysis_combo.currentIndexChanged.connect(self.on_layout_changed)
         controls_layout.addWidget(self.bridge_analysis_combo)
@@ -384,38 +403,40 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         self.tab_widget.addTab(self.bubble_canvas, "LC13")
         self.tab_widget.addTab(self.lc14_container, "LC14")
         self.tab_widget.addTab(lc15_container, "LC15")
-        
+
         # Create a container widget for the LC16 tab
         lc16_container = QWidget()
         lc16_layout = QVBoxLayout(lc16_container)
-        
+
         # Add controls layout for LC16
         lc16_controls_layout = QHBoxLayout()
         lc16_controls_layout.addWidget(QLabel("LC16 Analysis:"))
         lc16_controls_layout.addWidget(self.path_analysis_combo)
         lc16_controls_layout.addStretch()
         lc16_layout.addLayout(lc16_controls_layout)
-        
+
         # Add LC16 visualization controls using the integration function
         lc16_ui_elements = integrate_lc16_ui_with_panel(
-            self, 
+            self,
             lc16_layout,  # Add to the LC16 tab layout instead of the top controls
             analysis_combo=self.path_analysis_combo,
-            cluster_combo=self.path_similarity_cluster_combo
+            cluster_combo=self.path_similarity_cluster_combo,
         )
-        
+
         # Store references to the UI elements for later use
         self.lc16_viz_style_combo = lc16_ui_elements["viz_style_combo"]
         self.lc16_show_nodes_cb = lc16_ui_elements["show_nodes_checkbox"]
-        self.lc16_color_by_centrality_cb = lc16_ui_elements["color_by_centrality_checkbox"]
+        self.lc16_color_by_centrality_cb = lc16_ui_elements[
+            "color_by_centrality_checkbox"
+        ]
         self.lc16_hide_unconnected_cb = lc16_ui_elements["hide_unconnected_checkbox"]
-        
+
         # Add the canvas to the LC16 tab
         lc16_layout.addWidget(self.path_analysis_canvas)
-        
+
         # Add the LC16 tab to the tab widget
         self.tab_widget.addTab(lc16_container, "LC16")
-        
+
         self.tab_widget.addTab(self.bridge_analysis_canvas, "LC17")
         self.tab_widget.addTab(self.interlayer_path_similarity_canvas, "LC20")
 
@@ -1136,7 +1157,7 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
             hide_unconnected=viz_settings["hide_unconnected"],
             emphasize_layers=viz_settings["emphasize_layers"],
             node_size=viz_settings["node_size"],
-            layout_spacing=viz_settings["layout_spacing"]
+            layout_spacing=viz_settings["layout_spacing"],
         )
 
         # Apply tight layout and draw
@@ -1157,7 +1178,7 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
 
         # Get the selected analysis type
         analysis_type = (
-            self.bridge_analysis_combo.currentText().lower().replace(" ", "_")
+            self.bridge_analysis_combo.currentText().lower().replace(" ", "_").replace("-", "_")
         )
 
         # Get visible links
@@ -2643,7 +2664,7 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
          
          <p><b>Controls:</b></p>
          <ul>
-             <li><b>LC17 Analysis:</b> Select an analysis type (Bridge Score, Flow Efficiency, Layer Span, Centrality Distribution, Cluster Cohesion, Information Flow)</li>
+             <li><b>LC17 Analysis:</b> Select an analysis type (Bridge Score, Flow Efficiency, Layer Span, Centrality Distribution, Cluster Cohesion, Information Flow, Structural Holes, Cross-Layer Influence, Cluster Resilience, Path Diversity, Boundary Spanning, Module Conservation, Functional Enrichment, Disease Association, Co-expression Correlation, Pathway Alignment)</li>
          </ul>
          
          <p><b>Calculation Method:</b></p>
@@ -2664,6 +2685,16 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
              <li><b>Centrality Distribution:</b> Heatmap showing the distribution of betweenness centrality across layers for each cluster</li>
              <li><b>Cluster Cohesion:</b> Heatmap showing the distribution of connections within each cluster</li>
              <li><b>Information Flow:</b> Heatmap showing the distribution of information flow between layers through each cluster</li>
+             <li><b>Structural Holes:</b> Heatmap showing the distribution of structural holes across layers</li>
+             <li><b>Cross-Layer Influence:</b> Heatmap showing the distribution of cross-layer influence across layers</li>
+             <li><b>Cluster Resilience:</b> Heatmap showing the distribution of cluster resilience across layers</li>
+             <li><b>Path Diversity:</b> Heatmap showing the distribution of path diversity across layers</li>
+             <li><b>Boundary Spanning:</b> Heatmap showing the distribution of boundary spanning across layers</li>
+             <li><b>Module Conservation:</b> Heatmap showing the distribution of module conservation across layers</li>
+             <li><b>Functional Enrichment:</b> Heatmap showing the distribution of functional enrichment across layers</li>
+             <li><b>Disease Association:</b> Heatmap showing the distribution of disease association across layers</li>
+             <li><b>Co-expression Correlation:</b> Heatmap showing the distribution of co-expression correlation across layers</li>
+             <li><b>Pathway Alignment:</b> Heatmap showing the distribution of pathway alignment across layers</li>
          </ul>
          
          <p><b>Interpretation:</b></p>
@@ -2674,6 +2705,16 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
              <li><b>Centrality Distribution:</b> Indicates the distribution of betweenness centrality across layers for each cluster. Higher values indicate clusters that are more central in the network.</li>
              <li><b>Cluster Cohesion:</b> Measures the strength of connections within each cluster. Higher values indicate clusters that are more cohesive.</li>
              <li><b>Information Flow:</b> Shows how information flows between layers through each cluster. Higher values indicate clusters that are more effective at facilitating information flow between layers.</li>
+             <li><b>Structural Holes:</b> Indicates the distribution of structural holes across layers. Higher values indicate layers that are more isolated from the rest of the network.</li>
+             <li><b>Cross-Layer Influence:</b> Indicates the distribution of cross-layer influence across layers. Higher values indicate layers that are more influential on other layers.</li>
+             <li><b>Cluster Resilience:</b> Indicates the distribution of cluster resilience across layers. Higher values indicate clusters that are more resilient to changes in the network.</li>
+             <li><b>Path Diversity:</b> Indicates the distribution of path diversity across layers. Higher values indicate layers that are more diverse in terms of information flow.</li>
+             <li><b>Boundary Spanning:</b> Indicates the distribution of boundary spanning across layers. Higher values indicate layers that are more connected to the rest of the network.</li>
+             <li><b>Module Conservation:</b> Indicates the distribution of module conservation across layers. Higher values indicate layers that are more conserved in terms of functional modules.</li>
+             <li><b>Functional Enrichment:</b> Indicates the distribution of functional enrichment across layers. Higher values indicate layers that are more enriched in specific biological processes or pathways.</li>
+             <li><b>Disease Association:</b> Indicates the distribution of disease association across layers. Higher values indicate layers that are more associated with specific diseases.</li>
+             <li><b>Co-expression Correlation:</b> Indicates the distribution of co-expression correlation across layers. Higher values indicate layers that are more correlated in terms of gene expression.</li>
+             <li><b>Pathway Alignment:</b> Indicates the distribution of pathway alignment across layers. Higher values indicate layers that are more aligned with specific biological pathways.</li>
          </ul>
          
          <p><b>Applications:</b></p>
@@ -2684,52 +2725,63 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
              <li>Compare interlayer connectivity patterns across different layers</li>
              <li>Find clusters that span multiple layers and may play important roles in cross-layer interactions</li>
              <li>Understand the distribution of betweenness centrality across layers for each cluster</li>
-             <li>Identify clusters that are more central in the network</li>
-             <li>Analyze the strength of connections within each cluster</li>
-             <li>Understand how information flows between layers through each cluster</li>
+             <li>Identify clusters that are more conserved in terms of functional modules</li>
+             <li>Discover layers that are more enriched in specific biological processes or pathways</li>
+             <li>Identify layers that are more associated with specific diseases</li>
+             <li>Analyze co-expression correlation across layers to identify shared gene modules</li>
+             <li>Compare pathway alignment across layers to identify shared biological pathways</li>
+         </ul>
+         
+         <p><b>Limitations:</b></p>
+         <ul>
+             <li>The analysis assumes that the network is undirected and that edges represent bidirectional interactions.</li>
+             <li>The analysis does not account for the direction of interactions or the possibility of feedback loops.</li>
+             <li>The analysis may not be applicable to networks with a large number of disconnected components or highly fragmented structures.</li>
+             <li>The analysis may not be able to capture complex interactions that occur at the level of individual genes or proteins.</li>
+             <li>The analysis may not be able to capture the full range of possible interactions that could occur between layers.</li>
+         </ul>
+         
+         <p><b>Future Work:</b></p>
+         <ul>
+             <li>Extend the analysis to include directed networks and feedback loops.</li>
+             <li>Develop methods to identify clusters that are more conserved in terms of functional modules.</li>
+             <li>Develop methods to identify layers that are more enriched in specific biological processes or pathways.</li>
+             <li>Develop methods to identify layers that are more associated with specific diseases.</li>
+             <li>Develop methods to analyze co-expression correlation across layers to identify shared gene modules.</li>
+             <li>Develop methods to compare pathway alignment across layers to identify shared biological pathways.</li>
+         </ul>
+         
+         <p><b>Conclusion:</b></p>
+         <ul>
+             <li>The analysis provides a comprehensive overview of the flow of information and connections between layers in the network.</li>
+             <li>The analysis identifies clusters that are more central in the network, have higher cohesiveness, and are more effective at facilitating information flow between layers.</li>
+             <li>The analysis identifies layers that are more isolated from the rest of the network, have higher structural holes, and are less influential on other layers.</li>
+             <li>The analysis identifies clusters that are more resilient to changes in the network and have higher path diversity.</li>
+             <li>The analysis identifies layers that are more connected to the rest of the network and have higher boundary spanning.</li>
+             <li>The analysis identifies clusters that are more conserved in terms of functional modules and are more enriched in specific biological processes or pathways.</li>
+             <li>The analysis identifies layers that are more associated with specific diseases and co-expression correlation across layers.</li>
+             <li>The analysis identifies layers that are more enriched in specific biological pathways and have higher pathway alignment.</li>
+         </ul>
+         
+         <p><b>Implications:</b></p>
+         <ul>
+             <li>Understanding the flow of information and connections between layers in the network can help identify clusters that are more central in the network and have higher cohesiveness.</li>
+             <li>Understanding the distribution of betweenness centrality across layers for each cluster can help identify clusters that are more central in the network and have higher cohesiveness.</li>
+             <li>Understanding the distribution of structural holes across layers can help identify layers that are more isolated from the rest of the network and have higher structural holes.</li>
+             <li>Understanding the distribution of cross-layer influence across layers can help identify layers that are more influential on other layers.</li>
+             <li>Understanding the distribution of cluster resilience across layers can help identify clusters that are more resilient to changes in the network.</li>
+             <li>Understanding the distribution of path diversity across layers can help identify layers that are more diverse in terms of information flow.</li>
+             <li>Understanding the distribution of boundary spanning across layers can help identify layers that are more connected to the rest of the network.</li>
+             <li>Understanding the distribution of module conservation across layers can help identify layers that are more conserved in terms of functional modules.</li>
+             <li>Understanding the distribution of functional enrichment across layers can help identify layers that are more enriched in specific biological processes or pathways.</li>
+             <li>Understanding the distribution of disease association across layers can help identify layers that are more associated with specific diseases.</li>
+             <li>Understanding the distribution of co-expression correlation across layers can help identify shared gene modules and biological pathways.</li>
+             <li>Understanding the distribution of pathway alignment across layers can help identify shared biological pathways and biological processes.</li>
          </ul>
          """
-        self.tab_widget.setTabToolTip(16, bridge_analysis_tooltip)
 
-        # LC20: Interlayer Path Similarity tooltip
-        interlayer_path_similarity_tooltip = """
-         <h3>LC20: Interlayer Path Similarity Analysis</h3>
-         
-         <p><b>Data Source:</b></p>
-         <ul>
-             <li>data_manager.node_ids: List of all node IDs in the network</li>
-             <li>data_manager.node_clusters: Dictionary mapping node IDs to cluster assignments</li>
-             <li>data_manager.nodes_per_layer: Dictionary mapping layer indices to lists of node IDs</li>
-             <li>data_manager.current_node_mask: Boolean mask for visible nodes</li>
-             <li>data_manager.edge_connections: List of (start_idx, end_idx) tuples representing links</li>
-         </ul>
-         
-         <p><b>Controls:</b></p>
-         <ul>
-             <li><b>LC20 Cluster:</b> Select a specific cluster to analyze or view all clusters</li>
-         </ul>
-         
-         <p><b>Calculation Method:</b></p>
-         <ol>
-             <li>Filter visible nodes and edges using current_node_mask</li>
-             <li>Identify interlayer edges (connections between nodes in different layers)</li>
-             <li>For each cluster pair (or selected cluster with all others):
-                 <ul>
-                     <li>Calculate path-based similarity using interlayer edges only</li>
-                     <li>Compute average shortest path length between nodes in different clusters</li>
-                     <li>Transform to similarity score: 1 / (1 + average path length)</li>
-                 </ul>
-             </li>
-             <li>Create heatmap showing similarity scores between clusters</li>
-             <li>For selected cluster view, create individual heatmaps for each layer pair</li>
-         </ol>
-         
-         <p><b>Visualization:</b></p>
-         <ul>
-             <li><b>Combined View (All Clusters):</b> Matrix showing path-based similarity between all cluster pairs using only interlayer edges</li>
-             <li><b>Single Cluster View:</b> Multiple matrices showing path-based similarity between the selected cluster and all others, broken down by layer pairs</li>
-         </ul>
-         """
+        interlayer_path_similarity_tooltip = "asfd"
+
         self.tab_widget.setTabToolTip(18, interlayer_path_similarity_tooltip)
 
     def update_enhanced_network(self):
@@ -2964,15 +3016,16 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
     def update_lc14_treemap(self, data_manager):
         """Update the LC14 treemap visualization"""
         import logging
+
         logger = logging.getLogger(__name__)
-        
+
         # Get the current count type
         count_type = (
             "nodes"
             if self.lc14_count_type_combo.currentText() == "Nodes"
             else "interlayer_edges"
         )
-        
+
         logger.info(f"Updating LC14 treemap with count_type: {count_type}")
 
         # Clear the figure
@@ -2983,8 +3036,10 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         node_clusters = data_manager.node_clusters
         nodes_per_layer = data_manager.nodes_per_layer
         layers = data_manager.layers
-        
-        logger.info(f"Data manager info: nodes_per_layer={nodes_per_layer}, layers={layers}")
+
+        logger.info(
+            f"Data manager info: nodes_per_layer={nodes_per_layer}, layers={layers}"
+        )
         logger.info(f"Number of node_ids: {len(node_ids)}")
         logger.info(f"Number of node_clusters: {len(node_clusters)}")
 
@@ -2996,23 +3051,32 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         elif hasattr(data_manager, "edge_connections"):
             visible_links = data_manager.edge_connections
             logger.info("Using data_manager.edge_connections")
-        
+
         # If visible_links is still empty, try to get link_pairs directly
         if not visible_links and hasattr(data_manager, "link_pairs"):
             visible_links = data_manager.link_pairs
             logger.info("Using data_manager.link_pairs as visible_links is empty")
-            
+
             # If we have a current_edge_mask, apply it to filter the links
-            if hasattr(data_manager, "current_edge_mask") and data_manager.current_edge_mask is not None:
+            if (
+                hasattr(data_manager, "current_edge_mask")
+                and data_manager.current_edge_mask is not None
+            ):
                 # Filter links using the edge mask
-                visible_links = [link for i, link in enumerate(visible_links) if data_manager.current_edge_mask[i]]
-                logger.info(f"Filtered visible_links using current_edge_mask, now have {len(visible_links)} links")
-        
+                visible_links = [
+                    link
+                    for i, link in enumerate(visible_links)
+                    if data_manager.current_edge_mask[i]
+                ]
+                logger.info(
+                    f"Filtered visible_links using current_edge_mask, now have {len(visible_links)} links"
+                )
+
         logger.info(f"Number of visible_links: {len(visible_links)}")
         if visible_links and len(visible_links) > 0:
             sample_size = min(5, len(visible_links))
             logger.info(f"Sample of visible_links: {visible_links[:sample_size]}")
-            
+
         # No need to convert visible_links anymore - the treemap function now handles both formats
         # (node indices and node IDs)
 
@@ -3027,13 +3091,15 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         elif hasattr(data_manager, "visible_layers"):
             visible_layer_indices = data_manager.visible_layers
             logger.info("Using data_manager.visible_layers")
-        
+
         logger.info(f"Visible layer indices: {visible_layer_indices}")
-        
+
         # Check if we have cluster colors
         if hasattr(data_manager, "cluster_colors"):
             logger.info(f"Number of cluster colors: {len(data_manager.cluster_colors)}")
-            logger.info(f"Sample of cluster colors: {list(data_manager.cluster_colors.items())[:3]}")
+            logger.info(
+                f"Sample of cluster colors: {list(data_manager.cluster_colors.items())[:3]}"
+            )
 
         # Get font sizes
         small_font = {"fontsize": 8}
@@ -3041,7 +3107,7 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
 
         # Create the treemap
         from charts.layer_cluster.lc14_treemap import create_layer_cluster_treemap
-        
+
         logger.info("Calling create_layer_cluster_treemap")
 
         create_layer_cluster_treemap(
@@ -3061,7 +3127,7 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         # Draw the canvas
         self.treemap_figure.tight_layout()
         self.treemap_canvas.draw()
-        
+
         logger.info("Finished updating LC14 treemap")
 
     def on_flow_ideas_state_changed(self, state):
