@@ -6,6 +6,9 @@ from collections import defaultdict, Counter
 from matplotlib.colors import LinearSegmentedColormap
 import matplotlib.patches as patches
 import matplotlib.colors as mcolors
+from scipy.stats import gaussian_kde
+import matplotlib.cm as cm
+from matplotlib.gridspec import GridSpec
 
 def create_cluster_bridging_analysis(ax, visible_links, node_ids, node_clusters, nodes_per_layer, 
                                     layers, visible_layer_indices, 
@@ -41,7 +44,8 @@ def create_cluster_bridging_analysis(ax, visible_links, node_ids, node_clusters,
     layer_colors : dict
         Dictionary mapping layer indices to colors
     analysis_type : str
-        Type of bridging analysis to perform: 'bridge_score', 'flow_efficiency', or 'layer_span'
+        Type of bridging analysis to perform: 'bridge_score', 'flow_efficiency', 'layer_span',
+        'centrality_distribution', 'cluster_cohesion', or 'information_flow'
     """
     try:
         logging.info(f"Visible links: {len(visible_links)}, Node IDs: {len(node_ids)}, Clusters: {len(node_clusters)}")
@@ -177,6 +181,15 @@ def create_cluster_bridging_analysis(ax, visible_links, node_ids, node_clusters,
         elif analysis_type == 'layer_span':
             _analyze_layer_span(ax, G, unique_clusters, nodes_by_cluster, nodes_by_layer, 
                                cluster_colors, layers, visible_layer_indices, layer_colors)
+        elif analysis_type == 'centrality_distribution':
+            _analyze_centrality_distribution(ax, G, unique_clusters, nodes_by_cluster, nodes_by_layer,
+                                           cluster_colors, layers, visible_layer_indices)
+        elif analysis_type == 'cluster_cohesion':
+            _analyze_cluster_cohesion(ax, G, unique_clusters, nodes_by_cluster, nodes_by_layer,
+                                     cluster_colors, layers, visible_layer_indices)
+        elif analysis_type == 'information_flow':
+            _analyze_information_flow(ax, G, unique_clusters, nodes_by_cluster, nodes_by_layer,
+                                     cluster_colors, layers, visible_layer_indices)
         else:
             ax.text(0.5, 0.5, f"Unknown analysis type: {analysis_type}", 
                    ha='center', va='center')
@@ -421,4 +434,373 @@ def _analyze_layer_span(ax, G, unique_clusters, nodes_by_cluster, nodes_by_layer
     # Add explanation
     ax.text(0.5, -0.15, 
            "Layer Span: Distribution of a cluster's nodes across different layers.\nHigher span values indicate clusters that bridge more layers. Each color represents a different layer.",
+           ha='center', va='center', transform=ax.transAxes)
+
+
+def _analyze_centrality_distribution(ax, G, unique_clusters, nodes_by_cluster, nodes_by_layer,
+                                   cluster_colors, layers, visible_layer_indices):
+    """
+    Analyze and visualize the distribution of different centrality measures across clusters.
+    This helps identify which clusters serve as central hubs in the network.
+    """
+    logging.info("Analyzing centrality distribution across clusters")
+    
+    # Calculate different centrality measures
+    betweenness = nx.betweenness_centrality(G)
+    closeness = nx.closeness_centrality(G)
+    
+    # Handle eigenvector centrality for potentially disconnected graphs
+    try:
+        # Try to calculate eigenvector centrality
+        eigenvector = nx.eigenvector_centrality_numpy(G)
+    except nx.NetworkXError:
+        # If the graph is disconnected, calculate eigenvector centrality for each connected component
+        eigenvector = {}
+        for component in nx.connected_components(G):
+            subgraph = G.subgraph(component)
+            # Only calculate if the component has more than 1 node
+            if len(subgraph) > 1:
+                sub_eigenvector = nx.eigenvector_centrality_numpy(subgraph)
+                eigenvector.update(sub_eigenvector)
+            else:
+                # For isolated nodes, set eigenvector centrality to 0
+                for node in component:
+                    eigenvector[node] = 0.0
+    
+    # Group centrality measures by cluster
+    cluster_centrality = defaultdict(lambda: {'betweenness': [], 'closeness': [], 'eigenvector': []})
+    
+    for node, bc in betweenness.items():
+        if node in G.nodes:
+            cluster = G.nodes[node]['cluster']
+            cluster_centrality[cluster]['betweenness'].append(bc)
+            cluster_centrality[cluster]['closeness'].append(closeness[node])
+            # Check if node has eigenvector centrality (it might not if it's in a tiny component)
+            if node in eigenvector:
+                cluster_centrality[cluster]['eigenvector'].append(eigenvector[node])
+            else:
+                cluster_centrality[cluster]['eigenvector'].append(0.0)
+    
+    # Create a figure with subplots for each centrality measure
+    gs = GridSpec(2, 2, width_ratios=[3, 1], height_ratios=[1, 1], wspace=0.3, hspace=0.3)
+    
+    # Create subplots
+    scatter_ax = plt.subplot(gs[:, 0])  # Left column, both rows
+    bc_ax = plt.subplot(gs[0, 1])       # Top right
+    ec_ax = plt.subplot(gs[1, 1])       # Bottom right
+    
+    # 1. Create a scatter plot of betweenness vs eigenvector centrality
+    for cluster in unique_clusters:
+        if cluster not in cluster_centrality:
+            continue
+            
+        bc_values = cluster_centrality[cluster]['betweenness']
+        ec_values = cluster_centrality[cluster]['eigenvector']
+        
+        if not bc_values or not ec_values:
+            continue
+            
+        color = cluster_colors.get(cluster, '#CCCCCC')
+        
+        # Calculate the average values for this cluster
+        avg_bc = np.mean(bc_values)
+        avg_ec = np.mean(ec_values)
+        
+        # Plot individual nodes with transparency
+        scatter_ax.scatter(bc_values, ec_values, color=color, alpha=0.3, s=30, label=f"C{cluster} nodes")
+        
+        # Plot the cluster average as a larger point
+        scatter_ax.scatter([avg_bc], [avg_ec], color=color, edgecolor='black', s=150, 
+                         marker='o', label=f"C{cluster} avg")
+        
+        # Add cluster label
+        scatter_ax.text(avg_bc, avg_ec, f"C{cluster}", fontweight='bold', ha='center', va='center')
+    
+    scatter_ax.set_xlabel('Betweenness Centrality')
+    scatter_ax.set_ylabel('Eigenvector Centrality')
+    scatter_ax.set_title('Centrality Distribution by Cluster')
+    scatter_ax.grid(True, alpha=0.3)
+    
+    # Remove duplicate labels
+    handles, labels = scatter_ax.get_legend_handles_labels()
+    by_label = dict(zip(labels, handles))
+    scatter_ax.legend(by_label.values(), by_label.keys(), loc='upper right')
+    
+    # 2. Create density plots for betweenness centrality
+    for cluster in unique_clusters:
+        if cluster not in cluster_centrality:
+            continue
+            
+        bc_values = cluster_centrality[cluster]['betweenness']
+        
+        if not bc_values or len(bc_values) < 2:
+            continue
+            
+        color = cluster_colors.get(cluster, '#CCCCCC')
+        
+        # Create a kernel density estimate
+        try:
+            kde = gaussian_kde(bc_values)
+            x = np.linspace(0, max(bc_values) * 1.1, 100)
+            bc_ax.plot(x, kde(x), color=color, label=f"C{cluster}")
+        except:
+            # If KDE fails, create a simple histogram
+            bc_ax.hist(bc_values, bins=10, alpha=0.5, color=color, density=True, label=f"C{cluster}")
+    
+    bc_ax.set_xlabel('Betweenness Centrality')
+    bc_ax.set_ylabel('Density')
+    bc_ax.set_title('Betweenness Distribution')
+    bc_ax.legend()
+    
+    # 3. Create density plots for eigenvector centrality
+    for cluster in unique_clusters:
+        if cluster not in cluster_centrality:
+            continue
+            
+        ec_values = cluster_centrality[cluster]['eigenvector']
+        
+        if not ec_values or len(ec_values) < 2:
+            continue
+            
+        color = cluster_colors.get(cluster, '#CCCCCC')
+        
+        # Create a kernel density estimate
+        try:
+            kde = gaussian_kde(ec_values)
+            x = np.linspace(0, max(ec_values) * 1.1, 100)
+            ec_ax.plot(x, kde(x), color=color, label=f"C{cluster}")
+        except:
+            # If KDE fails, create a simple histogram
+            ec_ax.hist(ec_values, bins=10, alpha=0.5, color=color, density=True, label=f"C{cluster}")
+    
+    ec_ax.set_xlabel('Eigenvector Centrality')
+    ec_ax.set_ylabel('Density')
+    ec_ax.set_title('Eigenvector Distribution')
+    ec_ax.legend()
+    
+    # Add explanation
+    ax.text(0.5, -0.1, 
+           "Centrality Distribution: Shows how different centrality measures are distributed across clusters.\n"
+           "Clusters in the upper right of the scatter plot are important bridges in the network.",
+           ha='center', va='center', transform=ax.transAxes)
+
+
+def _analyze_cluster_cohesion(ax, G, unique_clusters, nodes_by_cluster, nodes_by_layer,
+                             cluster_colors, layers, visible_layer_indices):
+    """
+    Analyze and visualize the cohesion of clusters within and between layers.
+    Cohesion measures how tightly connected nodes are within a cluster.
+    """
+    logging.info("Analyzing cluster cohesion within and between layers")
+    
+    # Calculate cohesion metrics for each cluster
+    intra_cohesion = {}  # Within-layer cohesion
+    inter_cohesion = {}  # Between-layer cohesion
+    
+    for cluster in unique_clusters:
+        cluster_nodes = nodes_by_cluster[cluster]
+        if not cluster_nodes:
+            intra_cohesion[cluster] = 0
+            inter_cohesion[cluster] = 0
+            continue
+        
+        # Create a subgraph for this cluster
+        subgraph = G.subgraph(cluster_nodes)
+        
+        # Calculate within-layer cohesion (average clustering coefficient within layers)
+        layer_cohesion = {}
+        for layer_idx in visible_layer_indices:
+            # Get nodes in this layer and cluster
+            layer_nodes = [n for n in cluster_nodes if G.nodes[n]['layer'] == layer_idx]
+            
+            if len(layer_nodes) < 3:  # Need at least 3 nodes for clustering coefficient
+                continue
+                
+            # Create a subgraph for this layer
+            layer_subgraph = subgraph.subgraph(layer_nodes)
+            
+            # Calculate average clustering coefficient
+            try:
+                clustering = nx.average_clustering(layer_subgraph)
+                layer_cohesion[layer_idx] = clustering
+            except:
+                layer_cohesion[layer_idx] = 0
+        
+        # Average within-layer cohesion across all layers
+        intra_cohesion[cluster] = np.mean(list(layer_cohesion.values())) if layer_cohesion else 0
+        
+        # Calculate between-layer cohesion (ratio of interlayer to total edges)
+        interlayer_edges = 0
+        total_edges = 0
+        
+        for u, v in subgraph.edges():
+            total_edges += 1
+            u_layer = G.nodes[u]['layer']
+            v_layer = G.nodes[v]['layer']
+            if u_layer != v_layer:
+                interlayer_edges += 1
+        
+        inter_cohesion[cluster] = interlayer_edges / max(total_edges, 1)
+    
+    # Create a scatter plot of intra vs inter cohesion
+    for cluster in unique_clusters:
+        intra = intra_cohesion[cluster]
+        inter = inter_cohesion[cluster]
+        
+        color = cluster_colors.get(cluster, '#CCCCCC')
+        
+        # Plot the cluster as a point
+        ax.scatter(intra, inter, color=color, edgecolor='black', s=200, alpha=0.7)
+        
+        # Add cluster label
+        ax.text(intra, inter, f"C{cluster}", fontweight='bold', ha='center', va='center')
+    
+    # Add quadrant labels
+    ax.axhline(0.5, color='gray', linestyle='--', alpha=0.5)
+    ax.axvline(0.5, color='gray', linestyle='--', alpha=0.5)
+    
+    # Add quadrant annotations
+    ax.text(0.25, 0.75, "Bridging Clusters\n(Low internal cohesion,\nhigh interlayer connectivity)",
+           ha='center', va='center', bbox=dict(facecolor='white', alpha=0.7))
+    
+    ax.text(0.75, 0.75, "Super-Connectors\n(High internal cohesion,\nhigh interlayer connectivity)",
+           ha='center', va='center', bbox=dict(facecolor='white', alpha=0.7))
+    
+    ax.text(0.25, 0.25, "Weak Clusters\n(Low internal cohesion,\nlow interlayer connectivity)",
+           ha='center', va='center', bbox=dict(facecolor='white', alpha=0.7))
+    
+    ax.text(0.75, 0.25, "Layer-Specific\n(High internal cohesion,\nlow interlayer connectivity)",
+           ha='center', va='center', bbox=dict(facecolor='white', alpha=0.7))
+    
+    # Set labels and title
+    ax.set_xlabel('Within-Layer Cohesion (Clustering Coefficient)')
+    ax.set_ylabel('Between-Layer Cohesion (Interlayer Edge Ratio)')
+    ax.set_title('Cluster Cohesion Analysis')
+    
+    # Set axis limits
+    ax.set_xlim(-0.05, 1.05)
+    ax.set_ylim(-0.05, 1.05)
+    
+    # Add explanation
+    ax.text(0.5, -0.1, 
+           "Cluster Cohesion: Shows how tightly connected nodes are within and between layers.\n"
+           "Clusters in the upper right quadrant are ideal bridges with strong internal and external connections.",
+           ha='center', va='center', transform=ax.transAxes)
+
+
+def _analyze_information_flow(ax, G, unique_clusters, nodes_by_cluster, nodes_by_layer,
+                             cluster_colors, layers, visible_layer_indices):
+    """
+    Simulate information flow through the network to identify key bridging clusters.
+    This uses a diffusion model to see how information spreads across layers through clusters.
+    """
+    logging.info("Analyzing information flow through clusters")
+    
+    # Create a matrix to store information flow between layers through each cluster
+    num_layers = len(visible_layer_indices)
+    flow_matrix = np.zeros((len(unique_clusters), num_layers))
+    
+    # For each layer, simulate information flow starting from that layer
+    for start_idx, start_layer in enumerate(visible_layer_indices):
+        # For each cluster, measure how well it transmits information from the start layer
+        for c_idx, cluster in enumerate(unique_clusters):
+            cluster_nodes = nodes_by_cluster[cluster]
+            
+            # Skip clusters with no nodes
+            if not cluster_nodes:
+                continue
+                
+            # Get nodes in the start layer for this cluster
+            start_nodes = [n for n in cluster_nodes if G.nodes[n]['layer'] == start_layer]
+            
+            if not start_nodes:
+                continue
+                
+            # Create a subgraph for this cluster
+            subgraph = G.subgraph(cluster_nodes)
+            
+            # Initialize information values (1.0 for start nodes, 0.0 for others)
+            info_values = {node: 1.0 if node in start_nodes else 0.0 for node in cluster_nodes}
+            
+            # Simulate diffusion for a few steps
+            num_steps = 3
+            damping = 0.85
+            
+            for _ in range(num_steps):
+                new_values = {}
+                
+                # For each node, update its value based on neighbors
+                for node in cluster_nodes:
+                    if node not in subgraph:
+                        continue
+                        
+                    # Get neighbors
+                    neighbors = list(subgraph.neighbors(node))
+                    
+                    if not neighbors:
+                        new_values[node] = info_values[node]
+                        continue
+                    
+                    # Calculate new value as weighted average of neighbors
+                    neighbor_sum = sum(info_values[neigh] for neigh in neighbors)
+                    new_value = (1 - damping) * info_values[node] + damping * neighbor_sum / len(neighbors)
+                    new_values[node] = new_value
+                
+                # Update all values at once
+                info_values = new_values
+            
+            # Measure information flow to each layer
+            for end_idx, end_layer in enumerate(visible_layer_indices):
+                if end_layer == start_layer:
+                    continue
+                    
+                # Get nodes in the end layer for this cluster
+                end_nodes = [n for n in cluster_nodes if G.nodes[n]['layer'] == end_layer]
+                
+                if not end_nodes:
+                    continue
+                
+                # Calculate average information value at end nodes
+                avg_info = sum(info_values[node] for node in end_nodes) / len(end_nodes)
+                
+                # Store in the flow matrix
+                flow_matrix[c_idx, end_idx] += avg_info
+    
+    # Normalize the flow matrix by the number of source layers
+    flow_matrix = flow_matrix / num_layers
+    
+    # Calculate overall flow score for each cluster (average across destination layers)
+    flow_scores = np.mean(flow_matrix, axis=1)
+    
+    # Clear the original axis and create a new figure with a polar projection
+    ax.clear()
+    
+    # Create a bar chart of flow scores instead of a radar chart
+    # Sort clusters by flow score
+    sorted_indices = np.argsort(flow_scores)[::-1]
+    sorted_clusters = [unique_clusters[i] for i in sorted_indices]
+    sorted_scores = [flow_scores[i] for i in sorted_indices]
+    
+    # Create bar chart
+    y_pos = np.arange(len(sorted_clusters))
+    colors = [cluster_colors.get(c, '#CCCCCC') for c in sorted_clusters]
+    
+    bars = ax.barh(y_pos, sorted_scores, color=colors)
+    
+    # Add labels and formatting
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels([f"Cluster {c}" for c in sorted_clusters])
+    ax.set_xlabel("Information Flow Score")
+    ax.set_title("Information Flow Through Clusters")
+    
+    # Add value labels
+    for i, bar in enumerate(bars):
+        width = bar.get_width()
+        ax.text(width + 0.01, bar.get_y() + bar.get_height()/2, 
+               f"{width:.2f}", ha='left', va='center')
+    
+    # Add explanation
+    ax.text(0.5, -0.15, 
+           "Information Flow: Shows how effectively clusters transmit information to different layers.\n"
+           "Higher scores indicate clusters that better bridge information across the network.",
            ha='center', va='center', transform=ax.transAxes) 

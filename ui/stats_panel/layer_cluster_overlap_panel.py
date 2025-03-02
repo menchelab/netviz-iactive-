@@ -122,7 +122,7 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         controls_layout.addWidget(QLabel("LC17 Analysis:"))
         self.bridge_analysis_combo = QComboBox()
         self.bridge_analysis_combo.addItems(
-            ["Bridge Score", "Flow Efficiency", "Layer Span"]
+            ["Bridge Score", "Flow Efficiency", "Layer Span", "Centrality Distribution", "Cluster Cohesion", "Information Flow"]
         )
         self.bridge_analysis_combo.currentIndexChanged.connect(self.on_layout_changed)
         controls_layout.addWidget(self.bridge_analysis_combo)
@@ -2643,7 +2643,7 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
          
          <p><b>Controls:</b></p>
          <ul>
-             <li><b>LC17 Analysis:</b> Select an analysis type (Bridge Score, Flow Efficiency, Layer Span)</li>
+             <li><b>LC17 Analysis:</b> Select an analysis type (Bridge Score, Flow Efficiency, Layer Span, Centrality Distribution, Cluster Cohesion, Information Flow)</li>
          </ul>
          
          <p><b>Calculation Method:</b></p>
@@ -2661,6 +2661,9 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
              <li><b>Bridge Score:</b> Bar chart showing how well each cluster connects different layers through both interlayer and intralayer edges</li>
              <li><b>Flow Efficiency:</b> Heatmap showing how efficiently information can flow between layers through each cluster in the duplicated node network</li>
              <li><b>Layer Span:</b> Stacked bar chart showing the distribution of each cluster's nodes across different layers</li>
+             <li><b>Centrality Distribution:</b> Heatmap showing the distribution of betweenness centrality across layers for each cluster</li>
+             <li><b>Cluster Cohesion:</b> Heatmap showing the distribution of connections within each cluster</li>
+             <li><b>Information Flow:</b> Heatmap showing the distribution of information flow between layers through each cluster</li>
          </ul>
          
          <p><b>Interpretation:</b></p>
@@ -2668,6 +2671,9 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
              <li><b>Bridge Score:</b> Higher values indicate clusters that more effectively bridge between layers through both interlayer and intralayer connections. The score is calculated as the ratio of interlayer to total connections within a cluster.</li>
              <li><b>Flow Efficiency:</b> Each cell (i,j) shows the best cluster for efficient information flow between layers i and j. Higher values (brighter colors) indicate more efficient pathways through the duplicated node network.</li>
              <li><b>Layer Span:</b> Shows how each cluster's nodes are distributed across layers. Clusters with higher span values bridge more layers. The stacked bars show the proportion of each cluster's nodes in each layer.</li>
+             <li><b>Centrality Distribution:</b> Indicates the distribution of betweenness centrality across layers for each cluster. Higher values indicate clusters that are more central in the network.</li>
+             <li><b>Cluster Cohesion:</b> Measures the strength of connections within each cluster. Higher values indicate clusters that are more cohesive.</li>
+             <li><b>Information Flow:</b> Shows how information flows between layers through each cluster. Higher values indicate clusters that are more effective at facilitating information flow between layers.</li>
          </ul>
          
          <p><b>Applications:</b></p>
@@ -2677,6 +2683,10 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
              <li>Analyze how information might flow between layers through specific clusters</li>
              <li>Compare interlayer connectivity patterns across different layers</li>
              <li>Find clusters that span multiple layers and may play important roles in cross-layer interactions</li>
+             <li>Understand the distribution of betweenness centrality across layers for each cluster</li>
+             <li>Identify clusters that are more central in the network</li>
+             <li>Analyze the strength of connections within each cluster</li>
+             <li>Understand how information flows between layers through each cluster</li>
          </ul>
          """
         self.tab_widget.setTabToolTip(16, bridge_analysis_tooltip)
