@@ -447,34 +447,77 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
     max_betweenness = max(edge_betweenness.values()) if edge_betweenness else 1.0
     normalized_betweenness = {edge: bc / max_betweenness for edge, bc in edge_betweenness.items()}
     
-    # Create a visualization of the network with bottlenecks highlighted
-    # Position nodes using a spring layout, grouped by layer
-    pos = nx.spring_layout(G, seed=42)
+    # Group nodes by layer and cluster for better layout
+    layer_nodes = defaultdict(list)
+    cluster_nodes = defaultdict(list)
+    for node in G.nodes:
+        layer = G.nodes[node]['layer']
+        cluster = G.nodes[node]['cluster']
+        layer_nodes[layer].append(node)
+        cluster_nodes[cluster].append(node)
+    
+    # Create a layout that better shows the network structure
+    # Use a combination of layout algorithms for better results
+    
+    # First, try a kamada_kawai layout which tends to show structure well
+    try:
+        pos = nx.kamada_kawai_layout(G)
+    except:
+        # Fall back to spring layout if kamada_kawai fails
+        pos = nx.spring_layout(G, k=0.3, iterations=50, seed=42)
+    
+    # Scale the layout to fill the available space
+    pos_array = np.array(list(pos.values()))
+    if len(pos_array) > 0:
+        # Find the current min/max coordinates
+        min_x, min_y = pos_array.min(axis=0)
+        max_x, max_y = pos_array.max(axis=0)
+        
+        # Scale to ensure we use most of the available space
+        scale_factor = 0.8  # Use 80% of the available space
+        for node in pos:
+            pos[node] = [
+                (pos[node][0] - min_x) / (max_x - min_x + 1e-10) * scale_factor * 2 - scale_factor,
+                (pos[node][1] - min_y) / (max_y - min_y + 1e-10) * scale_factor * 2 - scale_factor
+            ]
+    
+    # Clear the axis for a clean visualization
+    ax.clear()
     
     # Draw the graph
-    # 1. Draw edges with width and color based on betweenness and edge type
+    # 1. First draw all edges with minimal styling to show the structure
+    for u, v in G.edges():
+        edge_type = G.edges[u, v].get('edge_type', 'unknown')
+        # Use very light colors for the background structure
+        color = 'lightblue' if edge_type == "interlayer" else 'mistyrose'
+        ax.plot([pos[u][0], pos[v][0]], [pos[u][1], pos[v][1]], 
+               linewidth=0.5, color=color, alpha=0.3,
+               zorder=0)  # Lowest zorder to draw in the background
+    
+    # 2. Draw the significant edges with width and color based on betweenness
     for edge, betweenness in normalized_betweenness.items():
+        if betweenness < 0.1:  # Skip low betweenness edges for clarity
+            continue
+            
         u, v = edge
-        
-        # Get edge type (interlayer or intralayer)
         edge_type = G.edges[u, v].get('edge_type', 'unknown')
         
         # Calculate edge width based on betweenness
-        width = 1 + 5 * betweenness
+        width = 0.5 + 4 * betweenness
         
         # Calculate edge color based on type and betweenness
         if edge_type == "interlayer":
-            color = plt.cm.Blues(betweenness)  # Blue for interlayer
+            color = plt.cm.Blues(0.5 + 0.5 * betweenness)  # Blue for interlayer
         else:
-            color = plt.cm.Reds(betweenness)   # Red for intralayer
+            color = plt.cm.Reds(0.5 + 0.5 * betweenness)   # Red for intralayer
         
         # Draw the edge
         ax.plot([pos[u][0], pos[v][0]], [pos[u][1], pos[v][1]], 
-               linewidth=width, color=color, alpha=0.7,
-               zorder=1)  # Lower zorder to draw behind nodes
+               linewidth=width, color=color, alpha=0.8,
+               zorder=1)  # Higher zorder to draw on top of background edges
         
-        # Add edge label for significant bottlenecks
-        if betweenness > 0.5:
+        # Add edge label only for the most significant bottlenecks
+        if betweenness > 0.7:
             # Position the label at the middle of the edge
             x = (pos[u][0] + pos[v][0]) / 2
             y = (pos[u][1] + pos[v][1]) / 2
@@ -484,48 +527,69 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
             dy = pos[v][1] - pos[u][1]
             norm = np.sqrt(dx**2 + dy**2)
             if norm > 0:
-                offset_x = -dy / norm * 0.02
-                offset_y = dx / norm * 0.02
+                offset_x = -dy / norm * 0.05
+                offset_y = dx / norm * 0.05
             else:
                 offset_x = offset_y = 0
             
-            # Add the label
+            # Add the label with simplified text
             edge_label = "Inter" if edge_type == "interlayer" else "Intra"
             ax.text(x + offset_x, y + offset_y, 
                    f"{edge_label}\nBC={betweenness:.2f}", 
-                   fontsize=8, 
+                   fontsize=8,
                    ha='center', va='center',
-                   bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', pad=1),
-                   zorder=3)  # Higher zorder to draw on top
+                   bbox=dict(facecolor='white', alpha=0.9, edgecolor='gray', pad=1, boxstyle='round'),
+                   zorder=3)
     
-    # 2. Draw nodes with size based on betweenness and color based on layer
+    # 3. Draw nodes with size based on betweenness and color based on cluster
     node_betweenness = nx.betweenness_centrality(G, weight='weight')
     max_betweenness = max(node_betweenness.values()) if node_betweenness else 1.0
     
+    # Determine node size scaling based on network size
+    base_size = max(50, 500 / np.sqrt(len(G)))
+    
+    # First draw all nodes with minimal styling to show the structure
     for node in G.nodes:
+        cluster = G.nodes[node]['cluster']
+        
+        # Get node color based on cluster
+        if cluster_colors and cluster in cluster_colors:
+            color = cluster_colors[cluster]
+        else:
+            color = plt.cm.tab10(cluster % 10)
+            
+        # Draw all nodes with a small size for context
+        ax.scatter(pos[node][0], pos[node][1], 
+                  s=base_size * 0.5, color=color, alpha=0.3, edgecolor='none',
+                  zorder=1.5)  # Draw between edges and significant nodes
+    
+    # Then draw significant nodes with more emphasis
+    for node in G.nodes:
+        betweenness = node_betweenness.get(node, 0)
+        if betweenness < 0.1:  # Skip low betweenness nodes for clarity
+            continue
+            
         # Get node attributes
         layer = G.nodes[node]['layer']
         cluster = G.nodes[node]['cluster']
         original_id = G.nodes[node].get('original_id', node)
         
         # Calculate node size based on betweenness
-        betweenness = node_betweenness.get(node, 0)
-        size = 100 + 500 * (betweenness / max_betweenness)
+        size = base_size + 300 * (betweenness / max_betweenness)
         
         # Get node color based on cluster
         if cluster_colors and cluster in cluster_colors:
             color = cluster_colors[cluster]
         else:
-            # Use a default colormap if cluster colors not provided
             color = plt.cm.tab10(cluster % 10)
         
-        # Draw the node
+        # Draw the significant node
         ax.scatter(pos[node][0], pos[node][1], 
-                  s=size, color=color, edgecolor='black', linewidth=1,
-                  zorder=2)  # Middle zorder to draw between edges and labels
+                  s=size, color=color, edgecolor='black', linewidth=0.8,
+                  zorder=2)  # Higher zorder to draw on top of edges
         
         # Add node label for significant nodes
-        if betweenness > 0.1:
+        if betweenness > 0.3:
             # Extract layer and original node ID from the node name
             node_parts = node.split('_', 1)
             if len(node_parts) == 2:
@@ -533,17 +597,23 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
             else:
                 layer_str, orig_id = str(layer), str(original_id)
                 
+            # Create label
+            label = f"L{layer_str}_N{orig_id}"
+            if betweenness > 0.5:
+                label += f"\nBC={betweenness:.2f}"
+                
             ax.text(pos[node][0], pos[node][1], 
-                   f"L{layer_str}_N{orig_id}\nBC={betweenness:.2f}", 
-                   fontsize=8, 
+                   label, 
+                   fontsize=8,
                    ha='center', va='center',
+                   bbox=dict(facecolor='white', alpha=0.9, edgecolor='gray', pad=1, boxstyle='round'),
                    zorder=4)  # Highest zorder to draw on top of everything
     
     # Add a legend for edge types
-    inter_line = plt.Line2D([0], [0], color=plt.cm.Blues(0.7), linewidth=3, label='Interlayer Edge')
-    intra_line = plt.Line2D([0], [0], color=plt.cm.Reds(0.7), linewidth=3, label='Intralayer Edge')
+    inter_line = plt.Line2D([0], [0], color=plt.cm.Blues(0.8), linewidth=3, label='Interlayer Edge')
+    intra_line = plt.Line2D([0], [0], color=plt.cm.Reds(0.8), linewidth=3, label='Intralayer Edge')
     
-    ax.legend(handles=[inter_line, intra_line], loc='upper right')
+    ax.legend(handles=[inter_line, intra_line], loc='upper right', framealpha=0.9)
     
     # Add a colorbar for edge betweenness
     sm = ScalarMappable(cmap=plt.cm.Reds, norm=Normalize(0, 1))
@@ -552,13 +622,18 @@ def _analyze_bottlenecks(ax, G, visible_layer_indices, layers, node_clusters, cl
     cbar.set_label('Edge Betweenness Centrality')
     
     # Add a title
-    ax.set_title('Critical Connections in Network\n(Using Duplicated Nodes <layer>_<node>)', fontsize=12)
+    ax.set_title('Critical Connections in Duplicated Network', fontsize=12)
     
-    # Remove axis ticks
+    # Remove axis ticks and spines for a cleaner look
     ax.set_xticks([])
     ax.set_yticks([])
+    for spine in ax.spines.values():
+        spine.set_visible(False)
     
-    # Adjust layout
-    plt.tight_layout()
+    # Set equal aspect ratio to prevent distortion
+    ax.set_aspect('equal')
+    
+    # Add a subtle grid for better orientation
+    ax.grid(alpha=0.1)
     
     logger.info(f"Created bottleneck visualization with {len(G.nodes)} nodes and {len(G.edges)} edges") 
