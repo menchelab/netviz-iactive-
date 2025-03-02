@@ -1,40 +1,49 @@
 import logging
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QCheckBox, QTabWidget, QComboBox, QLabel
+import numpy as np
+import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-
-# Import from the new location
-from charts.layer_cluster import (
-    create_layer_cluster_overlap_heatmap,
-    create_cluster_layer_distribution,
-    create_layer_cluster_distribution,
+from matplotlib.backends.qt_compat import QtCore, QtWidgets
+from matplotlib.backends.backend_qt5agg import FigureCanvas
+from PyQt5.QtWidgets import (
+    QVBoxLayout, QHBoxLayout, QWidget, QTabWidget, QLabel, 
+    QCheckBox, QComboBox, QGroupBox, QGridLayout, QDoubleSpinBox, QPushButton
 )
+from PyQt5.QtCore import Qt
 
-# Import the newly migrated functions
+from ui.stats_panel.base_panel import BaseStatsPanel
+from charts.layer_cluster.lc1_overlap_heatmap import create_layer_cluster_overlap_heatmap
+from charts.layer_cluster.lc2_cluster_layer_distribution import create_cluster_layer_distribution
+from charts.layer_cluster.lc3_layer_cluster_distribution import create_layer_cluster_distribution
 from charts.layer_cluster.lc4_network_diagram import create_layer_cluster_network_diagram
+from charts.layer_cluster.lc4a_network_diagram import (
+    create_enhanced_layer_cluster_network_diagram, 
+    create_enhanced_network_ui,
+    update_enhanced_network
+)
 from charts.layer_cluster.lc5_cluster_network import create_cluster_network
+from charts.layer_cluster.lc10_cooccurrence_network import create_cluster_cooccurrence_network
 from charts.layer_cluster.lc6_sankey_diagram import create_layer_cluster_sankey
 from charts.layer_cluster.lc7_connectivity_matrix import create_cluster_connectivity_matrix, create_layer_connectivity_matrix
 from charts.layer_cluster.lc8_chord_diagram import create_layer_cluster_chord
 from charts.layer_cluster.lc9_density_heatmap import create_layer_cluster_density_heatmap
-from charts.layer_cluster.lc10_cooccurrence_network import create_cluster_cooccurrence_network
 from charts.layer_cluster.lc11_normalized_heatmap import create_layer_cluster_normalized_heatmap
 from charts.layer_cluster.lc12_similarity_matrix import create_cluster_similarity_matrix
+from charts.layer_cluster.lc12_enhanced_similarity import create_enhanced_cluster_similarity
 from charts.layer_cluster.lc13_bubble_chart import create_layer_cluster_bubble_chart
 from charts.layer_cluster.lc14_treemap import create_layer_cluster_treemap
 from charts.layer_cluster.lc16_interlayer_paths import create_interlayer_path_analysis
 from charts.layer_cluster.lc17_cluster_bridging_analysis import create_cluster_bridging_analysis
-
-from ui.stats_panel.base_panel import BaseStatsPanel
+from charts.layer_cluster.lc20_interlayer_path_similarity import create_interlayer_path_similarity
+from utils.calc_community import AVAILABLE_COMMUNITY_ALGORITHMS
 
 
 class LayerClusterOverlapPanel(BaseStatsPanel):
     """Panel for visualizing layer and cluster overlaps"""
 
     def setup_ui(self):
-        layout = QVBoxLayout(self)
+        """Set up the UI components"""
+        layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(2)
 
         # Add checkbox to enable/disable charts
         controls_layout = QHBoxLayout()
@@ -83,6 +92,47 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         ])
         self.bridge_analysis_combo.currentIndexChanged.connect(self.on_layout_changed)
         controls_layout.addWidget(self.bridge_analysis_combo)
+        
+        # Add similarity metric dropdown for LC12
+        controls_layout.addSpacing(20)
+        controls_layout.addWidget(QLabel("LC12 Metric:"))
+        self.similarity_metric_combo = QComboBox()
+        self.similarity_metric_combo.addItems([
+            "All Metrics", "Jaccard", "Cosine", "Overlap", 
+            "Connection", "Layer Distribution", "Hierarchical",
+            "Node Sharing", "Path-based", "Mutual Information"
+        ])
+        self.similarity_metric_combo.currentIndexChanged.connect(self.on_layout_changed)
+        controls_layout.addWidget(self.similarity_metric_combo)
+        
+        # Add edge type dropdown for LC12
+        controls_layout.addSpacing(10)
+        controls_layout.addWidget(QLabel("Edge Type:"))
+        self.edge_type_combo = QComboBox()
+        self.edge_type_combo.addItems([
+            "All Edges", "Interlayer", "Intralayer"
+        ])
+        self.edge_type_combo.currentIndexChanged.connect(self.on_layout_changed)
+        controls_layout.addWidget(self.edge_type_combo)
+        
+        # Add cluster selector for LC20
+        controls_layout.addSpacing(20)
+        controls_layout.addWidget(QLabel("LC20 Cluster:"))
+        self.path_similarity_cluster_combo = QComboBox()
+        self.path_similarity_cluster_combo.addItem("All Clusters")
+        self.path_similarity_cluster_combo.currentIndexChanged.connect(self.on_layout_changed)
+        controls_layout.addWidget(self.path_similarity_cluster_combo)
+        
+        # LC4A: Enhanced Network Diagram controls - moved to the LC4A tab itself
+        self.enhanced_network_ui = create_enhanced_network_ui()
+        self.edge_counting_combo = self.enhanced_network_ui["edge_counting_combo"]
+        self.community_algorithm_combo = self.enhanced_network_ui["community_algorithm_combo"]
+        self.community_resolution_spin = self.enhanced_network_ui["community_resolution_spin"]
+        self.show_edge_weights_check = self.enhanced_network_ui["show_edge_weights_check"]
+        self.show_node_labels_check = self.enhanced_network_ui["show_node_labels_check"]
+        self.show_legend_check = self.enhanced_network_ui["show_legend_check"]
+        self.update_enhanced_network_btn = self.enhanced_network_ui["update_btn"]
+        self.update_enhanced_network_btn.clicked.connect(self.update_enhanced_network)
         
         controls_layout.addStretch()
         layout.addLayout(controls_layout)
@@ -156,12 +206,12 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         self.normalized_canvas = FigureCanvas(self.normalized_figure)
         self.normalized_ax = self.normalized_figure.add_subplot(111)
         
-        # LC12: Similarity matrix
-        self.similarity_figure = Figure(figsize=(10, 8), dpi=100)
+        # LC12: Similarity Matrix
+        self.similarity_figure = Figure(figsize=(8, 6), dpi=100)
         self.similarity_canvas = FigureCanvas(self.similarity_figure)
         self.similarity_ax = self.similarity_figure.add_subplot(111)
         
-        # LC13: Bubble chart
+        # LC13: Bubble Chart
         self.bubble_figure = Figure(figsize=(10, 8), dpi=100)
         self.bubble_canvas = FigureCanvas(self.bubble_figure)
         self.bubble_ax = self.bubble_figure.add_subplot(111)
@@ -170,6 +220,28 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         self.treemap_figure = Figure(figsize=(10, 8), dpi=100)
         self.treemap_canvas = FigureCanvas(self.treemap_figure)
         self.treemap_ax = self.treemap_figure.add_subplot(111)
+        
+        # Create a container widget for the LC14 tab
+        self.lc14_container = QWidget()
+        lc14_layout = QVBoxLayout(self.lc14_container)
+        
+        # Add controls for LC14
+        lc14_controls = QHBoxLayout()
+        
+        # Add dropdown for count type
+        lc14_count_type_label = QLabel("Count Type:")
+        self.lc14_count_type_combo = QComboBox()
+        self.lc14_count_type_combo.addItem("Nodes")
+        self.lc14_count_type_combo.addItem("Intralayer Edges")
+        self.lc14_count_type_combo.currentIndexChanged.connect(self.on_lc14_count_type_changed)
+        
+        lc14_controls.addWidget(lc14_count_type_label)
+        lc14_controls.addWidget(self.lc14_count_type_combo)
+        lc14_controls.addStretch()
+        
+        # Add controls and canvas to the layout
+        lc14_layout.addLayout(lc14_controls)
+        lc14_layout.addWidget(self.treemap_canvas)
         
         # LC15: Flow Visualization Ideas
         self.flow_ideas_figure = Figure(figsize=(12, 10), dpi=100)
@@ -185,6 +257,10 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         
         self.bridge_analysis_figure = Figure(figsize=(12, 10), dpi=100)
         self.bridge_analysis_canvas = FigureCanvas(self.bridge_analysis_figure)
+        
+        # Create figure for the new LC20 tab
+        self.interlayer_path_similarity_figure = Figure(figsize=(12, 10), dpi=100)
+        self.interlayer_path_similarity_canvas = FigureCanvas(self.interlayer_path_similarity_figure)
 
         # Add each canvas to a tab
         self.tab_widget.addTab(self.heatmap_canvas, "LC1: Heatmap")
@@ -198,15 +274,37 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         self.tab_widget.addTab(self.density_canvas, "LC9: Density Heatmap")
         self.tab_widget.addTab(self.cooccurrence_canvas, "LC10: Co-occurrence Network")
         self.tab_widget.addTab(self.normalized_canvas, "LC11: Normalized Heatmap")
-        self.tab_widget.addTab(self.similarity_canvas, "LC12: Similarity Matrix")
+        self.tab_widget.addTab(self.similarity_canvas, "LC12: Enhanced Similarity Analysis")
         self.tab_widget.addTab(self.bubble_canvas, "LC13: Bubble Chart")
-        self.tab_widget.addTab(self.treemap_canvas, "LC14: Treemap")
+        self.tab_widget.addTab(self.lc14_container, "LC14: Treemap")
         self.tab_widget.addTab(self.path_analysis_canvas, "LC16: Interlayer Path Analysis")
         self.tab_widget.addTab(self.bridge_analysis_canvas, "LC17: Cluster Bridging Analysis")
         self.tab_widget.addTab(self.flow_ideas_canvas, "LC15: Flow Ideas")
+        self.tab_widget.addTab(self.interlayer_path_similarity_canvas, "LC20: Interlayer Path Similarity")
+
+        # LC4A: Enhanced Network Diagram
+        self.enhanced_network_figure = Figure(figsize=(8, 6), dpi=100)
+        self.enhanced_network_canvas = FigureCanvas(self.enhanced_network_figure)
+        self.enhanced_network_ax = self.enhanced_network_figure.add_subplot(111)
+        
+        # Create a container widget for the LC4A tab
+        lc4a_container = QWidget()
+        lc4a_layout = QVBoxLayout(lc4a_container)
+        
+        # Add the enhanced network controls to the LC4A tab
+        lc4a_layout.addWidget(self.enhanced_network_ui["group"])
+        
+        # Add the canvas to the LC4A tab
+        lc4a_layout.addWidget(self.enhanced_network_canvas)
+        
+        # Add the LC4A tab to the tab widget
+        self.tab_widget.addTab(lc4a_container, "LC4A: Enhanced Network Diagram")
 
         # Create tooltips for each tab
         self._create_tooltips()
+
+        # Set the layout for the widget
+        self.setLayout(layout)
 
     def on_state_changed(self, state):
         """Handle enable/disable state change"""
@@ -258,8 +356,17 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
     def on_layout_changed(self, _):
         """Handle layout algorithm or aspect ratio change"""
         if hasattr(self, "_current_data") and self.enable_checkbox.isChecked():
-            # Only update the LC4 tab to avoid redrawing everything
-            self.update_lc4_network_diagram(self._current_data)
+            # Only update the relevant tabs to avoid redrawing everything
+            if self.tab_widget.currentIndex() == 3:  # LC4 tab
+                self.update_lc4_network_diagram(self._current_data)
+            elif self.tab_widget.currentIndex() == 15:  # LC16 tab
+                self.update_lc16_path_analysis(self._current_data)
+            elif self.tab_widget.currentIndex() == 16:  # LC17 tab
+                self.update_lc17_bridge_analysis(self._current_data)
+            elif self.tab_widget.currentIndex() == 11:  # LC12 tab
+                self.update_lc12_similarity_matrix(self._current_data)
+            elif self.tab_widget.currentIndex() == 18:  # LC20 tab
+                self.update_lc20_interlayer_path_similarity(self._current_data)
             
     def update_lc4_network_diagram(self, data_manager):
         """Update only the LC4 network diagram with the current layout settings"""
@@ -652,6 +759,9 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
             data_manager.cluster_colors
         )
         
+        # LC12: Create cluster similarity matrix
+        self.update_lc12_similarity_matrix(data_manager)
+        
         # LC13: Create bubble chart
         create_layer_cluster_bubble_chart(
             self.bubble_ax,
@@ -667,18 +777,7 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         )
         
         # LC14: Create treemap
-        create_layer_cluster_treemap(
-            self.treemap_ax,
-            edge_connections,
-            node_ids,
-            node_clusters,
-            nodes_per_layer,
-            layers,
-            small_font,
-            medium_font,
-            visible_layer_indices,
-            data_manager.cluster_colors
-        )
+        self.update_lc14_treemap(data_manager)
         
         # LC15: Create four different flow visualization ideas
         # Idea 1: Circular flow diagram
@@ -783,6 +882,15 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         # Update LC17: Cluster Bridging Analysis
         self.update_lc17_bridge_analysis(data_manager)
 
+        # LC4A: Update Enhanced Network Diagram
+        self.update_enhanced_network()
+        
+        # Update LC20: Interlayer Path Similarity
+        self.update_lc20_interlayer_path_similarity(data_manager)
+        
+        # Update the cluster selector for LC20 with available clusters
+        self.update_cluster_selector(data_manager)
+
     def update_lc16_path_analysis(self, data_manager):
         """Update the LC16 interlayer path analysis with the current analysis type"""
         if not hasattr(self, "path_analysis_figure") or not self.enable_checkbox.isChecked():
@@ -866,7 +974,7 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         # Draw the canvas
         self.bridge_analysis_canvas.draw()
 
-    def _create_circular_flow_diagram(self, ax, visible_links, node_ids, node_clusters, nodes_per_layer, layers, small_font, medium_font, visible_layer_indices, cluster_colors):
+    def _create_circular_flow_diagram(self, ax, edge_connections, node_ids, node_clusters, nodes_per_layer, layers, small_font, medium_font, visible_layer_indices, cluster_colors):
         """
         Create a circular flow diagram showing connections between layers and clusters.
         Layers and clusters are arranged in a circle, with edges representing connections.
@@ -989,10 +1097,10 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         ax.set_xlim(-1.2, 1.2)
         ax.set_ylim(-1.2, 1.2)
     
-    def _create_force_directed_regions(self, ax, visible_links, node_ids, node_clusters, nodes_per_layer, layers, small_font, medium_font, visible_layer_indices, cluster_colors):
+    def _create_force_directed_regions(self, ax, edge_connections, node_ids, node_clusters, nodes_per_layer, layers, small_font, medium_font, visible_layer_indices, cluster_colors):
         """
         Create a force-directed graph with layers as regions.
-        Nodes are colored by cluster and positioned in regions based on their layer.
+        Nodes are arranged in regions based on their layer, with edges representing connections.
         """
         import networkx as nx
         import numpy as np
@@ -1011,7 +1119,7 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         
         # Get visible node indices
         visible_node_indices = set()
-        for start_idx, end_idx in visible_links:
+        for start_idx, end_idx in edge_connections:
             visible_node_indices.add(start_idx)
             visible_node_indices.add(end_idx)
         
@@ -1038,7 +1146,7 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
             node_to_layer[node_idx] = layer_idx
         
         # Add edges
-        for start_idx, end_idx in visible_links:
+        for start_idx, end_idx in edge_connections:
             if start_idx in node_to_cluster and end_idx in node_to_cluster:
                 G.add_edge(start_idx, end_idx)
         
@@ -1142,10 +1250,9 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         ax.set_xlim(-1.2, 1.2)
         ax.set_ylim(-1.2, 1.2)
     
-    def _create_alluvial_diagram(self, ax, visible_links, node_ids, node_clusters, nodes_per_layer, layers, small_font, medium_font, visible_layer_indices, cluster_colors):
+    def _create_alluvial_diagram(self, ax, edge_connections, node_ids, node_clusters, nodes_per_layer, layers, small_font, medium_font, visible_layer_indices, cluster_colors):
         """
         Create an alluvial diagram showing flow between layers and clusters.
-        Similar to a Sankey diagram but with a different layout.
         """
         import numpy as np
         import matplotlib.pyplot as plt
@@ -1307,9 +1414,9 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         ax.set_xticks([])
         ax.set_yticks([])
     
-    def _create_radial_network(self, ax, visible_links, node_ids, node_clusters, nodes_per_layer, layers, small_font, medium_font, visible_layer_indices, cluster_colors):
+    def _create_radial_network(self, ax, edge_connections, node_ids, node_clusters, nodes_per_layer, layers, small_font, medium_font, visible_layer_indices, cluster_colors):
         """
-        Create a radial network with layers as rings and clusters as segments.
+        Create a radial network diagram with layers as concentric circles and clusters as segments.
         """
         import numpy as np
         import matplotlib.pyplot as plt
@@ -1468,78 +1575,71 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
             <li>data_manager.node_ids: List of all node IDs in the network</li>
             <li>data_manager.node_clusters: Dictionary mapping node IDs to cluster assignments</li>
             <li>data_manager.nodes_per_layer: Dictionary mapping layer indices to lists of node IDs</li>
-            <li>data_manager.layers: List of layer names</li>
             <li>data_manager.current_node_mask: Boolean mask for visible nodes</li>
         </ul>
         
         <p><b>Calculation Method:</b></p>
         <ol>
             <li>Filter visible nodes using current_node_mask</li>
-            <li>Count nodes by cluster and layer using defaultdict(int)</li>
-            <li>Create count matrix with shape (num_clusters, num_layers)</li>
+            <li>Create matrix with shape (num_clusters, num_layers)</li>
+            <li>For each visible node, increment matrix[cluster_idx, layer_idx]</li>
             <li>Visualize matrix using matplotlib.pyplot.imshow with 'viridis' colormap</li>
-            <li>Add colorbar and annotations showing exact counts</li>
+            <li>Add colorbar and annotations showing node counts</li>
         </ol>
         
-        <p><b>Interpretation:</b> Each cell (i,j) shows count of nodes in cluster i and layer j. Darker colors = more nodes.</p>
+        <p><b>Interpretation:</b> Each cell (i,j) shows count of nodes in cluster i and layer j. Darker colors = higher count.</p>
         """
         self.tab_widget.setTabToolTip(0, heatmap_tooltip)
         
         # LC2: Distribution tooltip
         distribution_tooltip = """
-        <h3>LC2: Cluster-Layer Distribution</h3>
+        <h3>LC2: Cluster Distribution by Layer</h3>
         
         <p><b>Data Source:</b></p>
         <ul>
             <li>data_manager.node_ids: List of all node IDs in the network</li>
             <li>data_manager.node_clusters: Dictionary mapping node IDs to cluster assignments</li>
             <li>data_manager.nodes_per_layer: Dictionary mapping layer indices to lists of node IDs</li>
-            <li>data_manager.layers: List of layer names</li>
             <li>data_manager.current_node_mask: Boolean mask for visible nodes</li>
-            <li>data_manager.cluster_colors: Dictionary mapping cluster IDs to colors</li>
         </ul>
         
         <p><b>Calculation Method:</b></p>
         <ol>
             <li>Filter visible nodes using current_node_mask</li>
-            <li>Count nodes by cluster and layer using defaultdict(int)</li>
-            <li>For each cluster, calculate percentage of nodes in each layer</li>
-            <li>Create stacked bar chart using matplotlib.pyplot.bar with bottom parameter for stacking</li>
-            <li>Apply cluster colors from data_manager.cluster_colors</li>
+            <li>For each layer, count nodes in each cluster</li>
+            <li>Create stacked bar chart showing distribution of nodes across clusters for each layer</li>
+            <li>Add legend showing cluster colors</li>
         </ol>
         
-        <p><b>Interpretation:</b> Each bar = one cluster. Colored segments = percentage of cluster's nodes in each layer. Full bar height = 100%.</p>
+        <p><b>Interpretation:</b> Each bar shows distribution of nodes across clusters for a specific layer. Colors correspond to clusters.</p>
         """
         self.tab_widget.setTabToolTip(1, distribution_tooltip)
         
         # LC3: Layer Distribution tooltip
         layer_distribution_tooltip = """
-        <h3>LC3: Layer-Cluster Distribution</h3>
+        <h3>LC3: Layer Distribution by Cluster</h3>
         
         <p><b>Data Source:</b></p>
         <ul>
             <li>data_manager.node_ids: List of all node IDs in the network</li>
             <li>data_manager.node_clusters: Dictionary mapping node IDs to cluster assignments</li>
             <li>data_manager.nodes_per_layer: Dictionary mapping layer indices to lists of node IDs</li>
-            <li>data_manager.layers: List of layer names</li>
             <li>data_manager.current_node_mask: Boolean mask for visible nodes</li>
-            <li>data_manager.cluster_colors: Dictionary mapping cluster IDs to colors</li>
         </ul>
         
         <p><b>Calculation Method:</b></p>
         <ol>
             <li>Filter visible nodes using current_node_mask</li>
-            <li>Count nodes by cluster and layer using defaultdict(int)</li>
-            <li>For each layer, calculate percentage of nodes in each cluster</li>
-            <li>Create stacked bar chart using matplotlib.pyplot.bar with bottom parameter for stacking</li>
-            <li>Apply cluster colors from data_manager.cluster_colors</li>
+            <li>For each cluster, count nodes in each layer</li>
+            <li>Create stacked bar chart showing distribution of nodes across layers for each cluster</li>
+            <li>Add legend showing layer colors</li>
         </ol>
         
-        <p><b>Interpretation:</b> Each bar = one layer. Colored segments = percentage of layer's nodes in each cluster. Full bar height = 100%.</p>
+        <p><b>Interpretation:</b> Each bar shows distribution of nodes across layers for a specific cluster. Colors correspond to layers.</p>
         """
         self.tab_widget.setTabToolTip(2, layer_distribution_tooltip)
         
-        # LC4: Network & Similarity tooltip
+        # LC4: Network Diagram tooltip
         network_tooltip = """
         <h3>LC4: Layer-Cluster Network Diagram</h3>
         
@@ -1548,37 +1648,26 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
             <li>data_manager.node_ids: List of all node IDs in the network</li>
             <li>data_manager.node_clusters: Dictionary mapping node IDs to cluster assignments</li>
             <li>data_manager.nodes_per_layer: Dictionary mapping layer indices to lists of node IDs</li>
-            <li>data_manager.layers: List of layer names</li>
             <li>data_manager.current_node_mask: Boolean mask for visible nodes</li>
-            <li>data_manager.cluster_colors: Dictionary mapping cluster IDs to colors</li>
-            <li>data_manager.layer_colors: Dictionary mapping layer indices to colors</li>
+            <li>data_manager.edge_connections: List of (start_idx, end_idx) tuples representing links</li>
         </ul>
         
         <p><b>Calculation Method:</b></p>
         <ol>
-            <li>Filter visible nodes using current_node_mask</li>
-            <li>Count nodes by cluster and layer using defaultdict(int)</li>
-            <li>Create networkx.Graph with nodes for each layer and cluster</li>
-            <li>Add edges between layers and clusters with weight = node count</li>
-            <li>Apply selected layout algorithm:
-                <ul>
-                    <li>Community: Force-directed with community detection (Louvain algorithm)</li>
-                    <li>Bipartite: Optimized layout with layers on left, clusters on right</li>
-                    <li>Circular: Circular arrangement with edge bundling</li>
-                    <li>Spectral: Based on graph Laplacian eigendecomposition</li>
-                    <li>Spring: Force-directed with weight-based attraction</li>
-        </ul>
-            </li>
-            <li>Draw nodes with size proportional to node count</li>
-            <li>Draw edges with width proportional to weight, curved based on weight</li>
-            <li>Apply aspect ratio adjustment (0.75-2.0) to layout</li>
+            <li>Filter visible nodes and edges using current_node_mask</li>
+            <li>Create networkx graph with nodes representing layers and clusters</li>
+            <li>Add edges between nodes based on connections in the network</li>
+            <li>Set node sizes based on number of nodes in each layer/cluster</li>
+            <li>Set edge widths based on number of connections between layers/clusters</li>
+            <li>Use networkx spring layout to position nodes</li>
+            <li>Draw network using networkx drawing functions</li>
         </ol>
         
-        <p><b>Interpretation:</b> Nodes = layers/clusters. Node size = node count. Edge width = connection strength. Layout shows structural relationships.</p>
+        <p><b>Interpretation:</b> Nodes represent layers (circles) and clusters (squares). Node size indicates number of nodes. Edge width indicates number of connections. Position shows relationship strength.</p>
         """
         self.tab_widget.setTabToolTip(3, network_tooltip)
         
-        # LC5: Cluster Networks tooltip
+        # LC5: Cluster Network tooltip
         cluster_network_tooltip = """
         <h3>LC5: Cluster Networks</h3>
         
@@ -1586,29 +1675,26 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         <ul>
             <li>data_manager.node_ids: List of all node IDs in the network</li>
             <li>data_manager.node_clusters: Dictionary mapping node IDs to cluster assignments</li>
-            <li>data_manager.link_pairs: List of tuples (source_id, target_id) for all edges</li>
-            <li>data_manager.current_edge_mask: Boolean mask for visible edges</li>
             <li>data_manager.current_node_mask: Boolean mask for visible nodes</li>
-            <li>data_manager.cluster_colors: Dictionary mapping cluster IDs to colors</li>
+            <li>data_manager.edge_connections: List of (start_idx, end_idx) tuples representing links</li>
         </ul>
         
         <p><b>Calculation Method:</b></p>
         <ol>
-            <li>Filter visible nodes and edges using masks</li>
-            <li>Create networkx.Graph with nodes for each cluster</li>
-            <li>Count connections between clusters using filtered link_pairs</li>
-            <li>Add edges between clusters with weight = connection count</li>
-            <li>Apply networkx.spring_layout with weight consideration</li>
-            <li>Draw nodes with size proportional to node count in cluster</li>
-            <li>Draw edges with width proportional to connection count</li>
-            <li>Apply cluster colors from data_manager.cluster_colors</li>
+            <li>Filter visible nodes and edges using current_node_mask</li>
+            <li>Create networkx graph with nodes representing clusters</li>
+            <li>Add edges between nodes based on connections in the network</li>
+            <li>Set node sizes based on number of nodes in each cluster</li>
+            <li>Set edge widths based on number of connections between clusters</li>
+            <li>Use networkx spring layout to position nodes</li>
+            <li>Draw network using networkx drawing functions</li>
         </ol>
         
-        <p><b>Interpretation:</b> Nodes = clusters. Node size = node count. Edge width = connection count between clusters. Position shows connectivity structure.</p>
+        <p><b>Interpretation:</b> Nodes represent clusters. Node size indicates number of nodes. Edge width indicates number of connections. Position shows relationship strength.</p>
         """
         self.tab_widget.setTabToolTip(4, cluster_network_tooltip)
         
-        # LC6: Sankey tooltip
+        # LC6: Sankey Diagram tooltip
         sankey_tooltip = """
         <h3>LC6: Layer-Cluster Sankey Diagram</h3>
         
@@ -1617,76 +1703,44 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
             <li>data_manager.node_ids: List of all node IDs in the network</li>
             <li>data_manager.node_clusters: Dictionary mapping node IDs to cluster assignments</li>
             <li>data_manager.nodes_per_layer: Dictionary mapping layer indices to lists of node IDs</li>
-            <li>data_manager.layers: List of layer names</li>
             <li>data_manager.current_node_mask: Boolean mask for visible nodes</li>
-            <li>data_manager.cluster_colors: Dictionary mapping cluster IDs to colors</li>
-            <li>data_manager.layer_colors: Dictionary mapping layer indices to colors</li>
         </ul>
         
         <p><b>Calculation Method:</b></p>
         <ol>
             <li>Filter visible nodes using current_node_mask</li>
-            <li>Count nodes by cluster and layer using defaultdict(int)</li>
-            <li>Create lists for Sankey diagram:
-                <ul>
-                    <li>labels: Layer names and cluster names</li>
-                    <li>colors: Layer colors and cluster colors</li>
-                    <li>sources: Index of source node for each flow</li>
-                    <li>targets: Index of target node for each flow</li>
-                    <li>values: Count of nodes for each flow</li>
-                    <li>flow_counts: List of flow values for width calculation</li>
-        </ul>
-            </li>
-            <li>Create Sankey diagram using plotly.graph_objects.Sankey</li>
-            <li>Configure node and link properties (colors, hover info)</li>
-            <li>Convert to matplotlib figure using plotly.io.to_image</li>
+            <li>Create list of layers and clusters as Sankey diagram nodes</li>
+            <li>Create list of links between layers and clusters based on node distribution</li>
+            <li>Set link colors based on source node colors</li>
+            <li>Create Sankey diagram using matplotlib-sankey</li>
         </ol>
         
-        <p><b>Interpretation:</b> Nodes = layers/clusters. Link width = node count. Flow direction shows layer-cluster relationships. Colors match layer/cluster.</p>
+        <p><b>Interpretation:</b> Shows flow of nodes from layers (left) to clusters (right). Width of flow indicates number of nodes. Colors correspond to layers.</p>
         """
         self.tab_widget.setTabToolTip(5, sankey_tooltip)
         
         # LC7: Connectivity Matrix tooltip
         connectivity_tooltip = """
-        <h3>LC7: Connectivity Matrices</h3>
+        <h3>LC7: Cluster Connectivity Matrix</h3>
         
         <p><b>Data Source:</b></p>
         <ul>
             <li>data_manager.node_ids: List of all node IDs in the network</li>
             <li>data_manager.node_clusters: Dictionary mapping node IDs to cluster assignments</li>
-            <li>data_manager.nodes_per_layer: Dictionary mapping layer indices to lists of node IDs</li>
-            <li>data_manager.layers: List of layer names</li>
-            <li>data_manager.link_pairs: List of tuples (source_id, target_id) for all edges</li>
-            <li>data_manager.current_edge_mask: Boolean mask for visible edges</li>
             <li>data_manager.current_node_mask: Boolean mask for visible nodes</li>
-            <li>data_manager.cluster_colors: Dictionary mapping cluster IDs to colors</li>
-            <li>data_manager.layer_colors: Dictionary mapping layer indices to colors</li>
+            <li>data_manager.edge_connections: List of (start_idx, end_idx) tuples representing links</li>
         </ul>
         
         <p><b>Calculation Method:</b></p>
         <ol>
-            <li>Filter visible nodes and edges using masks</li>
-            <li>Create six connectivity matrices:
-                <ul>
-                    <li>Cluster-Cluster (All Edges): Count all connections between clusters</li>
-                    <li>Cluster-Cluster (Same Cluster): Count connections between nodes in same cluster</li>
-                    <li>Cluster-Cluster (Different Cluster): Count connections between nodes in different clusters</li>
-                    <li>Layer-Layer (All Edges): Count all connections between layers</li>
-                    <li>Layer-Layer (Same Cluster): Count connections between nodes in same cluster across layers</li>
-                    <li>Layer-Layer (Different Cluster): Count connections between nodes in different clusters across layers</li>
-        </ul>
-            </li>
-            <li>For each matrix:
-                <ul>
-                    <li>Create matrix with shape (num_entities, num_entities)</li>
-                    <li>Iterate through visible links and increment matrix cells based on edge type</li>
+            <li>Filter visible nodes and edges using current_node_mask</li>
+            <li>Create matrix with shape (num_clusters, num_clusters)</li>
+            <li>For each edge, increment matrix[source_cluster, target_cluster]</li>
                     <li>Visualize matrix using matplotlib.pyplot.imshow with 'viridis' colormap</li>
-                    <li>Add colorbar and annotations showing exact counts</li>
-        </ul>
-            </li>
+            <li>Add colorbar and annotations showing connection counts</li>
         </ol>
         
-        <p><b>Interpretation:</b> Each cell (i,j) shows connection count between entities i and j. Darker colors = more connections. Diagonal = internal connections.</p>
+        <p><b>Interpretation:</b> Each cell (i,j) shows count of connections between cluster i and cluster j. Darker colors = higher count.</p>
         """
         self.tab_widget.setTabToolTip(6, connectivity_tooltip)
         
@@ -1699,26 +1753,19 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
             <li>data_manager.node_ids: List of all node IDs in the network</li>
             <li>data_manager.node_clusters: Dictionary mapping node IDs to cluster assignments</li>
             <li>data_manager.nodes_per_layer: Dictionary mapping layer indices to lists of node IDs</li>
-            <li>data_manager.layers: List of layer names</li>
             <li>data_manager.current_node_mask: Boolean mask for visible nodes</li>
-            <li>data_manager.cluster_colors: Dictionary mapping cluster IDs to colors</li>
-            <li>data_manager.layer_colors: Dictionary mapping layer indices to colors</li>
         </ul>
         
         <p><b>Calculation Method:</b></p>
         <ol>
             <li>Filter visible nodes using current_node_mask</li>
-            <li>Count nodes by cluster and layer using defaultdict(int)</li>
-            <li>Create connection matrix of size (num_layers + num_clusters) × (num_layers + num_clusters)</li>
-            <li>Fill matrix with connection counts between layers and clusters</li>
-            <li>Create entity colors by combining layer_colors and cluster_colors</li>
-            <li>Draw circular arcs for each entity using matplotlib.patches.Wedge</li>
-            <li>Draw connections between entities using matplotlib.patches.Bezier</li>
-            <li>Connection width proportional to connection count</li>
+            <li>Create matrix with shape (num_layers + num_clusters, num_layers + num_clusters)</li>
+            <li>Fill matrix with counts of nodes shared between layers and clusters</li>
+            <li>Create chord diagram using matplotlib</li>
             <li>Add labels for layers and clusters</li>
         </ol>
         
-        <p><b>Interpretation:</b> Arcs = layers/clusters. Arc length = node count. Connections = relationships. Width = connection strength. Colors match layer/cluster.</p>
+        <p><b>Interpretation:</b> Arcs represent layers and clusters. Connections between arcs show shared nodes. Width indicates number of nodes.</p>
         """
         self.tab_widget.setTabToolTip(7, chord_tooltip)
         
@@ -1731,29 +1778,62 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
             <li>data_manager.node_ids: List of all node IDs in the network</li>
             <li>data_manager.node_clusters: Dictionary mapping node IDs to cluster assignments</li>
             <li>data_manager.nodes_per_layer: Dictionary mapping layer indices to lists of node IDs</li>
-            <li>data_manager.layers: List of layer names</li>
-            <li>data_manager.link_pairs: List of tuples (source_id, target_id) for all edges</li>
-            <li>data_manager.current_edge_mask: Boolean mask for visible edges</li>
             <li>data_manager.current_node_mask: Boolean mask for visible nodes</li>
+            <li>data_manager.edge_connections: List of (start_idx, end_idx) tuples representing links</li>
         </ul>
         
         <p><b>Calculation Method:</b></p>
         <ol>
-            <li>Filter visible nodes and edges using masks</li>
-            <li>Count nodes by cluster and layer using defaultdict(int)</li>
-            <li>Create density matrix with shape (num_clusters, num_layers)</li>
-            <li>For each cluster-layer pair:
+            <li>Filter visible nodes and edges using current_node_mask</li>
+            <li>Create three matrices:
                 <ul>
-                    <li>Count actual connections between nodes in the cluster and layer</li>
+                    <li>count_matrix: Count of nodes in each cluster-layer combination</li>
+                    <li>connection_matrix: Count of connections in each cluster-layer combination</li>
+                    <li>max_possible_matrix: Maximum possible connections in each cluster-layer combination</li>
+                </ul>
+            </li>
+            <li>For each cluster-layer combination:
+                <ul>
+                    <li>Count intra-layer connections (both nodes in same layer and cluster)</li>
+                    <li>Count inter-layer connections (nodes in different layers but same cluster)</li>
                     <li>Calculate maximum possible connections = n × (n-1) / 2 where n = node count</li>
-                    <li>Compute density = actual / maximum (or 0 if maximum = 0)</li>
+                    <li>Compute density = actual / maximum (or normalized node count if maximum = 0)</li>
         </ul>
             </li>
-            <li>Visualize density matrix using matplotlib.pyplot.imshow with 'viridis' colormap</li>
-            <li>Add colorbar and annotations showing density values</li>
+            <li>Visualize as a 2x2 grid of heatmaps</li>
         </ol>
         
-        <p><b>Interpretation:</b> Each cell (i,j) shows connection density in cluster i, layer j. Values range 0-1. Darker colors = higher density (more connected).</p>
+        <p><b>Charts Calculation & Interpretation:</b></p>
+        <ul>
+            <li><b>Original Density Heatmap (top-left):</b>
+                <ul>
+                    <li><i>Calculation:</i> Raw count of nodes in each cluster-layer combination</li>
+                    <li><i>Values:</i> Integer counts (e.g., 5, 12, 7)</li>
+                    <li><i>Interpretation:</i> Darker cells indicate more nodes in that cluster-layer combination</li>
+                </ul>
+            </li>
+            <li><b>Node Count Matrix (top-right):</b>
+                <ul>
+                    <li><i>Calculation:</i> Same as Original Heatmap but with different color scheme</li>
+                    <li><i>Values:</i> Integer counts (e.g., 5, 12, 7)</li>
+                    <li><i>Interpretation:</i> Shows distribution of nodes across clusters and layers</li>
+                </ul>
+            </li>
+            <li><b>Connection Matrix (bottom-left):</b>
+                <ul>
+                    <li><i>Calculation:</i> For each cluster-layer: intra-layer connections count as 1.0, inter-layer connections count as 0.5 for each layer</li>
+                    <li><i>Values:</i> Decimal numbers (e.g., 3.5, 8.0, 2.5)</li>
+                    <li><i>Interpretation:</i> Higher values indicate more connections within/between layers for that cluster</li>
+                </ul>
+            </li>
+            <li><b>Density Matrix (bottom-right):</b>
+                <ul>
+                    <li><i>Calculation:</i> connection_matrix[i,j] / max_possible_matrix[i,j] where max_possible = n(n-1)/2</li>
+                    <li><i>Values:</i> Range from 0.0 (no connections) to 1.0 (fully connected)</li>
+                    <li><i>Interpretation:</i> Measures connectivity efficiency; 1.0 means all possible connections exist</li>
+                </ul>
+            </li>
+        </ul>
         """
         self.tab_widget.setTabToolTip(8, density_tooltip)
         
@@ -1767,27 +1847,21 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
             <li>data_manager.node_clusters: Dictionary mapping node IDs to cluster assignments</li>
             <li>data_manager.nodes_per_layer: Dictionary mapping layer indices to lists of node IDs</li>
             <li>data_manager.current_node_mask: Boolean mask for visible nodes</li>
-            <li>data_manager.cluster_colors: Dictionary mapping cluster IDs to colors</li>
         </ul>
         
         <p><b>Calculation Method:</b></p>
         <ol>
             <li>Filter visible nodes using current_node_mask</li>
-            <li>Identify clusters present in each layer</li>
-            <li>Create networkx.Graph with nodes for each cluster</li>
-            <li>For each pair of clusters:
-                <ul>
-                    <li>Count layers where both clusters appear</li>
-                    <li>Add edge with weight = co-occurrence count if > 0</li>
-        </ul>
-            </li>
-            <li>Apply networkx.spring_layout with weight consideration</li>
-            <li>Draw nodes with size proportional to total node count in cluster</li>
-            <li>Draw edges with width proportional to co-occurrence count</li>
-            <li>Apply cluster colors from data_manager.cluster_colors</li>
+            <li>For each layer, identify clusters that have nodes in that layer</li>
+            <li>Create co-occurrence matrix counting how many layers each pair of clusters appears in together</li>
+            <li>Create networkx graph with nodes representing clusters</li>
+            <li>Add edges between clusters that co-occur in at least one layer</li>
+            <li>Set edge weights based on co-occurrence count</li>
+            <li>Use networkx spring layout to position nodes</li>
+            <li>Draw network using networkx drawing functions</li>
         </ol>
         
-        <p><b>Interpretation:</b> Nodes = clusters. Node size = node count. Edge width = number of layers where both clusters appear. Position shows co-occurrence patterns.</p>
+        <p><b>Interpretation:</b> Nodes represent clusters. Edge width indicates how many layers the clusters co-occur in. Position shows relationship strength.</p>
         """
         self.tab_widget.setTabToolTip(9, cooccurrence_tooltip)
         
@@ -1800,24 +1874,17 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
             <li>data_manager.node_ids: List of all node IDs in the network</li>
             <li>data_manager.node_clusters: Dictionary mapping node IDs to cluster assignments</li>
             <li>data_manager.nodes_per_layer: Dictionary mapping layer indices to lists of node IDs</li>
-            <li>data_manager.layers: List of layer names</li>
             <li>data_manager.current_node_mask: Boolean mask for visible nodes</li>
         </ul>
         
         <p><b>Calculation Method:</b></p>
         <ol>
             <li>Filter visible nodes using current_node_mask</li>
-            <li>Count nodes by cluster and layer using defaultdict(int)</li>
-            <li>Create count matrix with shape (num_clusters, num_layers)</li>
-            <li>Create normalized matrix with same shape</li>
-            <li>For each layer:
-                <ul>
-                    <li>Calculate total nodes in layer</li>
-                    <li>Normalize each cluster's count by dividing by total (percentage)</li>
-        </ul>
-            </li>
-            <li>Visualize normalized matrix using matplotlib.pyplot.imshow with 'viridis' colormap</li>
-            <li>Add colorbar and annotations showing percentage values</li>
+            <li>Create matrix with shape (num_clusters, num_layers)</li>
+            <li>For each visible node, increment matrix[cluster_idx, layer_idx]</li>
+            <li>Normalize matrix columns to sum to 1.0 (i.e., divide by column sum)</li>
+            <li>Visualize matrix using matplotlib.pyplot.imshow with 'viridis' colormap</li>
+            <li>Add colorbar and annotations showing normalized values</li>
         </ol>
         
         <p><b>Interpretation:</b> Each cell (i,j) shows percentage of layer j's nodes in cluster i. Values sum to 1.0 per column. Darker colors = higher percentage.</p>
@@ -1826,7 +1893,7 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         
         # LC12: Similarity Matrix tooltip
         similarity_tooltip = """
-        <h3>LC12: Cluster Similarity Matrix</h3>
+        <h3>LC12: Enhanced Cluster Similarity Analysis</h3>
         
         <p><b>Data Source:</b></p>
         <ul>
@@ -1834,24 +1901,100 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
             <li>data_manager.node_clusters: Dictionary mapping node IDs to cluster assignments</li>
             <li>data_manager.nodes_per_layer: Dictionary mapping layer indices to lists of node IDs</li>
             <li>data_manager.current_node_mask: Boolean mask for visible nodes</li>
+            <li>data_manager.edge_connections: List of (start_idx, end_idx) tuples representing links</li>
         </ul>
         
-        <p><b>Calculation Method:</b></p>
+        <p><b>Controls:</b></p>
+        <ul>
+            <li><b>LC12 Metric:</b> Select a specific similarity metric or view all metrics in a grid</li>
+            <li><b>Edge Type:</b> Filter edges used in calculations (All Edges, Interlayer only, or Intralayer only)</li>
+        </ul>
+        
+        <p><b>Visualization:</b></p>
+        <p>This enhanced visualization presents 9 different similarity metrics in a 3x3 grid:</p>
+        
         <ol>
-            <li>Filter visible nodes using current_node_mask</li>
-            <li>For each cluster, create binary vector indicating presence in each layer</li>
-            <li>Create similarity matrix with shape (num_clusters, num_clusters)</li>
-            <li>For each pair of clusters (i,j):
+            <li><b>Jaccard Similarity:</b>
                 <ul>
-                    <li>Calculate Jaccard similarity: |intersection| / |union|</li>
-                    <li>Store similarity value in matrix[i,j]</li>
+                    <li><i>Calculation:</i> |A ∩ B| / |A ∪ B| where A and B are sets of nodes in clusters i and j</li>
+                    <li><i>Values:</i> Range from 0.0 (no overlap) to 1.0 (identical sets)</li>
+                    <li><i>Interpretation:</i> Measures proportion of shared nodes relative to total nodes</li>
         </ul>
             </li>
-            <li>Visualize similarity matrix using matplotlib.pyplot.imshow with 'viridis' colormap</li>
-            <li>Add colorbar and annotations showing similarity values</li>
+            <li><b>Cosine Similarity:</b>
+                <ul>
+                    <li><i>Calculation:</i> (A·B)/(||A||·||B||) where A and B are layer distribution vectors for clusters i and j</li>
+                    <li><i>Values:</i> Range from 0.0 (orthogonal) to 1.0 (parallel vectors)</li>
+                    <li><i>Interpretation:</i> Measures similarity of layer distribution patterns regardless of magnitude</li>
+                </ul>
+            </li>
+            <li><b>Overlap Coefficient:</b>
+                <ul>
+                    <li><i>Calculation:</i> |A ∩ B| / min(|A|, |B|) where A and B are sets of nodes in clusters i and j</li>
+                    <li><i>Values:</i> Range from 0.0 (no overlap) to 1.0 (one set is subset of other)</li>
+                    <li><i>Interpretation:</i> Measures whether smaller cluster is subset of larger one</li>
+                </ul>
+            </li>
+            <li><b>Connection Similarity:</b>
+                <ul>
+                    <li><i>Calculation:</i> Number of direct connections between clusters i and j divided by sqrt(|Ci|·|Cj|) where |Ci| is node count in cluster i</li>
+                    <li><i>Values:</i> Range from 0.0 (no connections) to values typically < 1.0</li>
+                    <li><i>Interpretation:</i> Measures strength of direct connectivity between clusters</li>
+                </ul>
+            </li>
+            <li><b>Layer Distribution:</b>
+                <ul>
+                    <li><i>Calculation:</i> 1 - Jensen-Shannon divergence between normalized layer distribution vectors</li>
+                    <li><i>Values:</i> Range from 0.0 (completely different) to 1.0 (identical distributions)</li>
+                    <li><i>Interpretation:</i> Measures similarity of proportional layer distributions</li>
+                </ul>
+            </li>
+            <li><b>Hierarchical Clustering:</b>
+                <ul>
+                    <li><i>Calculation:</i> Hierarchical clustering using average linkage on Jaccard distance matrix</li>
+                    <li><i>Values:</i> Dendrogram with branch lengths representing distances</li>
+                    <li><i>Interpretation:</i> Clusters grouped by similarity; shorter branches = more similar</li>
+                </ul>
+            </li>
+            <li><b>Node Sharing Ratio:</b>
+                <ul>
+                    <li><i>Calculation:</i> For each layer, calculate |A ∩ B| / |A ∪ B| where A and B are sets of nodes in that layer for clusters i and j, then average across layers</li>
+                    <li><i>Values:</i> Range from 0.0 (no sharing) to 1.0 (identical node sets in each layer)</li>
+                    <li><i>Interpretation:</i> Measures layer-specific node sharing patterns</li>
+                </ul>
+            </li>
+            <li><b>Path-based Similarity:</b>
+                <ul>
+                    <li><i>Calculation:</i> 1 / (1 + average shortest path length between nodes in clusters i and j)</li>
+                    <li><i>Values:</i> Range from near 0.0 (distant) to 1.0 (directly connected)</li>
+                    <li><i>Interpretation:</i> Measures topological proximity between clusters</li>
+                </ul>
+            </li>
+            <li><b>Mutual Information:</b>
+                <ul>
+                    <li><i>Calculation:</i> Normalized mutual information between layer distributions: I(X;Y)/sqrt(H(X)·H(Y)) where H is entropy</li>
+                    <li><i>Values:</i> Range from 0.0 (independent) to 1.0 (perfectly correlated)</li>
+                    <li><i>Interpretation:</i> Measures information shared between layer distributions</li>
+                </ul>
+            </li>
         </ol>
         
-        <p><b>Interpretation:</b> Each cell (i,j) shows Jaccard similarity between clusters i and j. Values range 0-1. Diagonal = 1.0 (self-similarity). Darker colors = more similar.</p>
+        <p><b>Interpretation:</b></p>
+        <ul>
+            <li>For matrix visualizations, each cell (i,j) shows similarity between clusters i and j</li>
+            <li>Values range from 0 (no similarity) to 1 (identical)</li>
+            <li>Diagonal values are 1.0 (self-similarity)</li>
+            <li>Darker blue colors indicate higher similarity</li>
+            <li>The dendrogram groups clusters by similarity (shorter branches = more similar)</li>
+        </ul>
+        
+        <p><b>Applications:</b></p>
+        <ul>
+            <li>Identify clusters that share similar layer distributions</li>
+            <li>Discover functional relationships between clusters</li>
+            <li>Compare different similarity metrics to gain deeper insights</li>
+            <li>Understand hierarchical relationships between clusters</li>
+        </ul>
         """
         self.tab_widget.setTabToolTip(11, similarity_tooltip)
         
@@ -1864,29 +2007,20 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
             <li>data_manager.node_ids: List of all node IDs in the network</li>
             <li>data_manager.node_clusters: Dictionary mapping node IDs to cluster assignments</li>
             <li>data_manager.nodes_per_layer: Dictionary mapping layer indices to lists of node IDs</li>
-            <li>data_manager.layers: List of layer names</li>
             <li>data_manager.current_node_mask: Boolean mask for visible nodes</li>
-            <li>data_manager.cluster_colors: Dictionary mapping cluster IDs to colors</li>
         </ul>
         
         <p><b>Calculation Method:</b></p>
         <ol>
             <li>Filter visible nodes using current_node_mask</li>
-            <li>Count nodes by cluster and layer using defaultdict(int)</li>
-            <li>Create data arrays for bubble chart:
-                <ul>
-                    <li>x: Layer indices for each bubble</li>
-                    <li>y: Cluster indices for each bubble</li>
-                    <li>sizes: Node counts for each bubble (scaled for visualization)</li>
-                    <li>colors: Cluster colors for each bubble</li>
-        </ul>
-            </li>
-            <li>Draw bubbles using matplotlib.pyplot.scatter with size parameter</li>
-            <li>Add labels for layers and clusters</li>
-            <li>Add annotations showing exact counts</li>
+            <li>Create matrix with shape (num_clusters, num_layers)</li>
+            <li>For each visible node, increment matrix[cluster_idx, layer_idx]</li>
+            <li>Create scatter plot with x-axis representing layers and y-axis representing clusters</li>
+            <li>Set bubble size based on node count</li>
+            <li>Set bubble color based on cluster color</li>
         </ol>
         
-        <p><b>Interpretation:</b> Each bubble represents cluster-layer combination. Position = (layer, cluster). Bubble size = node count. Color = cluster color.</p>
+        <p><b>Interpretation:</b> Each bubble represents a cluster-layer combination. Bubble size indicates number of nodes. Bubble color corresponds to cluster.</p>
         """
         self.tab_widget.setTabToolTip(12, bubble_tooltip)
         
@@ -1899,85 +2033,414 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
             <li>data_manager.node_ids: List of all node IDs in the network</li>
             <li>data_manager.node_clusters: Dictionary mapping node IDs to cluster assignments</li>
             <li>data_manager.nodes_per_layer: Dictionary mapping layer indices to lists of node IDs</li>
-            <li>data_manager.layers: List of layer names</li>
             <li>data_manager.current_node_mask: Boolean mask for visible nodes</li>
-            <li>data_manager.cluster_colors: Dictionary mapping cluster IDs to colors</li>
-            <li>data_manager.layer_colors: Dictionary mapping layer indices to colors</li>
+            <li>data_manager.visible_links or data_manager.edge_connections: List of visible links in the network</li>
+        </ul>
+        
+        <p><b>Controls:</b></p>
+        <ul>
+            <li><b>Count Type:</b> Select whether to count nodes or intralayer edges within each cluster-layer combination</li>
         </ul>
         
         <p><b>Calculation Method:</b></p>
         <ol>
             <li>Filter visible nodes using current_node_mask</li>
-            <li>Count nodes by cluster and layer using defaultdict(int)</li>
-            <li>Create lists for treemap:
-                <ul>
-                    <li>labels: Cluster-layer combination names</li>
-                    <li>parents: Cluster names for each combination</li>
-                    <li>values: Node counts for each combination</li>
-                    <li>colors: Colors for each combination (derived from cluster colors)</li>
-        </ul>
-            </li>
-            <li>Create treemap using matplotlib_squarify:
-                <ul>
-                    <li>Normalize sizes to fit available space</li>
-                    <li>Calculate rectangle positions using squarify algorithm</li>
-                    <li>Draw rectangles using matplotlib.patches.Rectangle</li>
-                    <li>Add labels with size proportional to rectangle size</li>
-                </ul>
-            </li>
+            <li>For each cluster, calculate the total number of nodes or intralayer edges in each layer</li>
+            <li>Create a treemap where each rectangle represents a cluster-layer combination</li>
+            <li>Size of each rectangle is proportional to the count (nodes or edges) in that combination</li>
+            <li>Color of each rectangle is based on the cluster color</li>
         </ol>
         
-        <p><b>Interpretation:</b> Each rectangle = cluster-layer combination. Rectangle size = node count. Color = cluster color. Hierarchy: clusters contain layers.</p>
+        <p><b>Interpretation:</b> The treemap provides a hierarchical visualization of the distribution of nodes or intralayer edges across layers and clusters. Larger rectangles indicate higher density in that combination.</p>
         """
         self.tab_widget.setTabToolTip(13, treemap_tooltip)
         
         # LC15: Flow Ideas tooltip
         flow_ideas_tooltip = """
-        <h3>LC15: Flow Visualization Ideas</h3>
+        <h3>LC15: Flow Ideas</h3>
         
         <p><b>Data Source:</b></p>
         <ul>
             <li>data_manager.node_ids: List of all node IDs in the network</li>
             <li>data_manager.node_clusters: Dictionary mapping node IDs to cluster assignments</li>
             <li>data_manager.nodes_per_layer: Dictionary mapping layer indices to lists of node IDs</li>
-            <li>data_manager.layers: List of layer names</li>
-            <li>data_manager.link_pairs: List of tuples (source_id, target_id) for all edges</li>
-            <li>data_manager.current_edge_mask: Boolean mask for visible edges</li>
             <li>data_manager.current_node_mask: Boolean mask for visible nodes</li>
-            <li>data_manager.cluster_colors: Dictionary mapping cluster IDs to colors</li>
-            <li>data_manager.layer_colors: Dictionary mapping layer indices to colors</li>
         </ul>
         
-        <p><b>Visualizations:</b></p>
-        <ol>
-            <li><b>Circular Flow Diagram:</b>
-                <ul>
-                    <li>Data: Node counts and connections between clusters and layers</li>
-                    <li>Method: Arrange entities in circle, draw curved connections with width proportional to connection strength</li>
-                    <li>Result: Shows layer-cluster relationships</li>
-        </ul>
-            </li>
-            <li><b>Force-Directed Regions:</b>
-                <ul>
-                    <li>Data: Layer-cluster relationships</li>
-                    <li>Method: Arrange clusters in regions based on layer</li>
-                    <li>Result: Shows layer-cluster relationships</li>
-        </ul>
-            </li>
-            <li><b>Alluvial Diagram:</b>
-                <ul>
-                    <li>Data: Layer-cluster relationships</li>
-                    <li>Method: Show flow between layers and clusters</li>
-                    <li>Result: Shows layer-cluster relationships</li>
-        </ul>
-            </li>
-            <li><b>Radial Network:</b>
-                <ul>
-                    <li>Data: Layer-cluster relationships</li>
-                    <li>Method: Show layers as rings and clusters as segments</li>
-                    <li>Result: Shows layer-cluster relationships</li>
-        </ul>
-            </li>
-        </ol>
+        <p><b>Visualization Ideas:</b></p>
+        <ul>
+            <li>1. Circular Flow Diagram: Show connections between layers and clusters in a circular layout</li>
+            <li>2. Force-Directed Regions: Create a force-directed graph with layers as regions</li>
+            <li>3. Alluvial Diagram: Show flow between layers and clusters</li>
+            <li>4. Radial Network: Create a radial network diagram with layers as concentric circles and clusters as segments</li>
+                </ul>
+        
+        <p><b>Interpretation:</b> These visualizations provide different perspectives on the flow of information and connections between layers and clusters.</p>
         """
-        self.tab_widget.setTabToolTip(14, flow_ideas_tooltip) 
+        self.tab_widget.setTabToolTip(14, flow_ideas_tooltip)
+        
+        # LC16: Interlayer Path Analysis tooltip
+        path_analysis_tooltip = """
+        <h3>LC16: Combined Interlayer-Intralayer Path Analysis</h3>
+
+        <p><b>Data Source:</b></p>
+        <ul>
+            <li>data_manager.node_ids: List of all node IDs in the network</li>
+            <li>data_manager.node_clusters: Dictionary mapping node IDs to cluster assignments</li>
+            <li>data_manager.nodes_per_layer: Dictionary mapping layer indices to lists of node IDs</li>
+            <li>data_manager.current_node_mask: Boolean mask for visible nodes</li>
+            <li>data_manager.edge_connections: List of (start_idx, end_idx) tuples representing links</li>
+        </ul>
+
+        <p><b>Controls:</b></p>
+        <ul>
+            <li><b>LC16 Analysis:</b> Select an analysis type (Path Length, Betweenness, Bottleneck)</li>
+        </ul>
+
+        <p><b>Calculation Method:</b></p>
+        <ol>
+            <li>Filter visible links using current_node_mask</li>
+            <li>Classify edges as interlayer (connecting different layers) or intralayer (within same layer)</li>
+            <li>Identify common nodes that connect both interlayer and intralayer edges</li>
+            <li>Create a combined graph that includes all visible edges, with special marking for common nodes</li>
+            <li>For each analysis type, calculate the corresponding path metrics across the combined network</li>
+            <li>Visualize results showing how interlayer and intralayer edges interact through common nodes</li>
+        </ol>
+
+        <p><b>Visualization:</b></p>
+        <ul>
+            <li><b>Path Length:</b> Heatmap showing average shortest path lengths between layers in the combined network</li>
+            <li><b>Betweenness:</b> Bar chart showing betweenness centrality of all nodes vs. common nodes by layer</li>
+            <li><b>Bottleneck:</b> Network diagram highlighting critical connections in the combined network, with interlayer edges in blue, intralayer edges in red, and common nodes in yellow</li>
+        </ul>
+
+        <p><b>Interpretation:</b></p>
+        <ul>
+            <li><b>Path Length:</b> Each cell (i,j) shows the average shortest path length from nodes in layer i to nodes in layer j through the combined network. Lower values (blue) indicate closer connectivity.</li>
+            <li><b>Betweenness:</b> Shows which layers contain nodes that serve as important bridges in the network, with separate bars for all nodes and common nodes. Higher values indicate layers with more critical nodes.</li>
+            <li><b>Bottleneck:</b> Identifies critical connections in the combined network, highlighting common nodes that bridge interlayer and intralayer edges. Edge thickness and color intensity indicate importance.</li>
+        </ul>
+
+        <p><b>Applications:</b></p>
+        <ul>
+            <li>Understand how interlayer and intralayer edges interact through common nodes</li>
+            <li>Identify critical nodes that serve as bridges between different types of connections</li>
+            <li>Discover bottlenecks in the combined network that may affect information flow</li>
+            <li>Analyze the overall structure of the network considering both types of connections</li>
+            <li>Find potential vulnerabilities where removing a small number of nodes could significantly impact connectivity</li>
+        </ul>
+        """
+        self.tab_widget.setTabToolTip(15, path_analysis_tooltip)
+        
+        # LC17: Cluster Bridging Analysis tooltip
+        bridge_analysis_tooltip = """
+        <h3>LC17: Cluster Bridging Analysis</h3>
+        
+        <p><b>Data Source:</b></p>
+        <ul>
+            <li>data_manager.node_ids: List of all node IDs in the network</li>
+            <li>data_manager.node_clusters: Dictionary mapping node IDs to cluster assignments</li>
+            <li>data_manager.nodes_per_layer: Dictionary mapping layer indices to lists of node IDs</li>
+            <li>data_manager.current_node_mask: Boolean mask for visible nodes</li>
+            <li>data_manager.edge_connections: List of (start_idx, end_idx) tuples representing links</li>
+        </ul>
+        
+        <p><b>Controls:</b></p>
+        <ul>
+            <li><b>LC17 Analysis:</b> Select an analysis type (Bridge Score, Flow Efficiency, Layer Span)</li>
+        </ul>
+        
+        <p><b>Calculation Method:</b></p>
+        <ol>
+            <li>Filter visible links using current_node_mask</li>
+            <li>For each analysis type, calculate the corresponding bridging metric for all pairs of layers</li>
+            <li>Visualize results as a heatmap where cells (i,j) show the bridging metric between layers i and j</li>
+        </ol>
+        
+        <p><b>Visualization:</b></p>
+        <ul>
+            <li><b>Bridge Score:</b> Heatmap showing bridge score for all layer pairs</li>
+            <li><b>Flow Efficiency:</b> Heatmap showing flow efficiency for all layer pairs</li>
+            <li><b>Layer Span:</b> Heatmap showing layer span for all layer pairs</li>
+        </ul>
+        
+        <p><b>Interpretation:</b></p>
+        <ul>
+            <li>Bridge Score: Higher values indicate stronger bridges between layers</li>
+            <li>Flow Efficiency: Higher values indicate more efficient flow between layers</li>
+            <li>Layer Span: Higher values indicate layers that span more clusters</li>
+        </ul>
+        
+        <p><b>Applications:</b></p>
+        <ul>
+            <li>Identify clusters that serve as bridges between layers</li>
+            <li>Discover efficient interlayer communication pathways</li>
+            <li>Analyze how information might flow between layers through specific clusters</li>
+            <li>Compare interlayer connectivity patterns across different layers</li>
+        </ul>
+        """
+        self.tab_widget.setTabToolTip(16, bridge_analysis_tooltip)
+        
+        # LC20: Interlayer Path Similarity tooltip
+        interlayer_path_similarity_tooltip = """
+        <h3>LC20: Interlayer Path Similarity Analysis</h3>
+        
+        <p><b>Data Source:</b></p>
+        <ul>
+            <li>data_manager.node_ids: List of all node IDs in the network</li>
+            <li>data_manager.node_clusters: Dictionary mapping node IDs to cluster assignments</li>
+            <li>data_manager.nodes_per_layer: Dictionary mapping layer indices to lists of node IDs</li>
+            <li>data_manager.current_node_mask: Boolean mask for visible nodes</li>
+            <li>data_manager.edge_connections: List of (start_idx, end_idx) tuples representing links</li>
+        </ul>
+        
+        <p><b>Controls:</b></p>
+        <ul>
+            <li><b>LC20 Cluster:</b> Select a specific cluster to analyze or view all clusters</li>
+        </ul>
+        
+        <p><b>Calculation Method:</b></p>
+        <ol>
+            <li>Filter visible nodes and edges using current_node_mask</li>
+            <li>Identify interlayer edges (connections between nodes in different layers)</li>
+            <li>For each cluster pair (or selected cluster with all others):
+                <ul>
+                    <li>Calculate path-based similarity using interlayer edges only</li>
+                    <li>Compute average shortest path length between nodes in different clusters</li>
+                    <li>Transform to similarity score: 1 / (1 + average path length)</li>
+        </ul>
+            </li>
+            <li>Create heatmap showing similarity scores between clusters</li>
+            <li>For selected cluster view, create individual heatmaps for each layer pair</li>
+        </ol>
+        
+        <p><b>Visualization:</b></p>
+        <ul>
+            <li><b>Combined View (All Clusters):</b> Matrix showing path-based similarity between all cluster pairs using only interlayer edges</li>
+            <li><b>Single Cluster View:</b> Multiple matrices showing path-based similarity between the selected cluster and all others, broken down by layer pairs</li>
+        </ul>
+        
+        <p><b>Interpretation:</b></p>
+        <ul>
+            <li>Each cell (i,j) shows similarity between clusters i and j based on interlayer paths</li>
+            <li>Values range from near 0 (distant/disconnected) to 1 (directly connected)</li>
+            <li>Darker colors indicate higher similarity (shorter paths)</li>
+            <li>In single cluster view, each matrix represents paths between specific layer pairs</li>
+        </ul>
+        
+        <p><b>Applications:</b></p>
+        <ul>
+            <li>Identify clusters that serve as bridges between layers</li>
+            <li>Discover efficient interlayer communication pathways</li>
+            <li>Analyze how information might flow between layers through specific clusters</li>
+            <li>Compare interlayer connectivity patterns across different clusters</li>
+        </ul>
+        """
+        self.tab_widget.setTabToolTip(18, interlayer_path_similarity_tooltip)
+
+    def update_enhanced_network(self):
+        """Update the enhanced network diagram with the current data"""
+        if not hasattr(self, "enhanced_network_figure") or not self.enable_checkbox.isChecked():
+            return
+            
+        # Clear the figure
+        self.enhanced_network_figure.clear()
+        
+        # Create the axis if it doesn't exist
+        if not hasattr(self, "enhanced_network_ax"):
+            self.enhanced_network_ax = self.enhanced_network_figure.add_subplot(111)
+        else:
+            self.enhanced_network_ax = self.enhanced_network_figure.add_subplot(111)
+        
+        # Get the current data manager
+        data_manager = self._current_data
+        if data_manager is None:
+            return
+            
+        # Get the selected layout algorithm and aspect ratio
+        layout_algorithm = self.layout_algorithm_combo.currentText().lower()
+        aspect_ratio = float(self.aspect_ratio_combo.currentText())
+        
+        # Use the update function from lc4a_network_diagram.py
+        self.enhanced_network_ax = update_enhanced_network(
+            self.enhanced_network_figure,
+            self.enhanced_network_ax,
+            self.enhanced_network_canvas,
+            data_manager,
+            self.enhanced_network_ui,
+            layout_algorithm,
+            aspect_ratio
+        )
+
+    def update_lc12_similarity_matrix(self, data_manager):
+        """Update the LC12 similarity matrix with the selected metric and edge type"""
+        if not hasattr(self, "similarity_figure") or not self.enable_checkbox.isChecked():
+            return
+            
+        # Clear the figure
+        self.similarity_figure.clear()
+        self.similarity_ax = self.similarity_figure.add_subplot(111)
+        
+        # Get visible links
+        visible_links = []
+        if data_manager.current_edge_mask is not None:
+            visible_links = [data_manager.link_pairs[i] for i in range(len(data_manager.link_pairs)) 
+                            if data_manager.current_edge_mask[i]]
+        
+        # Get the selected metric and edge type
+        metric_index = self.similarity_metric_combo.currentIndex()
+        edge_type_index = self.edge_type_combo.currentIndex()
+        
+        # Map indices to metric and edge type
+        metric = "all" if metric_index == 0 else self.similarity_metric_combo.currentText().lower().replace(" ", "_")
+        edge_type = "all" if edge_type_index == 0 else self.edge_type_combo.currentText().lower()
+        
+        # Define font sizes
+        small_font = {"fontsize": 9}
+        medium_font = {"fontsize": 12}
+        
+        # Create the similarity matrix with the selected metric and edge type
+        create_enhanced_cluster_similarity(
+            self.similarity_ax,
+            visible_links,
+            data_manager.node_ids,
+            data_manager.node_clusters,
+            data_manager.nodes_per_layer,
+            data_manager.layers,
+            small_font,
+            medium_font,
+            data_manager.visible_layers,
+            data_manager.cluster_colors,
+            metric=metric,
+            edge_type=edge_type
+        )
+        
+        # Apply tight layout and draw
+        self.similarity_figure.tight_layout()
+        self.similarity_canvas.draw()
+
+    def update_lc20_interlayer_path_similarity(self, data_manager):
+        """Update the LC20 interlayer path similarity visualization"""
+        if not hasattr(self, "interlayer_path_similarity_figure") or not self.enable_checkbox.isChecked():
+            return
+            
+        # Clear the figure
+        self.interlayer_path_similarity_figure.clear()
+        
+        # Get visible links
+        visible_links = []
+        if data_manager.current_edge_mask is not None:
+            visible_links = [data_manager.link_pairs[i] for i in range(len(data_manager.link_pairs)) 
+                            if data_manager.current_edge_mask[i]]
+        
+        # Get the selected cluster
+        cluster_selection = self.path_similarity_cluster_combo.currentText()
+        selected_cluster = None if cluster_selection == "All Clusters" else int(cluster_selection.split(" ")[1])
+        
+        # Define font sizes
+        small_font = {"fontsize": 9}
+        medium_font = {"fontsize": 12}
+        
+        # Create the interlayer path similarity visualization
+        create_interlayer_path_similarity(
+            self.interlayer_path_similarity_figure,
+            visible_links,
+            data_manager.node_ids,
+            data_manager.node_clusters,
+            data_manager.nodes_per_layer,
+            data_manager.layers,
+            small_font,
+            medium_font,
+            data_manager.visible_layers,
+            data_manager.cluster_colors,
+            selected_cluster=selected_cluster
+        )
+        
+        # Apply tight layout and draw
+        self.interlayer_path_similarity_figure.tight_layout()
+        self.interlayer_path_similarity_canvas.draw()
+
+    def update_cluster_selector(self, data_manager):
+        """Update the cluster selector with available clusters"""
+        if not hasattr(self, "path_similarity_cluster_combo"):
+            return
+            
+        # Store current selection
+        current_text = self.path_similarity_cluster_combo.currentText()
+        
+        # Clear the combo box
+        self.path_similarity_cluster_combo.clear()
+        
+        # Add "All Clusters" option
+        self.path_similarity_cluster_combo.addItem("All Clusters")
+        
+        # Get unique clusters
+        unique_clusters = sorted(set(data_manager.node_clusters.values()))
+        
+        # Add each cluster
+        for cluster in unique_clusters:
+            self.path_similarity_cluster_combo.addItem(f"Cluster {cluster}")
+        
+        # Restore selection if possible
+        index = self.path_similarity_cluster_combo.findText(current_text)
+        if index >= 0:
+            self.path_similarity_cluster_combo.setCurrentIndex(index)
+        else:
+            self.path_similarity_cluster_combo.setCurrentIndex(0)
+
+    def on_lc14_count_type_changed(self, _):
+        """Handle change in LC14 count type dropdown"""
+        if hasattr(self, "_current_data") and self.enable_checkbox.isChecked():
+            self.update_lc14_treemap(self._current_data)
+
+    def update_lc14_treemap(self, data_manager):
+        """Update the LC14 treemap visualization"""
+        # Get the current count type
+        count_type = "nodes" if self.lc14_count_type_combo.currentText() == "Nodes" else "intralayer_edges"
+        
+        # Clear the figure
+        self.treemap_ax.clear()
+        
+        # Get data from data manager
+        node_ids = data_manager.node_ids
+        node_clusters = data_manager.node_clusters
+        nodes_per_layer = data_manager.nodes_per_layer
+        layers = data_manager.layers
+        
+        # Get visible links (edge connections)
+        visible_links = []
+        if hasattr(data_manager, 'visible_links'):
+            visible_links = data_manager.visible_links
+        elif hasattr(data_manager, 'edge_connections'):
+            visible_links = data_manager.edge_connections
+        
+        # Get visible layer indices
+        visible_layer_indices = []
+        if hasattr(data_manager, 'get_visible_layer_indices'):
+            visible_layer_indices = data_manager.get_visible_layer_indices()
+        elif hasattr(data_manager, 'visible_layer_indices'):
+            visible_layer_indices = data_manager.visible_layer_indices
+        
+        # Get font sizes
+        small_font = {"fontsize": 8}
+        medium_font = {"fontsize": 10}
+        
+        # Create the treemap
+        from charts.layer_cluster.lc14_treemap import create_layer_cluster_treemap
+        create_layer_cluster_treemap(
+            self.treemap_ax,
+            visible_links,
+            node_ids,
+            node_clusters,
+            nodes_per_layer,
+            layers,
+            small_font,
+            medium_font,
+            visible_layer_indices,
+            data_manager.cluster_colors,
+            count_type=count_type
+        )
+        
+        # Draw the canvas
+        self.treemap_figure.tight_layout()
+        self.treemap_canvas.draw()

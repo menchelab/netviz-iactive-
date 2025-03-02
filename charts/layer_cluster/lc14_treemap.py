@@ -20,13 +20,19 @@ def create_layer_cluster_treemap(
     medium_font,
     visible_layer_indices=None,
     cluster_colors=None,
+    count_type="nodes",  # New parameter: 'nodes' or 'intralayer_edges'
 ):
     """
-    Create a treemap visualization showing the distribution of nodes across layers and clusters.
-    Rectangle size represents the number of nodes in each layer-cluster combination.
+    Create a treemap visualization showing the distribution of nodes or intralayer edges across layers and clusters.
+    Rectangle size represents the number of nodes or intralayer edges in each layer-cluster combination.
+    
+    Parameters:
+    -----------
+    count_type : str
+        Type of counting to perform: 'nodes' (default) or 'intralayer_edges'
     """
     logger = logging.getLogger(__name__)
-    logger.info(f"Creating layer-cluster treemap with nodes_per_layer={nodes_per_layer}")
+    logger.info(f"Creating layer-cluster treemap with nodes_per_layer={nodes_per_layer}, count_type={count_type}")
     
     # Handle font parameters correctly
     if isinstance(medium_font, dict):
@@ -42,39 +48,72 @@ def create_layer_cluster_treemap(
     try:
         # Clear the axis
         ax.clear()
-        ax.set_title("Layer-Cluster Distribution Treemap", fontsize=medium_fontsize)
+        
+        # Set title based on count type
+        if count_type == "nodes":
+            ax.set_title("Layer-Cluster Node Distribution Treemap", fontsize=medium_fontsize)
+        else:
+            ax.set_title("Layer-Cluster Intralayer Edge Distribution Treemap", fontsize=medium_fontsize)
         
         # Filter to only visible layers
         visible_layer_indices = visible_layer_indices or list(range(len(layers)))
         
-        # Count nodes by cluster and layer
+        # Create a mapping of node_id to layer
+        node_to_layer = {}
+        for layer_idx in visible_layer_indices:
+            if layer_idx < len(layers):
+                # Handle different formats of nodes_per_layer
+                if isinstance(nodes_per_layer, dict):
+                    # If nodes_per_layer is a dictionary mapping layer_idx -> list of nodes
+                    for node_id in nodes_per_layer.get(layer_idx, []):
+                        if node_id in node_ids:
+                            node_to_layer[node_id] = layer_idx
+                elif isinstance(nodes_per_layer, int):
+                    # If nodes_per_layer is an integer (number of nodes per layer)
+                    for i, node_id in enumerate(node_ids):
+                        node_layer = i // nodes_per_layer
+                        if node_layer == layer_idx:
+                            node_to_layer[node_id] = layer_idx
+        
         cluster_layer_counts = {}
-        for node_id, cluster in node_clusters.items():
-            if node_id in node_ids:
-                for layer_idx in visible_layer_indices:
-                    if layer_idx < len(layers):
-                        # Handle different formats of nodes_per_layer
-                        node_in_layer = False
-                        if isinstance(nodes_per_layer, dict):
-                            # If nodes_per_layer is a dictionary mapping layer_idx -> list of nodes
-                            node_in_layer = node_id in nodes_per_layer.get(layer_idx, [])
-                        elif isinstance(nodes_per_layer, int):
-                            # If nodes_per_layer is an integer (number of nodes per layer)
-                            # Calculate the layer for this node based on its index in node_ids
-                            try:
-                                node_idx = node_ids.index(node_id)
-                                node_layer = node_idx // nodes_per_layer
-                                node_in_layer = node_layer == layer_idx
-                            except ValueError:
-                                # Node ID not found in node_ids list
-                                node_in_layer = False
+        
+        if count_type == "nodes":
+            # Count nodes by cluster and layer
+            for node_id, cluster in node_clusters.items():
+                if node_id in node_ids and node_id in node_to_layer:
+                    layer_idx = node_to_layer[node_id]
+                    if cluster not in cluster_layer_counts:
+                        cluster_layer_counts[cluster] = {}
+                    if layer_idx not in cluster_layer_counts[cluster]:
+                        cluster_layer_counts[cluster][layer_idx] = 0
+                    cluster_layer_counts[cluster][layer_idx] += 1
+        else:
+            # Count intralayer edges by cluster and layer
+            # First, create a mapping of node_id to cluster
+            node_to_cluster = {node_id: cluster for node_id, cluster in node_clusters.items() if node_id in node_ids}
+            
+            # Count intralayer edges
+            for source_id, target_id in visible_links:
+                # Check if both nodes are in the same layer
+                if (source_id in node_to_layer and 
+                    target_id in node_to_layer and 
+                    node_to_layer[source_id] == node_to_layer[target_id]):
+                    
+                    layer_idx = node_to_layer[source_id]
+                    
+                    # Check if both nodes are in the same cluster
+                    if (source_id in node_to_cluster and 
+                        target_id in node_to_cluster and 
+                        node_to_cluster[source_id] == node_to_cluster[target_id]):
                         
-                        if node_in_layer:
-                            if cluster not in cluster_layer_counts:
-                                cluster_layer_counts[cluster] = {}
-                            if layer_idx not in cluster_layer_counts[cluster]:
-                                cluster_layer_counts[cluster][layer_idx] = 0
-                            cluster_layer_counts[cluster][layer_idx] += 1
+                        cluster = node_to_cluster[source_id]
+                        
+                        # Increment the count for this cluster-layer combination
+                        if cluster not in cluster_layer_counts:
+                            cluster_layer_counts[cluster] = {}
+                        if layer_idx not in cluster_layer_counts[cluster]:
+                            cluster_layer_counts[cluster][layer_idx] = 0
+                        cluster_layer_counts[cluster][layer_idx] += 1
         
         # Check if we have any data
         if not cluster_layer_counts:
@@ -102,8 +141,11 @@ def create_layer_cluster_treemap(
             for layer_idx, count in sorted(layer_dict.items()):
                 if layer_idx < len(layers):
                     layer_name = layers[layer_idx]
-                    # Create label
-                    label = f"C{cluster}-{layer_name}\n({count})"
+                    # Create label with appropriate count description
+                    if count_type == "nodes":
+                        label = f"C{cluster}-{layer_name}\n({count} nodes)"
+                    else:
+                        label = f"C{cluster}-{layer_name}\n({count} edges)"
                     labels.append(label)
                     
                     # Add size (must be float)
@@ -188,7 +230,8 @@ def create_layer_cluster_treemap(
         ax.legend(handles=legend_elements, loc='upper right', 
                   title="Clusters", fontsize=small_fontsize-1)
         
-        logger.info(f"Successfully created treemap with {len(labels)} rectangles")
+        count_type_str = "nodes" if count_type == "nodes" else "intralayer edges"
+        logger.info(f"Successfully created treemap with {len(labels)} rectangles showing {count_type_str}")
         
     except Exception as e:
         logger.error(f"Error creating treemap: {str(e)}")

@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import networkx as nx
 from collections import defaultdict, Counter
 from matplotlib.colors import LinearSegmentedColormap
+import matplotlib.patches as patches
+import matplotlib.colors as mcolors
 
 def create_cluster_bridging_analysis(ax, visible_links, node_ids, node_clusters, nodes_per_layer, 
                                     layers, visible_layer_indices, 
@@ -68,7 +70,16 @@ def create_cluster_bridging_analysis(ax, visible_links, node_ids, node_clusters,
             else:
                 # Assuming nodes_per_layer is an integer (nodes per layer)
                 layer_size = nodes_per_layer
-                node_layer = node_id // layer_size
+                # Ensure node_id is an integer before division
+                if isinstance(node_id, str):
+                    try:
+                        node_id_int = int(node_id)
+                    except ValueError:
+                        continue  # Skip if node_id can't be converted to int
+                else:
+                    node_id_int = node_id
+                    
+                node_layer = node_id_int // layer_size
                 if node_layer not in visible_layer_indices:
                     continue  # Skip nodes not in visible layers
             
