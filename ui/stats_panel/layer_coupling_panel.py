@@ -386,28 +386,22 @@ class LayerCouplingPanel(BaseStatsPanel):
                                 )
 
             elif metric == "Topological Overlap":
-                # Calculate topological overlap
-                # For each pair of layers, calculate the overlap in their connections
+                # Calculate topological overlap using only intralayer connections
                 for i in range(n_layers):
                     for j in range(n_layers):
                         if i == j:
                             coupling_matrix[i, j] = 1.0
                         else:
-                            # Get connections for layers i and j
-                            i_connections = set(
-                                np.where(layer_connections[i, :] > 0)[0]
-                            )
-                            j_connections = set(
-                                np.where(layer_connections[j, :] > 0)[0]
-                            )
+                            # Get intralayer connections for layers i and j
+                            # Convert scalar to array before using np.where
+                            i_connections = set(np.where(np.atleast_1d(layer_connections[i, i]) > 0)[0])
+                            j_connections = set(np.where(np.atleast_1d(layer_connections[j, j]) > 0)[0])
 
-                            # Calculate Jaccard similarity
-                            if len(i_connections) == 0 and len(j_connections) == 0:
+                            # Calculate Jaccard similarity of intralayer connections
+                            if len(i_connections) == 0 or len(j_connections) == 0:
                                 coupling_matrix[i, j] = 0.0
                             else:
-                                intersection = len(
-                                    i_connections.intersection(j_connections)
-                                )
+                                intersection = len(i_connections.intersection(j_connections))
                                 union = len(i_connections.union(j_connections))
                                 coupling_matrix[i, j] = intersection / union
         except Exception as e:

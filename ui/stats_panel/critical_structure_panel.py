@@ -5,6 +5,8 @@ from PyQt5.QtWidgets import (
     QComboBox,
     QLabel,
     QSlider,
+    QSpinBox,
+    QDoubleSpinBox,
 )
 from PyQt5.QtCore import Qt
 from matplotlib.figure import Figure
@@ -14,6 +16,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import networkx as nx
 from scipy import stats
+from scipy.stats import zscore
+from utils.calc_layout import get_layout_position
 
 from .base_panel import BaseStatsPanel
 
@@ -841,8 +845,8 @@ class CriticalStructurePanel(BaseStatsPanel):
                 else:
                     node_colors = ["skyblue" for _ in range(n_layers)]
 
-                # Use spring layout
-                pos = nx.spring_layout(G, seed=42)
+                # Use centralized layout calculation
+                pos = get_layout_position(G, layout_algorithm="spring")
 
                 # Draw nodes
                 nx.draw_networkx_nodes(

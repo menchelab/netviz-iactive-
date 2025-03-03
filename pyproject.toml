@@ -21,6 +21,7 @@ dependencies = [
     "scikit-learn",
     "scipy",
     "tqdm",
+    "uunet>=2.2.1",
     "vispy",
 ]
 

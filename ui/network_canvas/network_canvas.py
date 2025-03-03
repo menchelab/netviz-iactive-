@@ -2,16 +2,19 @@ import numpy as np
 from vispy import scene
 from vispy.scene.visuals import Markers, Line, Text
 import logging
+import time
+from vispy import app
 
 from .node_manager import NodeManager
 from .edge_manager import EdgeManager
 from .label_manager import LabelManager
 from .visibility_manager import VisibilityManager
+from utils.anim.animation_manager import AnimationManager
 
+logger = logging.getLogger(__name__)
 
 class NetworkCanvas:
     def __init__(self, parent=None, data_manager=None):
-        logger = logging.getLogger(__name__)
         logger.info("Creating canvas...")
 
         # Store reference to data manager
@@ -25,7 +28,28 @@ class NetworkCanvas:
         self.view = self.canvas.central_widget.add_view()
         self.view.camera = "turntable"
         self.view.camera.fov = 45
-        self.view.camera.distance = 3
+        self.view.camera.distance = 7  # for non orthographic view
+        self.view.camera.scale_factor = 4  # for orthographic view
+
+        # Position camera higher on z-axis
+        initial_center = self.view.camera.center
+        self.view.camera.center = np.array(
+            [initial_center[0], initial_center[1], initial_center[2] + 1.5]
+        )
+
+        # Set up key event handling
+        self.canvas.events.key_press.connect(self._on_key_press)
+        # Store initial camera state for reset
+        self._initial_camera_state = {
+            "center": self.view.camera.center,
+            "distance": self.view.camera.distance,
+            "elevation": self.view.camera.elevation,
+            "azimuth": self.view.camera.azimuth,
+            "scale_factor": self.view.camera.scale_factor,
+        }
+
+        # Initialize animation manager
+        self.animation_manager = AnimationManager(self.view)
 
         # Create visuals
         self.scatter = Markers()
@@ -72,6 +96,127 @@ class NetworkCanvas:
         self.edge_manager = EdgeManager(self)
         self.label_manager = LabelManager(self)
         self.visibility_manager = VisibilityManager(self)
+
+    def _on_key_press(self, event):
+        """Handle key press events for navigation and view control"""
+
+        move_amount = 0.5
+        if event.key == "c":
+            self._center_view()
+        elif event.key == "r":
+            self._reset_camera_and_rotation()
+        # Camera animation keys
+        elif event.key == " ":  # Spacebar - Cosmic Zoom
+            self.animation_manager.play_animation(AnimationManager.COSMIC_ZOOM)
+        elif event.key == "u":  # Orbit Flyby
+            self.animation_manager.play_animation(AnimationManager.ORBIT_FLYBY)
+        elif event.key == "i":  # Spiral Dive
+            self.animation_manager.play_animation(AnimationManager.SPIRAL_DIVE)
+        elif event.key == "o":  # Bounce Zoom
+            self.animation_manager.play_animation(AnimationManager.BOUNCE_ZOOM)
+        elif event.key == "j":  # Swing Around
+            self.animation_manager.play_animation(AnimationManager.SWING_AROUND)
+        elif event.key == "k":  # Pulse Zoom
+            self.animation_manager.play_animation(AnimationManager.PULSE_ZOOM)
+        elif event.key == "l":  # Matrix Effect
+            self.animation_manager.play_animation(AnimationManager.MATRIX_EFFECT)
+        elif event.key == "m":  # Slow Matrix Effect
+            self.animation_manager.play_animation(AnimationManager.MATRIX_EFFECT_SLOW)
+        # Arrow keys and WASD for rotation
+        elif event.key in ("Left", "a"):
+            self._rotate_z(-move_amount)  # Rotate left around z-axis
+        elif event.key in ("Right", "d"):
+            self._rotate_z(move_amount)  # Rotate right around z-axis
+        elif event.key in ("Up", "w"):
+            self._rotate_x(move_amount)  # Rotate up around x-axis
+        elif event.key in ("Down", "s"):
+            self._rotate_x(-move_amount)  # Rotate down around x-axis
+        # Q and E for y-axis rotation
+        elif event.key == "q":
+            self._rotate_y(-move_amount)  # Rotate left around y-axis
+        elif event.key == "e":
+            self._rotate_y(move_amount)  # Rotate right around y-axis
+        # Axis view keys
+        elif event.key == "x":
+            self._look_along_axis("x")
+        elif event.key == "y":
+            self._look_along_axis("y")
+        elif event.key == "z":
+            self._look_along_axis("z")
+
+    def _center_view(self):
+        self.view.camera.center = self._initial_camera_state["center"]
+        self.view.camera.distance = self._initial_camera_state["distance"]
+        self.canvas.update()
+
+    def _reset_camera_and_rotation(self):
+        """Reset camera to an isometric diagonal view"""
+        # Reset to initial camera state for position and distance
+        self.view.camera.center = self._initial_camera_state["center"]
+        self.view.camera.distance = self._initial_camera_state["distance"]
+        self.view.camera.scale_factor = self._initial_camera_state["scale_factor"]
+
+        # Set to isometric view angles
+        # Azimuth: 45 degrees (halfway between x and y axes)
+        # Elevation: 35.264 degrees (approximately arctan(1/sqrt(2)), the isometric angle)
+        self.view.camera.azimuth = 45
+        self.view.camera.elevation = 45
+
+        # Reset roll if available
+        if hasattr(self.view.camera, "roll"):
+            self.view.camera.roll = 0
+
+        self.canvas.update()
+
+    def _reset_camera(self):
+        """Reset camera to initial state"""
+        self.view.camera.center = self._initial_camera_state["center"]
+        self.view.camera.distance = self._initial_camera_state["distance"]
+        self.view.camera.elevation = self._initial_camera_state["elevation"]
+        self.view.camera.azimuth = self._initial_camera_state["azimuth"]
+
+    def _rotate_z(self, degrees):
+        """Rotate the view around the z-axis"""
+        self.view.camera.azimuth += degrees
+        self.canvas.update()
+
+    def _rotate_x(self, degrees):
+        """Rotate the view around the x-axis"""
+        self.view.camera.elevation += degrees
+        self.canvas.update()
+
+    def _rotate_y(self, degrees):
+        """Rotate the view around the y-axis (roll)"""
+        if hasattr(self.view.camera, "roll"):
+            self.view.camera.roll += degrees
+            self.canvas.update()
+
+    def _look_along_axis(self, axis):
+        """Set the camera to look along the specified axis toward the center"""
+        # Store current center and distance
+        center = self.view.camera.center
+        distance = self.view.camera.distance
+
+        # Reset camera orientation
+        if axis == "x":
+            # Look along x-axis (from positive x)
+            self.view.camera.azimuth = 0
+            self.view.camera.elevation = 0
+        elif axis == "y":
+            # Look along y-axis (from positive y)
+            self.view.camera.azimuth = 90
+            self.view.camera.elevation = 0
+        elif axis == "z":
+            # Look along z-axis (from top)
+            self.view.camera.azimuth = 0
+            self.view.camera.elevation = 90
+
+        # Restore center and distance
+        self.view.camera.center = center
+        self.view.camera.distance = distance
+
+        # Update the view
+        self.canvas.update()
 
     def load_data(
         self,

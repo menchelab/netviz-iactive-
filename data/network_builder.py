@@ -4,14 +4,42 @@ import networkx as nx
 import logging
 from tqdm import tqdm
 from utils.color_utils import generate_distinct_colors
+from utils.calc_layout import get_layout_position
+
+
+def calculate_layer_layout(G, layer_nodes, layout_algorithm="kamada_kawai"):
+    """Calculate layout for a specific layer's nodes"""
+    subgraph = G.subgraph(layer_nodes)
+    return get_layout_position(subgraph, layout_algorithm=layout_algorithm)
 
 
 def build_multilayer_network(
-    edge_list_path, node_metadata_path, add_interlayer_edges=True
+    edge_list_path,
+    node_metadata_path,
+    add_interlayer_edges=True,
+    use_ml_layout=False,
+    layout_algorithm="kamada_kawai",
+    z_offset=0.5,
 ):
     """
     Build a multilayer network from edge list and node metadata files.
     Following the logic from multiCore_DataDiVR.ipynb.
+
+    Parameters:
+    -----------
+    edge_list_path : str
+        Path to edge list file
+    node_metadata_path : str
+        Path to node metadata file
+    add_interlayer_edges : bool
+        Whether to add edges between layers
+    use_ml_layout : bool
+        Whether to use multilayer layout
+    layout_algorithm : str
+        The layout algorithm to use
+    z_offset : float
+        The vertical offset between network layers (default: 0.5)
+        If 0, will auto-scale so that total height is 2.0
 
     Returns numpy arrays ready for visualization.
     """
@@ -25,7 +53,7 @@ def build_multilayer_network(
     # Remove .tsv string from the column names
     edgelist_with_att.columns = edgelist_with_att.columns.str.replace(".tsv", "")
 
-    # Read the node metadata
+    # Read the node metadata first
     node_metadata = pd.read_table(
         node_metadata_path, sep="\t", header=0, index_col=False
     )
@@ -56,7 +84,14 @@ def build_multilayer_network(
     # Create node positions array
     # First, create a base graph for layout calculation
     G_base = nx.Graph()
-    G_base.add_nodes_from(unique_base_nodes)
+
+    # Add nodes with cluster information
+    for base_node in unique_base_nodes:
+        cluster = "Unknown"
+        if base_node in node_metadata["Node"].values:
+            node_data = node_metadata[node_metadata["Node"] == base_node].iloc[0]
+            cluster = node_data["cluster"]
+        G_base.add_node(base_node, cluster=cluster)
 
     # Add edges from the first layer for layout purposes
     first_layer = layers[0]
@@ -64,16 +99,70 @@ def build_multilayer_network(
         source = row["V1"].split("_")[0]
         target = row["V2"].split("_")[0]
         G_base.add_edge(source, target)
+
+    # Create node-to-layer mapping before layout calculation
+    node_layers = {}
+    for layer in layers:
+        for base_node in unique_base_nodes:
+            node_id = f"{base_node}_{layer}"
+            node_layers[node_id] = layer
+
+    # Calculate layout
     logger.info("Calculating layout...")
-    try:
-        layout = nx.kamada_kawai_layout(G_base)
-        # maybe something else better? TODO make this configurable in UI
-        # but take care to re trigger network_builder if setting is changed
+    if use_ml_layout:
+        positions = {}
+        for layer in layers:
+            # Get nodes in this layer from edge list
+            layer_nodes = set(
+                edgelist_with_att[edgelist_with_att[layer] == 1]["V1"].tolist()
+                + edgelist_with_att[edgelist_with_att[layer] == 1]["V2"].tolist()
+            )
+            layer_pos = calculate_layer_layout(G_base, layer_nodes, layout_algorithm)
+            # Map positions to layer-specific nodes
+            for node in unique_base_nodes:
+                node_id = f"{node}_{layer}"
+                positions[node_id] = (
+                    layer_pos[node]
+                    if node in layer_pos
+                    else positions.get(f"{node}_{first_layer}", (0, 0))
+                )
+    else:
+        # Calculate single layout using first layer nodes
+        base_layout = calculate_layer_layout(
+            G_base, unique_base_nodes, layout_algorithm
+        )
+        positions = {}
+        # Map base node positions to all layer nodes
+        for layer in layers:
+            for node in unique_base_nodes:
+                positions[f"{node}_{layer}"] = base_layout[node]
 
-    except:
-        logger.warning("Kamada-Kawai layout failed, falling back to spring layout")
-        layout = nx.spring_layout(G_base)
-
+    # Calculate network width if auto z_offset (0)
+    if z_offset == 0 and positions:
+        # Get all x,y positions from the first layer to calculate width
+        first_layer_positions = [positions[f"{node}_{first_layer}"] for node in unique_base_nodes 
+                                if f"{node}_{first_layer}" in positions]
+        
+        if first_layer_positions:
+            # Calculate the width (max x - min x) and height (max y - min y)
+            x_values = [pos[0] for pos in first_layer_positions]
+            y_values = [pos[1] for pos in first_layer_positions]
+            
+            width = max(x_values) - min(x_values) if x_values else 1.0
+            height = max(y_values) - min(y_values) if y_values else 1.0
+            
+            # Use the larger of width or height as the network extent
+            network_extent = max(width, height)
+            
+            # Set z_offset so that total height is 2 * network_extent
+            # This makes the vertical spacing proportional to the network width
+            z_offset = (2.0 * network_extent) / (len(layers) - 1) if len(layers) > 1 else network_extent
+            logger.info(f"Auto z_offset: {z_offset:.2f} (based on network extent: {network_extent:.2f})")
+        else:
+            # Fallback if no positions found
+            z_offset = 2.0 / (len(layers) - 1) if len(layers) > 1 else 0.5
+            logger.info(f"Auto z_offset fallback: {z_offset:.2f}")
+    
     # Create node positions for all layers
     node_positions = []
     node_ids = []
@@ -87,8 +176,8 @@ def build_multilayer_network(
             node_ids.append(node_id)
 
             # Get position from layout
-            x, y = layout[base_node]
-            node_positions.append([x, y, z / 15]) # TODO make configurable in UI this is z axis step, basically network layer distances
+            x, y = positions[node_id]
+            node_positions.append([x, y, z * z_offset])  # Use configurable z_offset
 
             # Get node metadata
             if base_node in node_metadata["Node"].values:
@@ -188,15 +277,15 @@ def build_multilayer_network(
     logger.info(f"Found {len(unique_origins)} origins: {unique_origins}")
 
     return (
-        node_positions,
-        link_pairs,
-        link_colors,
-        node_ids,
-        layers,
-        node_clusters,
-        unique_clusters,
-        node_colors,
-        node_origins,
-        unique_origins,
-        layer_colors,
+        node_positions,  # numpy array we already created
+        link_pairs,  # numpy array we already created
+        link_colors,  # list we already created
+        node_ids,  # list we already created
+        layers,  # list we already have
+        node_clusters,  # dict we already created
+        unique_clusters,  # list we already created
+        node_colors,  # list we already created
+        node_origins,  # dict we already created
+        unique_origins,  # list we already created
+        layer_colors,  # dict we already created
     )

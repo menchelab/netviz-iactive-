@@ -29,6 +29,14 @@ import sys
 
 from .base_panel import BaseStatsPanel
 from data.data_loader import get_available_diseases, load_disease_data
+from utils.calc_layout import (
+    get_layout_position,
+)  # Explicit import since it's used through network_builder
+
+# Note: Layout calculations are centralized in utils/calc_layout.py
+# The layout positions are computed when loading data through network_builder.py,
+# which uses calc_layout.py's get_layout_position function with configurable algorithms.
+# This ensures consistent layout calculations across the application.
 
 
 class ChartGridPanel(BaseStatsPanel):
@@ -59,7 +67,7 @@ class ChartGridPanel(BaseStatsPanel):
         self.algorithm_dropdown.currentTextChanged.connect(self.on_algorithm_changed)
         self.algorithm_layout.addWidget(self.algorithm_dropdown)
         chart_layout.addLayout(self.algorithm_layout)
-        
+
         # Hide algorithm selector by default
         self.algorithm_dropdown.hide()
         self.algorithm_layout.itemAt(0).widget().hide()
@@ -106,7 +114,7 @@ class ChartGridPanel(BaseStatsPanel):
         self.scroll_area.setMinimumHeight(800)
         self.scroll_content = QWidget()
         self.grid_layout = QGridLayout(self.scroll_content)
-        self.grid_layout.setSpacing(1) 
+        self.grid_layout.setSpacing(1)
         self.grid_layout.setContentsMargins(5, 5, 5, 5)
         self.scroll_area.setWidget(self.scroll_content)
         layout.addWidget(self.scroll_area, 1)
@@ -271,7 +279,7 @@ class ChartGridPanel(BaseStatsPanel):
                     print(f"Found chart function: {name}")
                     self._current_chart_function = obj
                     found_function = True
-                    
+
                     # Check if the function has an algorithm/metric parameter
                     sig = inspect.signature(obj)
                     algorithm_param = None
@@ -279,38 +287,70 @@ class ChartGridPanel(BaseStatsPanel):
                         if param_name in ["algorithm", "layout_algorithm", "metric"]:
                             algorithm_param = param
                             break
-                    
+
                     if algorithm_param:
                         # Show and populate algorithm dropdown
                         self.algorithm_dropdown.clear()
-                        
+
                         # Get algorithm options based on the chart type
                         if chart_name == "layer_communities":
-                            options = ["Louvain", "Leiden", "Label Propagation", "Spectral", "Infomap", "Fluid", "AsyncLPA"]
+                            options = [
+                                "Louvain",
+                                "Leiden",
+                                "Label Propagation",
+                                "Spectral",
+                                "Infomap",
+                                "Fluid",
+                                "AsyncLPA",
+                            ]
                         elif chart_name == "interlayer_graph":
-                            options = ["spring", "circular", "kamada_kawai", "spectral", "shell", "spiral", "force_atlas2", 
-                                     "radial", "weighted_spring", "weighted_spectral", "hierarchical_betweeness_centrality", 
-                                     "connection_centric", "pagerank_centric"]
+                            options = [
+                                "spring",
+                                "circular",
+                                "kamada_kawai",
+                                "spectral",
+                                "shell",
+                                "spiral",
+                                "force_atlas2",
+                                "radial",
+                                "weighted_spring",
+                                "weighted_spectral",
+                                "hierarchical_betweeness_centrality",
+                                "connection_centric",
+                                "pagerank_centric",
+                            ]
                         elif chart_name == "information_flow":
-                            options = ["Betweenness Centrality", "Flow Betweenness", "Information Centrality"]
+                            options = [
+                                "Betweenness Centrality",
+                                "Flow Betweenness",
+                                "Information Centrality",
+                            ]
                         elif chart_name == "layer_influence":
-                            options = ["PageRank", "Eigenvector Centrality", "Combined Influence Index"]
+                            options = [
+                                "PageRank",
+                                "Eigenvector Centrality",
+                                "Combined Influence Index",
+                            ]
                         else:
                             options = []
-                        
+
                         if options:
                             self.algorithm_dropdown.addItems(options)
                             self.algorithm_dropdown.show()
                             self.algorithm_layout.itemAt(0).widget().show()
                             # Set default value from the parameter's default value if available
                             if algorithm_param.default != inspect.Parameter.empty:
-                                default_idx = options.index(algorithm_param.default) if algorithm_param.default in options else 0
+                                default_idx = (
+                                    options.index(algorithm_param.default)
+                                    if algorithm_param.default in options
+                                    else 0
+                                )
                                 self.algorithm_dropdown.setCurrentIndex(default_idx)
                     else:
                         # Hide algorithm dropdown if not needed
                         self.algorithm_dropdown.hide()
                         self.algorithm_layout.itemAt(0).widget().hide()
-                    
+
                     # Enable the generate button
                     self.generate_button.setEnabled(True)
                     break
@@ -401,7 +441,11 @@ class ChartGridPanel(BaseStatsPanel):
         print(f"Using {num_columns} columns for grid layout")
 
         # Get the selected algorithm/metric if applicable
-        selected_algorithm = self.algorithm_dropdown.currentText() if self.algorithm_dropdown.isVisible() else None
+        selected_algorithm = (
+            self.algorithm_dropdown.currentText()
+            if self.algorithm_dropdown.isVisible()
+            else None
+        )
 
         # Create a figure for each dataset
         for i, dataset in enumerate(datasets):
@@ -425,7 +469,7 @@ class ChartGridPanel(BaseStatsPanel):
                     dataset_data = load_disease_data(data_dir, dataset)
 
                     # Check if we got all the expected data
-                    if dataset_data and len(dataset_data) >= 7: # XXX
+                    if dataset_data and len(dataset_data) >= 7:  # XXX
                         self._datasets_cache[dataset] = dataset_data
                     else:
                         print(f"Incomplete data for dataset {dataset}")
@@ -593,15 +637,23 @@ class ChartGridPanel(BaseStatsPanel):
             # Create axes for the chart
             if self._current_chart_function.__name__ == "create_layer_coupling_charts":
                 # Special case for layer_coupling_charts which needs four axes
-                gs = gridspec.GridSpec(2, 2, height_ratios=[1, 1], width_ratios=[1.5, 1])
-                coupling_heatmap_ax = fig.add_subplot(gs[0, 0])  # Top left: coupling heatmap
-                coupling_bar_ax = fig.add_subplot(gs[0, 1])  # Top right: coupling bar chart
+                gs = gridspec.GridSpec(
+                    2, 2, height_ratios=[1, 1], width_ratios=[1.5, 1]
+                )
+                coupling_heatmap_ax = fig.add_subplot(
+                    gs[0, 0]
+                )  # Top left: coupling heatmap
+                coupling_bar_ax = fig.add_subplot(
+                    gs[0, 1]
+                )  # Top right: coupling bar chart
                 dendrogram_ax = fig.add_subplot(gs[1, 0])  # Bottom left: dendrogram
                 circular_ax = fig.add_subplot(gs[1, 1])  # Bottom right: circular layout
 
                 # Call the chart function
                 try:
-                    print(f"Calling {self._current_chart_function.__name__} for {dataset}")
+                    print(
+                        f"Calling {self._current_chart_function.__name__} for {dataset}"
+                    )
                     self._current_chart_function(
                         coupling_heatmap_ax,
                         coupling_bar_ax,
@@ -628,7 +680,10 @@ class ChartGridPanel(BaseStatsPanel):
                         wrap=True,
                     )
                     ax.axis("off")
-            elif self._current_chart_function.__name__ == "create_critical_structure_charts":
+            elif (
+                self._current_chart_function.__name__
+                == "create_critical_structure_charts"
+            ):
                 # Special case for critical_structure_charts which needs four axes
                 gs = gridspec.GridSpec(2, 2, figure=fig)
                 criticality_bar_ax = fig.add_subplot(gs[0, 0])  # Top left
@@ -638,7 +693,9 @@ class ChartGridPanel(BaseStatsPanel):
 
                 # Call the chart function with all required parameters
                 try:
-                    print(f"Calling {self._current_chart_function.__name__} for {dataset}")
+                    print(
+                        f"Calling {self._current_chart_function.__name__} for {dataset}"
+                    )
                     self._current_chart_function(
                         criticality_bar_ax=criticality_bar_ax,
                         impact_ax=impact_ax,
@@ -653,8 +710,12 @@ class ChartGridPanel(BaseStatsPanel):
                     fig.suptitle(dataset, fontsize=12)
                     fig.tight_layout(rect=[0, 0, 1, 0.95])  # Make room for title
                 except Exception as e:
-                    print(f"Error generating critical structure chart for {dataset}: {e}")
-                    logging.error(f"Error generating critical structure chart for {dataset}: {e}")
+                    print(
+                        f"Error generating critical structure chart for {dataset}: {e}"
+                    )
+                    logging.error(
+                        f"Error generating critical structure chart for {dataset}: {e}"
+                    )
                     fig.clear()
                     ax = fig.add_subplot(111)
                     ax.text(
@@ -666,7 +727,10 @@ class ChartGridPanel(BaseStatsPanel):
                         wrap=True,
                     )
                     ax.axis("off")
-            elif self._current_chart_function.__name__ == "create_layer_communities_chart":
+            elif (
+                self._current_chart_function.__name__
+                == "create_layer_communities_chart"
+            ):
                 # Special case for layer_communities_chart which needs two axes
                 gs = gridspec.GridSpec(2, 1, height_ratios=[1, 1])
                 heatmap_ax = fig.add_subplot(gs[0])
@@ -674,7 +738,9 @@ class ChartGridPanel(BaseStatsPanel):
 
                 # Call the chart function
                 try:
-                    print(f"Calling {self._current_chart_function.__name__} for {dataset}")
+                    print(
+                        f"Calling {self._current_chart_function.__name__} for {dataset}"
+                    )
                     self._current_chart_function(
                         heatmap_ax,
                         network_ax,
@@ -700,7 +766,10 @@ class ChartGridPanel(BaseStatsPanel):
                         wrap=True,
                     )
                     ax.axis("off")
-            elif self._current_chart_function.__name__ == "create_node_connections_charts":
+            elif (
+                self._current_chart_function.__name__
+                == "create_node_connections_charts"
+            ):
                 # Special case for node_connections_charts which needs two axes
                 gs = gridspec.GridSpec(1, 2)
                 intralayer_ax = fig.add_subplot(gs[0])
@@ -708,7 +777,9 @@ class ChartGridPanel(BaseStatsPanel):
 
                 # Call the chart function
                 try:
-                    print(f"Calling {self._current_chart_function.__name__} for {dataset}")
+                    print(
+                        f"Calling {self._current_chart_function.__name__} for {dataset}"
+                    )
                     self._current_chart_function(
                         intralayer_ax,
                         interlayer_ax,
@@ -734,7 +805,9 @@ class ChartGridPanel(BaseStatsPanel):
                         wrap=True,
                     )
                     ax.axis("off")
-            elif self._current_chart_function.__name__ == "create_layer_influence_chart":
+            elif (
+                self._current_chart_function.__name__ == "create_layer_influence_chart"
+            ):
                 # Special case for layer_influence_chart which needs two axes
                 gs = gridspec.GridSpec(1, 2)
                 bar_ax = fig.add_subplot(gs[0])
@@ -742,7 +815,9 @@ class ChartGridPanel(BaseStatsPanel):
 
                 # Call the chart function
                 try:
-                    print(f"Calling {self._current_chart_function.__name__} for {dataset}")
+                    print(
+                        f"Calling {self._current_chart_function.__name__} for {dataset}"
+                    )
                     self._current_chart_function(
                         bar_ax,
                         network_ax,
@@ -768,7 +843,9 @@ class ChartGridPanel(BaseStatsPanel):
                         wrap=True,
                     )
                     ax.axis("off")
-            elif self._current_chart_function.__name__ == "create_information_flow_chart":
+            elif (
+                self._current_chart_function.__name__ == "create_information_flow_chart"
+            ):
                 # Special case for information_flow_chart which needs two axes
                 gs = gridspec.GridSpec(1, 2)
                 flow_ax = fig.add_subplot(gs[0])
@@ -776,7 +853,9 @@ class ChartGridPanel(BaseStatsPanel):
 
                 # Call the chart function
                 try:
-                    print(f"Calling {self._current_chart_function.__name__} for {dataset}")
+                    print(
+                        f"Calling {self._current_chart_function.__name__} for {dataset}"
+                    )
                     self._current_chart_function(
                         flow_ax,
                         network_ax,
@@ -808,7 +887,9 @@ class ChartGridPanel(BaseStatsPanel):
 
                 # Call the chart function
                 try:
-                    print(f"Calling {self._current_chart_function.__name__} for {dataset}")
+                    print(
+                        f"Calling {self._current_chart_function.__name__} for {dataset}"
+                    )
                     self._current_chart_function(
                         ax,
                         layer_connections,
@@ -862,12 +943,8 @@ class ChartGridPanel(BaseStatsPanel):
                         "node_origins": node_origins,
                         "unique_origins": unique_origins,
                         "layer_colors": layer_colors,
-                        "small_font": {
-                            "fontsize": 6
-                        },
-                        "visible_layer_indices": list(
-                            range(len(layers))
-                        ),
+                        "small_font": {"fontsize": 6},
+                        "visible_layer_indices": list(range(len(layers))),
                         "visible_links": visible_links,
                         "nodes_per_layer": nodes_per_layer,
                         "intralayer_connections": intralayer_connections,
