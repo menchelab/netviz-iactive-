@@ -152,7 +152,6 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         self.similarity_metric_combo = QComboBox()
         self.similarity_metric_combo.addItems(
             [
-                "All Metrics",
                 "Jaccard",
                 "Cosine",
                 "Overlap",
@@ -162,6 +161,8 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
                 "Node Sharing",
                 "Path-based",
                 "Mutual Information",
+                "All Metrics",
+
             ]
         )
         self.similarity_metric_combo.currentIndexChanged.connect(self.on_layout_changed)

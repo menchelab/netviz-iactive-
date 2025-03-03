@@ -289,7 +289,7 @@ def create_layer_cluster_density_heatmap(
     # Add text annotations for density values
     for i in range(len(unique_clusters)):
         for j in range(len(unique_layers)):
-            density = density_matrix[i, j]
+            density = density_matrix[i, j] / 2
             if density > 0:
                 # Use white text for dark cells, black for light cells
                 text_color = 'white' if density > 0.5 else 'black'

@@ -63,14 +63,14 @@ def create_lc16_ui_elements(parent=None):
     show_nodes_checkbox.setChecked(True)
     show_nodes_checkbox.setToolTip("Show nodes in the visualization")
 
-    color_by_centrality_checkbox = QCheckBox("Color by BC")
+    color_by_centrality_checkbox = QCheckBox("BCvizcolor")
     color_by_centrality_checkbox.setChecked(False)
     color_by_centrality_checkbox.setToolTip(
         "Color edges by betweenness centrality instead of edge type"
     )
 
     # Add new UI elements for improved visualization
-    hide_unconnected_checkbox = QCheckBox("remove trash")
+    hide_unconnected_checkbox = QCheckBox("n>80?5%:15%")
     hide_unconnected_checkbox.setChecked(False)
     hide_unconnected_checkbox.setToolTip(
         "15% thres, if n > 80% -> 5% thres"
