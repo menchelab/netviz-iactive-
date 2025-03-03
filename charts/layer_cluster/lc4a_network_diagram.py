@@ -12,6 +12,7 @@ import os
 # Add the project root to the path to import utils
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from utils.calc_community import detect_communities, get_node_community_metrics, AVAILABLE_COMMUNITY_ALGORITHMS
+from utils.calc_layout import get_layout_position
 
 # Import Qt components for UI
 from PyQt5.QtWidgets import (
@@ -39,6 +40,24 @@ def create_enhanced_network_ui():
     enable_checkbox.setChecked(False)  # Disabled by default
     enable_checkbox.setFixedHeight(20)  # Slightly increased height
     enhanced_network_layout.addWidget(enable_checkbox)
+    
+    # Layout algorithm dropdown
+    layout_label = QLabel("L:")  # Shorter label
+    layout_label.setFixedHeight(20)
+    enhanced_network_layout.addWidget(layout_label)
+    
+    layout_algorithm_combo = QComboBox()
+    layout_algorithm_combo.setFixedHeight(20)
+    # Add layout algorithms from utils/calc_layout.py
+    layout_algorithm_combo.addItems([
+        "spring", "circular", "kamada_kawai", "spectral", "shell", "spiral", 
+        "force_atlas2", "radial", "weighted_spring", "weighted_spectral", 
+        "hierarchical_betweeness_centrality", "connection_centric", 
+        "pagerank_centric", "cluster_centric", "cluster_grid", 
+        "cluster_hierarchical", "cluster_force_directed"
+    ])
+    layout_algorithm_combo.setToolTip("Layout algorithm to use for node positioning")
+    enhanced_network_layout.addWidget(layout_algorithm_combo)
     
     # Edge counting method
     edge_label = QLabel("E:")  # Shorter label
@@ -86,12 +105,13 @@ def create_enhanced_network_ui():
     return {
         "widget": enhanced_network_widget,
         "enable_checkbox": enable_checkbox,
+        "layout_algorithm_combo": layout_algorithm_combo,
         "edge_counting_combo": edge_counting_combo,
         "community_algorithm_combo": community_algorithm_combo,
         "community_resolution_spin": community_resolution_spin
     }
 
-def update_enhanced_network(figure, ax, canvas, data_manager, ui_components, layout_algorithm="community", aspect_ratio=1.0):
+def update_enhanced_network(figure, ax, canvas, data_manager, ui_components, aspect_ratio=1.0):
     """
     Update the enhanced network diagram with current settings.
     
@@ -107,8 +127,6 @@ def update_enhanced_network(figure, ax, canvas, data_manager, ui_components, lay
         The data manager containing the data to visualize
     ui_components : dict
         Dictionary of UI components from create_enhanced_network_ui()
-    layout_algorithm : str
-        The layout algorithm to use
     aspect_ratio : float
         The aspect ratio for the layout
     """
@@ -120,6 +138,9 @@ def update_enhanced_network(figure, ax, canvas, data_manager, ui_components, lay
     new_ax = figure.add_subplot(111)
     
     # Get the selected options from UI components
+    # Use the layout algorithm from the dropdown
+    layout_algorithm = ui_components["layout_algorithm_combo"].currentText()
+    
     edge_counting = ui_components["edge_counting_combo"].currentText()
     
     community_algorithm = ui_components["community_algorithm_combo"].currentText()
@@ -379,23 +400,28 @@ def create_enhanced_layer_cluster_network_diagram(
             community_algorithm = None
     
     # Choose layout algorithm
-    if layout_algorithm == "bipartite":
-        # Optimized bipartite layout
-        pos = _create_bipartite_layout(G, layer_nodes, cluster_nodes, aspect_ratio)
-    elif layout_algorithm == "circular":
-        # Circular layout with edge bundling
-        pos = _create_circular_layout(G, layer_nodes, cluster_nodes)
-    elif layout_algorithm == "spectral":
-        # Spectral layout based on graph Laplacian
-        pos = _create_spectral_layout(G, layer_nodes, cluster_nodes, aspect_ratio)
-    elif layout_algorithm == "spring":
-        # Standard spring layout with weight-based attraction
-        pos = nx.spring_layout(G, k=0.5, iterations=100, weight='weight', seed=42)
-        # Adjust positions to ensure layers are on the left and clusters on the right
-        _adjust_spring_layout(pos, layer_nodes, cluster_nodes, aspect_ratio)
-    else:  # Default to "community"
-        # Force-directed layout with community detection
-        pos = _create_community_layout(G, layer_nodes, cluster_nodes, aspect_ratio, node_communities)
+    if layout_algorithm in ["bipartite", "circular", "spectral", "spring", "community"]:
+        # Use internal layout algorithms for backward compatibility
+        if layout_algorithm == "bipartite":
+            # Optimized bipartite layout
+            pos = _create_bipartite_layout(G, layer_nodes, cluster_nodes, aspect_ratio)
+        elif layout_algorithm == "circular":
+            # Circular layout with edge bundling
+            pos = _create_circular_layout(G, layer_nodes, cluster_nodes)
+        elif layout_algorithm == "spectral":
+            # Spectral layout based on graph Laplacian
+            pos = _create_spectral_layout(G, layer_nodes, cluster_nodes, aspect_ratio)
+        elif layout_algorithm == "spring":
+            # Standard spring layout with weight-based attraction
+            pos = nx.spring_layout(G, k=0.5, iterations=100, weight='weight', seed=42)
+            # Adjust positions to ensure layers are on the left and clusters on the right
+            _adjust_spring_layout(pos, layer_nodes, cluster_nodes, aspect_ratio)
+        else:  # Default to "community"
+            # Force-directed layout with community detection
+            pos = _create_community_layout(G, layer_nodes, cluster_nodes, aspect_ratio, node_communities)
+    else:
+        # Use the layout algorithms from utils/calc_layout.py
+        pos = get_layout_position(G, layout_algorithm)
     
     # Scale the layout to fit within the plot area
     _scale_layout(pos, padding=0.1)

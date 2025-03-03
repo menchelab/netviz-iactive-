@@ -116,7 +116,7 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         # Remove LC16 Analysis dropdown from top controls
         # It will be moved to the LC16 tab
         self.path_analysis_combo = QComboBox()
-        self.path_analysis_combo.addItems(["Path Length", "Betweenness", "Bottleneck"])
+        self.path_analysis_combo.addItems(["Betweenness", "Path Length",  "Bottleneck"])
         self.path_analysis_combo.currentIndexChanged.connect(self.on_layout_changed)
 
         # Add analysis type dropdown for LC17
@@ -191,11 +191,13 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         # It will be moved to the LC16 tab
         self.enhanced_network_ui = create_enhanced_network_ui()
         self.edge_counting_combo = self.enhanced_network_ui["edge_counting_combo"]
+        self.layout_algorithm_combo_enhanced = self.enhanced_network_ui["layout_algorithm_combo"]
         self.community_algorithm_combo = self.enhanced_network_ui["community_algorithm_combo"]
         self.community_resolution_spin = self.enhanced_network_ui["community_resolution_spin"]
 
         # Connect signals from UI components to update function
         self.edge_counting_combo.currentIndexChanged.connect(self.update_enhanced_network)
+        self.layout_algorithm_combo_enhanced.currentIndexChanged.connect(self.update_enhanced_network)
         self.community_algorithm_combo.currentIndexChanged.connect(self.update_enhanced_network)
         self.community_resolution_spin.valueChanged.connect(self.update_enhanced_network)
 
@@ -2793,19 +2795,17 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         if data_manager is None:
             return
 
-        # Get the selected layout algorithm and aspect ratio
-        layout_algorithm = self.layout_algorithm_combo.currentText().lower()
+        # Get the aspect ratio (still using the external aspect ratio combo)
         aspect_ratio = float(self.aspect_ratio_combo.currentText())
 
-        #
+        # Use our enhanced network UI for everything else
         self.enhanced_network_ax = update_enhanced_network(
             self.enhanced_network_figure,
             self.enhanced_network_ax,
             self.enhanced_network_canvas,
             data_manager,
             self.enhanced_network_ui,
-            layout_algorithm,
-            aspect_ratio,
+            aspect_ratio=aspect_ratio,
         )
 
     def on_enhanced_network_state_changed(self, state):

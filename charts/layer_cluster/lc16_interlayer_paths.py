@@ -47,8 +47,8 @@ def create_lc16_ui_elements(parent=None):
     viz_style_combo = QComboBox()
     viz_style_combo.addItems(
         [
-            "Standard",
             "Hierarchical",
+            "Standard",
             "Layer-Focused",
             "Circle",
             "Force-Directed",
@@ -71,7 +71,7 @@ def create_lc16_ui_elements(parent=None):
 
     # Add new UI elements for improved visualization
     hide_unconnected_checkbox = QCheckBox("n>80?5%:15%")
-    hide_unconnected_checkbox.setChecked(False)
+    hide_unconnected_checkbox.setChecked(True)
     hide_unconnected_checkbox.setToolTip(
         "15% thres, if n > 80% -> 5% thres"
     )
@@ -112,7 +112,7 @@ def create_interlayer_path_analysis(
     layers,
     visible_layer_indices=None,
     cluster_colors=None,
-    analysis_type="path_length",  # Options: "path_length", "betweenness", "bottleneck"
+    analysis_type="betweenness",  # Options: "path_length", "betweenness", "bottleneck"
     medium_fontsize=12,
     small_fontsize=9,
     selected_cluster=None,  # New parameter to filter by cluster
@@ -410,9 +410,10 @@ def create_interlayer_path_analysis(
 
         # Set title based on analysis type
         title_map = {
-            "path_length": "Interlayer Path Analysis (Duplicated Nodes)",
             "betweenness": "Node Betweenness in Duplicated Network",
             "bottleneck": "Critical Connections in Instanced Network",
+            "path_length": "Interlayer Path Analysis (Duplicated Nodes)",
+
         }
         title = title_map.get(
             analysis_type, f"Duplicated Network Analysis: {analysis_type}"
@@ -849,21 +850,25 @@ def _analyze_bottlenecks(
         f"Analyzing bottleneck connections in the duplicated node network with style: {viz_style}"
     )
 
+    logger.info("calculate edge betweeness centrality")
     # Calculate edge betweenness centrality to identify bottlenecks
     edge_betweenness = nx.edge_betweenness_centrality(G, weight="weight")
 
+    logger.info("normalize")
     # Normalize edge betweenness by the maximum value
     max_betweenness = max(edge_betweenness.values()) if edge_betweenness else 1.0
     normalized_betweenness = {
         edge: bc / max_betweenness for edge, bc in edge_betweenness.items()
     }
 
+    logger.info("node betweeness")
     # Calculate node betweenness for filtering and sizing
     node_betweenness = nx.betweenness_centrality(G, weight="weight")
     max_node_betweenness = max(node_betweenness.values()) if node_betweenness else 1.0
 
     # Filter out unconnected nodes if requested
     if hide_unconnected:
+        logger.info("filter unconnected")
         # Define a threshold for "significant" connections
         betweenness_threshold = 0.15  # Increased threshold - nodes with betweenness < 15% of max are considered unconnected
 
@@ -891,6 +896,7 @@ def _analyze_bottlenecks(
             f"Filtered graph to {len(G.nodes)} connected nodes from original {len(node_betweenness)} nodes"
         )
 
+    logger.info("grouping")
     # Group nodes by layer and cluster for better layout
     layer_nodes = defaultdict(list)
     cluster_nodes = defaultdict(list)
@@ -899,6 +905,8 @@ def _analyze_bottlenecks(
         cluster = G.nodes[node]["cluster"]
         layer_nodes[layer].append(node)
         cluster_nodes[cluster].append(node)
+
+    logger.info("layout")
 
     # Create a layout based on the selected visualization style
     if viz_style == "Layer-Focused":
