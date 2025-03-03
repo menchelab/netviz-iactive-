@@ -16,7 +16,7 @@ from utils.calc_community import detect_communities, get_node_community_metrics,
 # Import Qt components for UI
 from PyQt5.QtWidgets import (
     QGroupBox, QGridLayout, QLabel, QComboBox, 
-    QDoubleSpinBox, QCheckBox, QPushButton
+    QDoubleSpinBox, QCheckBox, QPushButton, QHBoxLayout, QWidget
 )
 
 def create_enhanced_network_ui():
@@ -28,68 +28,67 @@ def create_enhanced_network_ui():
     dict
         Dictionary containing all UI components
     """
-    # Create group box for enhanced network options
-    enhanced_network_group = QGroupBox("Enhanced Network Diagram Options")
-    enhanced_network_layout = QGridLayout()
+    # Create a horizontal layout for a very compact UI
+    enhanced_network_widget = QWidget()
+    enhanced_network_layout = QHBoxLayout(enhanced_network_widget)
+    enhanced_network_layout.setContentsMargins(2, 2, 2, 2)  # Add minimal padding
+    enhanced_network_layout.setSpacing(3)  # Slightly increased spacing
+    
+    # Enable checkbox
+    enable_checkbox = QCheckBox("Enable")
+    enable_checkbox.setChecked(False)  # Disabled by default
+    enable_checkbox.setFixedHeight(20)  # Slightly increased height
+    enhanced_network_layout.addWidget(enable_checkbox)
     
     # Edge counting method
-    enhanced_network_layout.addWidget(QLabel("Edge Counting:"), 0, 0)
+    edge_label = QLabel("E:")  # Shorter label
+    edge_label.setFixedHeight(20)  # Slightly increased height
+    enhanced_network_layout.addWidget(edge_label)
+    
     edge_counting_combo = QComboBox()
+    edge_counting_combo.setFixedHeight(20)  # Slightly increased height
     edge_counting_combo.addItems(["all", "unique", "weighted"])
     edge_counting_combo.setToolTip("Method to count edges between nodes:\n"
                                    "- all: Count all edges (default)\n"
                                    "- unique: Count unique connections (binary)\n"
                                    "- weighted: Use edge weights for counting")
-    enhanced_network_layout.addWidget(edge_counting_combo, 0, 1)
+    enhanced_network_layout.addWidget(edge_counting_combo)
     
     # Community detection algorithm
-    enhanced_network_layout.addWidget(QLabel("Community Detection:"), 1, 0)
+    community_label = QLabel("C:")  # Shorter label
+    community_label.setFixedHeight(20)  # Slightly increased height
+    enhanced_network_layout.addWidget(community_label)
+    
     community_algorithm_combo = QComboBox()
+    community_algorithm_combo.setFixedHeight(20)  # Slightly increased height
     community_algorithm_combo.addItem("None")
     community_algorithm_combo.addItems(AVAILABLE_COMMUNITY_ALGORITHMS)
     community_algorithm_combo.setToolTip("Community detection algorithm to use")
-    enhanced_network_layout.addWidget(community_algorithm_combo, 1, 1)
+    enhanced_network_layout.addWidget(community_algorithm_combo)
     
     # Resolution parameter for community detection
-    enhanced_network_layout.addWidget(QLabel("Resolution:"), 2, 0)
+    resolution_label = QLabel("R:")  # Shorter label
+    resolution_label.setFixedHeight(20)  # Slightly increased height
+    enhanced_network_layout.addWidget(resolution_label)
+    
     community_resolution_spin = QDoubleSpinBox()
+    community_resolution_spin.setFixedHeight(20)  # Slightly increased height
     community_resolution_spin.setRange(0.1, 5.0)
     community_resolution_spin.setSingleStep(0.1)
     community_resolution_spin.setValue(1.0)
     community_resolution_spin.setToolTip("Resolution parameter for community detection algorithms")
-    enhanced_network_layout.addWidget(community_resolution_spin, 2, 1)
+    enhanced_network_layout.addWidget(community_resolution_spin)
     
-    # Show edge weights
-    show_edge_weights_check = QCheckBox("Show Edge Weights")
-    show_edge_weights_check.setChecked(True)
-    enhanced_network_layout.addWidget(show_edge_weights_check, 3, 0)
-    
-    # Show node labels
-    show_node_labels_check = QCheckBox("Show Node Labels")
-    show_node_labels_check.setChecked(True)
-    enhanced_network_layout.addWidget(show_node_labels_check, 3, 1)
-    
-    # Show legend
-    show_legend_check = QCheckBox("Show Legend")
-    show_legend_check.setChecked(True)
-    enhanced_network_layout.addWidget(show_legend_check, 4, 0, 1, 2)
-    
-    # Apply button for enhanced network
-    update_enhanced_network_btn = QPushButton("Update Enhanced Network")
-    enhanced_network_layout.addWidget(update_enhanced_network_btn, 5, 0, 1, 2)
-    
-    enhanced_network_group.setLayout(enhanced_network_layout)
+    # Add stretch to push everything to the left
+    enhanced_network_layout.addStretch()
     
     # Return all UI components in a dictionary
     return {
-        "group": enhanced_network_group,
+        "widget": enhanced_network_widget,
+        "enable_checkbox": enable_checkbox,
         "edge_counting_combo": edge_counting_combo,
         "community_algorithm_combo": community_algorithm_combo,
-        "community_resolution_spin": community_resolution_spin,
-        "show_edge_weights_check": show_edge_weights_check,
-        "show_node_labels_check": show_node_labels_check,
-        "show_legend_check": show_legend_check,
-        "update_btn": update_enhanced_network_btn
+        "community_resolution_spin": community_resolution_spin
     }
 
 def update_enhanced_network(figure, ax, canvas, data_manager, ui_components, layout_algorithm="community", aspect_ratio=1.0):
@@ -128,9 +127,11 @@ def update_enhanced_network(figure, ax, canvas, data_manager, ui_components, lay
         community_algorithm = None
         
     community_resolution = ui_components["community_resolution_spin"].value()
-    show_edge_weights = ui_components["show_edge_weights_check"].isChecked()
-    show_node_labels = ui_components["show_node_labels_check"].isChecked()
-    show_legend = ui_components["show_legend_check"].isChecked()
+    
+    # Always set these to True as per requirements
+    show_edge_weights = True
+    show_node_labels = True
+    show_legend = True
     
     # Get visible links
     visible_links = []
@@ -217,11 +218,11 @@ def create_enhanced_layer_cluster_network_diagram(
     # Clear the axis and set title
     ax.clear()
     
-    # Set title based on configuration
+    # Set title based on configuration with minimal padding
     title = f"Layer-Cluster Network ({layout_algorithm.title()} Layout)"
     if community_algorithm:
         title += f" with {community_algorithm.title()} Communities"
-    ax.set_title(title)
+    ax.set_title(title, pad=2, fontsize=10)
     
     # Filter visible layers if specified
     if visible_layer_indices is not None:
@@ -461,48 +462,47 @@ def create_enhanced_layer_cluster_network_diagram(
         # Draw nodes with community colors
         for node in G.nodes():
             comm = node_communities.get(node, -1)
-            color = community_colors.get(comm, "gray")
+            comm_color = community_colors.get(comm, "gray")
             
-            # Adjust color based on node type (layer vs cluster)
+            # Set node color based on node type (layer vs cluster)
             if node.startswith("L_"):
-                # For layer nodes, use a lighter version of the community color
-                base_color = to_rgba(color)
-                # Mix with light blue
-                mixed_color = [0.7 * base_color[0] + 0.3 * 0.7, 
-                              0.7 * base_color[1] + 0.3 * 0.9, 
-                              0.7 * base_color[2] + 0.3 * 1.0, 
-                              1.0]
-                node_color = mixed_color
+                # For layer nodes, use layer color for fill
+                layer_name = node[2:]  # Remove "L_" prefix
+                layer_index = next((i for i, l in enumerate(layers) if l == layer_name), 0)
+                # Generate a distinct color for the layer
+                node_color = plt.cm.tab20(layer_index % 20)
                 size = layer_sizes.get(node, 500)
             else:  # Cluster node
-                # For cluster nodes, use the cluster color but adjust saturation based on community
-                base_color = to_rgba(cluster_colors.get(node[2:], "gray"))
-                comm_color = to_rgba(color)
-                # Mix cluster color with community color
-                mixed_color = [0.7 * base_color[0] + 0.3 * comm_color[0], 
-                              0.7 * base_color[1] + 0.3 * comm_color[1], 
-                              0.7 * base_color[2] + 0.3 * comm_color[2], 
-                              1.0]
-                node_color = mixed_color
+                # For cluster nodes, use the cluster color
+                node_color = cluster_colors.get(node[2:], "gray")
                 size = cluster_sizes.get(node, 500)
             
-            # Draw the node
+            # Draw the node with community color as edge color
             nx.draw_networkx_nodes(
                 G, pos, 
                 nodelist=[node],
                 node_color=[node_color],
                 node_size=size,
                 alpha=0.8,
-                edgecolors='black',
+                edgecolors=[comm_color],  # Use community color for outline only
+                linewidths=2.0,  # Make outline more visible
                 ax=ax
             )
     else:
         # Standard drawing without communities
-        # Draw layer nodes
+        # Draw layer nodes with their respective layer colors
+        layer_node_colors = []
+        for node in layer_nodes:
+            layer_name = node[2:]  # Remove "L_" prefix
+            layer_index = next((i for i, l in enumerate(layers) if l == layer_name), 0)
+            # Generate a distinct color for each layer
+            layer_color = plt.cm.tab20(layer_index % 20)
+            layer_node_colors.append(layer_color)
+        
         nx.draw_networkx_nodes(
             G, pos, 
             nodelist=layer_nodes,
-            node_color="lightblue",
+            node_color=layer_node_colors,
             node_size=[layer_sizes.get(n, 500) for n in layer_nodes],
             alpha=0.8,
             edgecolors='black',
@@ -552,71 +552,67 @@ def create_enhanced_layer_cluster_network_diagram(
             ax=ax
         )
     
-    # Create legends if requested
+    # Add legend if requested
     if show_legend:
-        # Create a legend for clusters
-        legend_elements = []
+        # Create legend handles
+        legend_handles = []
+        
+        # Add layer colors to legend
+        for i, layer in enumerate(layers):
+            if i in visible_layers:
+                layer_color = plt.cm.tab20(i % 20)
+                legend_handles.append(mpatches.Patch(color=layer_color, label=f"Layer: {layer}"))
+        
+        # Add cluster colors to legend
         for cluster in unique_clusters:
-            legend_elements.append(
-                plt.Line2D([0], [0], 
-                        marker='o', 
-                        color='w',
-                        markerfacecolor=cluster_colors.get(cluster, "gray"),
-                        markersize=10,
-                        label=str(cluster))
-            )
+            legend_handles.append(mpatches.Patch(color=cluster_colors.get(cluster, "gray"), label=f"Cluster: {cluster}"))
         
-        # Add the cluster legend
-        ax.legend(
-            handles=legend_elements,
-            loc='upper right',
-            fontsize=8,
-            title="Clusters",
-            title_fontsize=9
-        )
-        
-        # Add a community legend if community detection was used
+        # Add community colors to legend if community detection was used
         if community_algorithm and node_communities:
-            # Create a separate legend for communities
-            community_legend_elements = []
-            for comm in sorted(set(node_communities.values())):
-                community_legend_elements.append(
-                    plt.Line2D([0], [0], 
-                            marker='s', 
-                            color='w',
-                            markerfacecolor=community_colors.get(comm, "gray"),
-                            markersize=10,
-                            label=f"Comm {comm}")
-                )
-            
-            # Add the community legend in a different location
-            community_legend = ax.legend(
-                handles=community_legend_elements,
-                loc='lower right',
-                fontsize=8,
-                title="Communities",
-                title_fontsize=9
-            )
-            
-            # Add the first legend back
-            ax.add_artist(community_legend)
+            for comm, color in community_colors.items():
+                # Use a patch with colored edge to represent community
+                p = mpatches.Patch(edgecolor=color, facecolor='none', linewidth=2, label=f"Community: {comm}")
+                legend_handles.append(p)
         
-        # Add a colorbar for edge weights
-        sm = ScalarMappable(cmap=edge_cmap, norm=edge_norm)
-        sm.set_array([])
-        cbar = plt.colorbar(sm, ax=ax, shrink=0.6, pad=0.02)
-        cbar.set_label('Connection Strength', fontsize=8)
+        # Add edge weight colorbar
+        if len(edges_with_weights) > 0:
+            sm = ScalarMappable(cmap=edge_cmap, norm=edge_norm)
+            sm.set_array([])
+            # Create a separate axis for the colorbar at the bottom
+            cax = ax.figure.add_axes([0.25, 0.02, 0.5, 0.02])  # [left, bottom, width, height]
+            cbar = plt.colorbar(sm, cax=cax, orientation='horizontal')
+            cbar.set_label('Edge Weight', fontsize=8)
+            cbar.ax.tick_params(labelsize=7)
+        
+        # Add the legend with smaller font size at the bottom left
+        legend = ax.legend(
+            handles=legend_handles, 
+            loc='lower left',
+            fontsize=6,  # Smaller font size
+            ncol=3,  # Use 3 columns to make it more compact
+            framealpha=0.7,  # Make the legend background semi-transparent
+            title="Legend",
+            title_fontsize=7,
+            borderaxespad=0.1,  # Reduce padding
+            handlelength=1.0,  # Shorter handles
+            handleheight=0.7,  # Shorter handles
+            labelspacing=0.4,  # Reduce spacing between items
+            columnspacing=1.0  # Reduce spacing between columns
+        )
     
     # Remove axis ticks and labels
     ax.set_xticks([])
     ax.set_yticks([])
     
-    # Add padding around the plot
+    # Maximize the plot area by setting tight boundaries
     ax.set_xlim(-0.05, 1.05)
     ax.set_ylim(-0.05, 1.05)
     
-    # Apply tight layout with padding
-    plt.tight_layout(pad=1.5)
+    # Remove padding around the plot
+    ax.set_position([0.02, 0.02, 0.96, 0.96])  # [left, bottom, width, height]
+    
+    # Don't use tight_layout as it adds unnecessary padding
+    # plt.tight_layout(pad=0.5)
     
     logger.info(f"Successfully created enhanced layer-cluster network with {len(unique_layers)} layers and {len(unique_clusters)} clusters") 
     return G  # Return the graph for potential further analysis

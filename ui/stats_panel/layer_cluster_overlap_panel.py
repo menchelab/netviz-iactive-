@@ -191,19 +191,13 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         # It will be moved to the LC16 tab
         self.enhanced_network_ui = create_enhanced_network_ui()
         self.edge_counting_combo = self.enhanced_network_ui["edge_counting_combo"]
-        self.community_algorithm_combo = self.enhanced_network_ui[
-            "community_algorithm_combo"
-        ]
-        self.community_resolution_spin = self.enhanced_network_ui[
-            "community_resolution_spin"
-        ]
-        self.show_edge_weights_check = self.enhanced_network_ui[
-            "show_edge_weights_check"
-        ]
-        self.show_node_labels_check = self.enhanced_network_ui["show_node_labels_check"]
-        self.show_legend_check = self.enhanced_network_ui["show_legend_check"]
-        self.update_enhanced_network_btn = self.enhanced_network_ui["update_btn"]
-        self.update_enhanced_network_btn.clicked.connect(self.update_enhanced_network)
+        self.community_algorithm_combo = self.enhanced_network_ui["community_algorithm_combo"]
+        self.community_resolution_spin = self.enhanced_network_ui["community_resolution_spin"]
+
+        # Connect signals from UI components to update function
+        self.edge_counting_combo.currentIndexChanged.connect(self.update_enhanced_network)
+        self.community_algorithm_combo.currentIndexChanged.connect(self.update_enhanced_network)
+        self.community_resolution_spin.valueChanged.connect(self.update_enhanced_network)
 
         controls_layout.addStretch()
         layout.addLayout(controls_layout)
@@ -442,7 +436,8 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         self.tab_widget.addTab(self.interlayer_path_similarity_canvas, "LC20")
 
         # LC4A: Enhanced Network Diagram
-        self.enhanced_network_figure = Figure(figsize=(8, 6), dpi=100)
+        self.enhanced_network_figure = Figure(figsize=(10, 8), dpi=100, tight_layout=False)
+        self.enhanced_network_figure.subplots_adjust(left=0, right=1, top=0.95, bottom=0.05)
         self.enhanced_network_canvas = FigureCanvas(self.enhanced_network_figure)
         self.enhanced_network_ax = self.enhanced_network_figure.add_subplot(111)
 
@@ -457,29 +452,23 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         )
         self.enhanced_network_canvas.draw()
 
-        # Create a container widget for the LC4A tab
+        # Create LC4A tab
         lc4a_container = QWidget()
         lc4a_layout = QVBoxLayout(lc4a_container)
-
-        # Add enable/disable checkbox for LC4A
-        lc4a_controls_layout = QHBoxLayout()
-        self.enhanced_network_enable_checkbox = QCheckBox("Enable")
-        self.enhanced_network_enable_checkbox.setChecked(False)  # Disabled by default
-        self.enhanced_network_enable_checkbox.stateChanged.connect(
+        lc4a_layout.setContentsMargins(0, 0, 0, 0)  # Remove all margins
+        lc4a_layout.setSpacing(0)  # No spacing between elements
+        
+        # Add the enhanced network UI to the LC4A tab
+        self.enhanced_network_ui["widget"].setMaximumHeight(24)  # Compact UI height
+        lc4a_layout.addWidget(self.enhanced_network_ui["widget"])
+        
+        # Connect the enable checkbox
+        self.enhanced_network_ui["enable_checkbox"].stateChanged.connect(
             self.on_enhanced_network_state_changed
         )
-        lc4a_controls_layout.addWidget(self.enhanced_network_enable_checkbox)
-        lc4a_controls_layout.addStretch()
-        lc4a_layout.addLayout(lc4a_controls_layout)
 
-        # Add the enhanced network controls to the LC4A tab
-        lc4a_layout.addWidget(self.enhanced_network_ui["group"])
-
-        # Initially disable the controls since the checkbox is unchecked by default
-        self.enhanced_network_ui["group"].setEnabled(False)
-
-        # Add the canvas to the LC4A tab
-        lc4a_layout.addWidget(self.enhanced_network_canvas)
+        # Add the canvas to the LC4A tab with stretch factor to maximize space
+        lc4a_layout.addWidget(self.enhanced_network_canvas, 1)  # Add stretch factor of 1
 
         # Add the LC4A tab to the tab widget
         self.tab_widget.addTab(lc4a_container, "LC4A: Enhanced Network Diagram")
@@ -2775,7 +2764,7 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
             return
 
         # Check if the enhanced network is enabled
-        if not self.enhanced_network_enable_checkbox.isChecked():
+        if not self.enhanced_network_ui["enable_checkbox"].isChecked():
             # Clear the figure
             self.enhanced_network_figure.clear()
             self.enhanced_network_ax = self.enhanced_network_figure.add_subplot(111)
@@ -2820,12 +2809,9 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         )
 
     def on_enhanced_network_state_changed(self, state):
-        """Handle enable/disable state change for enhanced network diagram"""
-        if hasattr(self, "_current_data") and self._current_data:
-            self.update_enhanced_network()
-
-            # Enable or disable the controls based on the checkbox state
-            self.enhanced_network_ui["group"].setEnabled(state)
+        """Handle state changes for the enhanced network diagram checkbox"""
+        # The UI components are always enabled, we just update the network based on the checkbox state
+        self.update_enhanced_network()
 
     def update_lc12_similarity_matrix(self, data_manager):
         """Update the LC12 similarity matrix with the selected metric and edge type"""
