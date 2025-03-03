@@ -36,7 +36,7 @@ class LoaderPanel(QWidget):
         self.layout_combo.setMinimumWidth(150)  # Ensure dropdown has reasonable width
         layout.addWidget(self.layout_combo)
 
-        self.z_offset_label = QLabel("Z(n+1)*= Auto")
+        self.z_offset_label = QLabel("Z+= Auto")
         layout.addWidget(self.z_offset_label)
 
         self.z_offset_slider = QSlider(Qt.Horizontal)
