@@ -555,57 +555,38 @@ class LayerClusterOverlapPanel(BaseStatsPanel):
         if hasattr(self, "_current_data") and self.enable_checkbox.isChecked():
             try:
                 # Determine which control was changed and update the corresponding visualization
-                sender = self.sender()
+                # sender = self.sender()
 
-                # Update based on which control was changed
-                if (
-                    sender == self.layout_algorithm_combo
-                    or sender == self.aspect_ratio_combo
-                ):
-                    self.update_lc4_network_diagram(self._current_data)
-                elif sender == self.path_analysis_combo:
-                    self.update_lc16_path_analysis(self._current_data)
-                elif sender == self.bridge_analysis_combo:
-                    self.update_lc17_bridge_analysis(self._current_data)
-                elif (
-                    sender == self.similarity_metric_combo
-                    or sender == self.edge_type_combo
-                ):
-                    self.update_lc12_similarity_matrix(self._current_data)
-                elif sender == self.path_similarity_cluster_combo:
-                    # Update both LC20 and LC16 when the cluster dropdown changes
-                    self.update_lc20_interlayer_path_similarity(self._current_data)
-                    self.update_lc16_path_analysis(self._current_data)
-                else:
-                    # If we can't determine the sender, update based on current tab
-                    current_tab = self.tab_widget.currentIndex()
+ 
+                # If we can't determine the sender, update based on current tab
+                current_tab = self.tab_widget.currentIndex()
 
-                    # Map tab indices to update methods
-                    tab_to_update = {
-                        0: self.update_lc1_heatmap,  # LC1: Overlap Heatmap
-                        1: self.update_lc2_distribution,  # LC2: Cluster-Layer Distribution
-                        2: self.update_lc3_layer_distribution,  # LC3: Layer-Cluster Distribution
-                        3: self.update_lc4_network_diagram,  # LC4: Network Diagram
-                        4: self.update_lc5_cluster_network,  # LC5: Cluster Network
-                        5: self.update_lc6_sankey,  # LC6: Sankey Diagram
-                        6: self.update_lc7_connectivity,  # LC7: Connectivity Matrix
-                        7: self.update_lc8_chord,  # LC8: Chord Diagram
-                        8: self.update_lc9_density,  # LC9: Density Heatmap
-                        9: self.update_lc10_cooccurrence,  # LC10: Co-occurrence Network
-                        10: self.update_lc11_normalized,  # LC11: Normalized Heatmap
-                        11: self.update_lc12_similarity_matrix,  # LC12: Similarity Matrix
-                        12: self.update_lc13_bubble,  # LC13: Bubble Chart
-                        13: self.update_lc14_treemap,  # LC14: Treemap
-                        14: self.update_flow_ideas,  # LC15: Flow Ideas
-                        15: self.update_lc16_path_analysis,  # LC16: Interlayer Path Analysis
-                        16: self.update_lc17_bridge_analysis,  # LC17: Cluster Bridging Analysis
-                        17: self.update_lc20_interlayer_path_similarity,  # LC20: Interlayer Path Similarity
-                        18: self.update_enhanced_network,  # LC4A: Enhanced Network Diagram
-                    }
+                # Map tab indices to update methods
+                tab_to_update = {
+                    0: self.update_lc1_heatmap,  # LC1: Overlap Heatmap
+                    1: self.update_lc2_distribution,  # LC2: Cluster-Layer Distribution
+                    2: self.update_lc3_layer_distribution,  # LC3: Layer-Cluster Distribution
+                    3: self.update_lc4_network_diagram,  # LC4: Network Diagram
+                    4: self.update_lc5_cluster_network,  # LC5: Cluster Network
+                    5: self.update_lc6_sankey,  # LC6: Sankey Diagram
+                    6: self.update_lc7_connectivity,  # LC7: Connectivity Matrix
+                    7: self.update_lc8_chord,  # LC8: Chord Diagram
+                    8: self.update_lc9_density,  # LC9: Density Heatmap
+                    9: self.update_lc10_cooccurrence,  # LC10: Co-occurrence Network
+                    10: self.update_lc11_normalized,  # LC11: Normalized Heatmap
+                    11: self.update_lc12_similarity_matrix,  # LC12: Similarity Matrix
+                    12: self.update_lc13_bubble,  # LC13: Bubble Chart
+                    13: self.update_lc14_treemap,  # LC14: Treemap
+                    14: self.update_flow_ideas,  # LC15: Flow Ideas
+                    15: self.update_lc16_path_analysis,  # LC16: Interlayer Path Analysis
+                    16: self.update_lc17_bridge_analysis,  # LC17: Cluster Bridging Analysis
+                    17: self.update_lc20_interlayer_path_similarity,  # LC20: Interlayer Path Similarity
+                    18: self.update_enhanced_network,  # LC4A: Enhanced Network Diagram
+                }
 
-                    # Call the appropriate update method if the current tab is in our map
-                    if current_tab in tab_to_update:
-                        tab_to_update[current_tab](self._current_data)
+                # Call the appropriate update method if the current tab is in our map
+                if current_tab in tab_to_update:
+                    tab_to_update[current_tab](self._current_data)
             except Exception as e:
                 logging.error(f"Error in on_layout_changed: {str(e)}")
                 import traceback
