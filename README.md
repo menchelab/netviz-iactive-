@@ -1,3 +1,8 @@
+# Proof Of Concept/test for multilayer network visualisation -> filtering -> analysis
+
+in experimental state :)
+
+
 # Running
 
 suggested to use UV, https://github.com/astral-sh/uv
@@ -7,7 +12,14 @@ uv sync
 uv run python main.py
 ```
 
-to debug if opengl errors: (maybe try to get glxgears or vispy minimal example running first)
+## Linux
+
+```bash
+uv sync
+uv run python main.py
+```
+
+if no opengl backend or errors try this to debug (maybe try to get glxgears or vispy minimal example running first):
 
 ```
 uv run python
@@ -19,7 +31,12 @@ if not, you should try to install opengl drivers libs whatever, maybe test with 
 
 ## OSX
 
-on osx maybe uncomment quartz package in pyproject.toml for better performance
+```bash
+uv sync
+uv run python main.py
+```
+
+maybe uncomment quartz package in pyproject.toml for better performance
 
 
 ## Windows
@@ -28,7 +45,7 @@ on osx maybe uncomment quartz package in pyproject.toml for better performance
 2. edit pyproject.toml and <b>un</b>-comment last line `constraint-dependenc...`
 3. run:
 
-```
+```bash
 uv sync
 uv run python main.py
 ```
