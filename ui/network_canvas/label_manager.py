@@ -34,6 +34,21 @@ class LabelManager:
             self.canvas.edge_count_bars.visible = False
             return
 
+        # Handle case when node_mask is None
+        if node_mask is None:
+            logger.warning("Node mask is None, showing all nodes for labels and bars")
+            node_mask = np.ones(len(self.canvas.node_positions), dtype=bool)
+        
+        # Ensure node_mask is a boolean array with the correct length
+        if not isinstance(node_mask, np.ndarray) or len(node_mask) != len(self.canvas.node_positions):
+            logger.warning(f"Invalid node mask for labels and bars, showing all nodes. Mask type: {type(node_mask)}, length: {len(node_mask) if hasattr(node_mask, '__len__') else 'N/A'}")
+            node_mask = np.ones(len(self.canvas.node_positions), dtype=bool)
+        
+        # Convert to boolean if not already
+        if node_mask.dtype != bool:
+            logger.warning(f"Converting node mask from {node_mask.dtype} to boolean for labels and bars")
+            node_mask = node_mask.astype(bool)
+
         # Prepare data for labels and bar charts
         label_positions = []
         label_texts = []

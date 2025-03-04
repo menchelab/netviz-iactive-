@@ -324,12 +324,22 @@ class MultilayerNetworkViz(QWidget):
             # Only update data manager if filter settings have changed
             if filter_changed:
                 # Update visibility in data manager
-                node_mask, edge_mask = self.data_manager.update_visibility(
-                    visible_layers, visible_clusters, visible_origins
+                # Convert visible_layers from indices to boolean array
+                visible_layers_array = np.zeros(len(self.data_manager.layers), dtype=bool)
+                for idx in visible_layers:
+                    visible_layers_array[idx] = True
+                
+                # Update visibility in data manager
+                self.data_manager.update_visibility(
+                    visible_layers=visible_layers_array, 
+                    visible_clusters=visible_clusters, 
+                    visible_origins=visible_origins
                 )
 
             # Update network canvas with visibility settings
             self.network_canvas.update_visibility(
+                node_mask=self.data_manager.current_node_mask,
+                edge_mask=self.data_manager.current_edge_mask,
                 show_intralayer=show_intralayer,
                 show_nodes=show_nodes,
                 show_labels=show_labels,

@@ -183,7 +183,7 @@ def build_multilayer_network(
             if base_node in node_metadata["Node"].values:
                 node_data = node_metadata[node_metadata["Node"] == base_node].iloc[0]
                 color = node_data["nodecolor"]
-                cluster = node_data["cluster"]
+                cluster = 'C' + str(node_data["cluster"])
                 origin = node_data.get("Origin", "Unknown")  # Get origin if available
                 node_colors.append(color)
                 node_clusters[node_id] = cluster

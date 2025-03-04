@@ -2,14 +2,6 @@ import logging
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QTabWidget
 
 from .main_stats_panel import MainStatsPanel
-from .sankey_panel import SankeyPanel
-from .layer_graph_panel import LayerGraphPanel
-from .layer_communities_panel import LayerCommunitiesPanel
-from .information_flow_panel import InformationFlowPanel
-from .layer_coupling_panel import LayerCouplingPanel
-from .critical_structure_panel import CriticalStructurePanel
-from .hyperbolic_embedding_panel import HyperbolicEmbeddingPanel
-from .chart_grid_panel import ChartGridPanel
 
 
 class NetworkStatsPanel(QWidget):
@@ -27,48 +19,12 @@ class NetworkStatsPanel(QWidget):
         self.tab_widget.setDocumentMode(True)  # Cleaner look
         layout.addWidget(self.tab_widget)
 
-        # Create panels for each tab
+        # Create main stats panel
         self.main_stats_panel = MainStatsPanel()
-        self.sankey_panel = SankeyPanel()
-        self.layer_graph_panel = LayerGraphPanel()
-        self.layer_communities_panel = LayerCommunitiesPanel()
-        self.information_flow_panel = InformationFlowPanel()
 
-        # Create advanced analytics panels
-        self.layer_coupling_panel = LayerCouplingPanel()
-        self.critical_structure_panel = CriticalStructurePanel()
-        #        self.hyperbolic_embedding_panel = HyperbolicEmbeddingPanel()
-
-        # Create chart grid panel
-        self.chart_grid_panel = ChartGridPanel()
-
-        # Add panels to tabs
-        self.tab_widget.addTab(self.main_stats_panel, "stats")
-        self.tab_widget.addTab(self.sankey_panel, "test")
-        self.tab_widget.addTab(self.layer_graph_panel, "L Graph")
-        self.tab_widget.addTab(self.layer_communities_panel, "L Communities")
-        self.tab_widget.addTab(self.information_flow_panel, "test InfoFlow")
-
-        # Add advanced analytics tabs
-        self.tab_widget.addTab(self.layer_coupling_panel, "L Coupling")
-        self.tab_widget.addTab(self.critical_structure_panel, "test critstruct")
-        #        self.tab_widget.addTab(self.hyperbolic_embedding_panel, "Hyperbolic View")
-
-        # Add chart grid tab
-        self.tab_widget.addTab(self.chart_grid_panel, "multi")
+        # Add panel to tabs
+        self.tab_widget.addTab(self.main_stats_panel, "Stats")
 
     def update_stats(self, data_manager):
-        # Update each panel
+        # Update main stats panel
         self.main_stats_panel.update_stats(data_manager)
-        self.sankey_panel.update_stats(data_manager)
-        self.layer_graph_panel.update_stats(data_manager)
-        self.layer_communities_panel.update_stats(data_manager)
-        self.information_flow_panel.update_stats(data_manager)
-
-        # Update advanced analytics panels
-        self.layer_coupling_panel.update_stats(data_manager)
-        self.critical_structure_panel.update_stats(data_manager)
-        #        self.hyperbolic_embedding_panel.update_stats(data_manager)
-
-        # Update chart grid panel
-        self.chart_grid_panel.update_stats(data_manager)

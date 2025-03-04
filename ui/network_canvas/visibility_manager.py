@@ -85,7 +85,7 @@ class VisibilityManager:
         return interlayer_edge_counts
 
     def _update_node_visibility(self, node_mask, show_nodes):
-        """Update the visibility of nodes"""
+        """Update node visibility based on mask"""
         logger = logging.getLogger(__name__)
 
         if not show_nodes:
@@ -95,22 +95,70 @@ class VisibilityManager:
 
         self.canvas.scatter.visible = True
 
-        # Get visible node positions and colors
-        visible_positions = self.canvas.node_positions[node_mask]
-        visible_colors = self.canvas.node_colors_rgba[node_mask]
-        visible_sizes = self.canvas.node_sizes[node_mask]
+        # Handle case when node_mask is None
+        if node_mask is None:
+            logger.warning("Node mask is None, showing all nodes")
+            node_mask = np.ones(len(self.canvas.node_positions), dtype=bool)
+        
+        # Ensure node_mask is a boolean array with the correct length
+        if not isinstance(node_mask, np.ndarray) or len(node_mask) != len(self.canvas.node_positions):
+            logger.warning(f"Invalid node mask, showing all nodes. Mask type: {type(node_mask)}, length: {len(node_mask) if hasattr(node_mask, '__len__') else 'N/A'}")
+            node_mask = np.ones(len(self.canvas.node_positions), dtype=bool)
+        
+        # Convert to boolean if not already
+        if node_mask.dtype != bool:
+            logger.warning(f"Converting node mask from {node_mask.dtype} to boolean")
+            node_mask = node_mask.astype(bool)
 
-        logger.info(f"Showing {len(visible_positions)} nodes")
+        try:
+            # Get visible node positions and colors
+            visible_indices = np.where(node_mask)[0]
+            logger.info(f"Visible indices: {len(visible_indices)} out of {len(node_mask)}")
+            
+            # Check if node_positions is available
+            if self.canvas.node_positions is None or len(self.canvas.node_positions) == 0:
+                logger.error("No node positions available")
+                return
+                
+            visible_positions = self.canvas.node_positions[visible_indices]
+            
+            # Check if node_colors_rgba is available
+            if self.canvas.node_colors_rgba is None:
+                logger.warning("No node colors available, using default white")
+                visible_colors = np.ones((len(visible_indices), 4))  # White with full opacity
+            else:
+                visible_colors = self.canvas.node_colors_rgba[visible_indices]
+                
+            # Check if node_sizes is available
+            if self.canvas.node_sizes is None:
+                logger.warning("No node sizes available, using default size")
+                visible_sizes = np.ones(len(visible_indices)) * 5  # Default size
+            else:
+                visible_sizes = self.canvas.node_sizes[visible_indices]
+            
+            logger.info(f"Showing {len(visible_positions)} nodes")
 
-        # Update the scatter visual
-        if len(visible_positions) > 0:
+            # Update the scatter visual
+            if len(visible_positions) > 0:
+                self.canvas.scatter.set_data(
+                    pos=visible_positions, face_color=visible_colors, size=visible_sizes
+                )
+            else:
+                # If no nodes are visible, set empty data
+                logger.warning("No nodes visible, setting empty data")
+                self.canvas.scatter.set_data(
+                    pos=np.zeros((0, 3)), face_color=np.zeros((0, 4)), size=np.zeros(0)
+                )
+        except Exception as e:
+            logger.error(f"Error updating node visibility: {str(e)}")
+            logger.error(f"node_mask type: {type(node_mask)}, shape: {node_mask.shape if hasattr(node_mask, 'shape') else 'N/A'}")
+            logger.error(f"node_positions shape: {self.canvas.node_positions.shape if hasattr(self.canvas.node_positions, 'shape') else 'N/A'}")
+            logger.error(f"node_colors_rgba shape: {self.canvas.node_colors_rgba.shape if hasattr(self.canvas.node_colors_rgba, 'shape') else 'N/A'}")
+            
+            # Fallback: show all nodes
+            logger.warning("Falling back to showing all nodes")
             self.canvas.scatter.set_data(
-                pos=visible_positions, face_color=visible_colors, size=visible_sizes
-            )
-        else:
-            # Create a dummy point that's invisible
-            self.canvas.scatter.set_data(
-                pos=np.array([[0, 0, 0]]),
-                face_color=np.array([[0, 0, 0, 0]]),
-                size=np.array([0]),
+                pos=self.canvas.node_positions,
+                face_color=self.canvas.node_colors_rgba,
+                size=self.canvas.node_sizes
             )

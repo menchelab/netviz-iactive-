@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QCheckBox
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+import numpy as np
 
 from charts.layer_connectivity import create_layer_connectivity_chart
 from charts.cluster_distribution import create_cluster_distribution_chart
@@ -24,7 +25,7 @@ class MainStatsPanel(BaseStatsPanel):
         controls_layout = QHBoxLayout()
         controls_layout.setContentsMargins(5, 5, 5, 0)
         self.enable_checkbox = QCheckBox("Enable Charts")
-        self.enable_checkbox.setChecked(True)
+        self.enable_checkbox.setChecked(False)
         self.enable_checkbox.stateChanged.connect(self.on_state_changed)
         controls_layout.addWidget(self.enable_checkbox)
         controls_layout.addStretch()
@@ -98,106 +99,42 @@ class MainStatsPanel(BaseStatsPanel):
         self.interlayer_graph_ax = self.right_figure.add_subplot(312)
         self.layer_similarity_ax = self.right_figure.add_subplot(313)
 
+        # Set up fonts
         small_font = {"fontsize": 6}
         medium_font = {"fontsize": 7}
-
-        # Get data from manager
-        node_positions = data_manager.node_positions
-        link_pairs = data_manager.link_pairs
-        node_ids = data_manager.node_ids
-        layers = data_manager.layers
-        node_clusters = data_manager.node_clusters
-        node_mask = data_manager.current_node_mask
-        edge_mask = data_manager.current_edge_mask
-        visible_layer_indices = data_manager.visible_layers
-        layer_colors = data_manager.layer_colors
-
-        # Get layer connections from data manager (already filtered)
-        layer_connections = data_manager.get_layer_connections(filter_to_visible=True)
-
-        # Get visible nodes and edges
-        visible_nodes = [i for i, mask in enumerate(node_mask) if mask]
-        visible_edges = [i for i, mask in enumerate(edge_mask) if mask]
-        visible_links = [link_pairs[i] for i in visible_edges]
-
-        # Calculate nodes per layer
-        nodes_per_layer = len(node_positions) // len(layers)
-
-        # Get visible layers list for filtered views
-        visible_layers = [layers[i] for i in visible_layer_indices] if visible_layer_indices else []
-
-        # Create mapping from original layer indices to filtered indices
-        layer_index_map = {orig_idx: new_idx for new_idx, orig_idx in enumerate(visible_layer_indices)} if visible_layer_indices else {}
 
         # --- LEFT COLUMN CHARTS ---
 
         # 1. Layer connectivity matrix
-        im, layer_connections = create_layer_connectivity_chart(
-            self.layer_connectivity_ax,
-            visible_links,
-            nodes_per_layer,
-            visible_layers,  # Use visible layers instead of all layers
-            small_font,
-            medium_font,
-            layer_index_map,  # Pass the mapping
+        self._create_layer_connectivity_chart(
+            self.layer_connectivity_ax, data_manager, small_font, medium_font
         )
-        cbar = self.left_figure.colorbar(
-            im, ax=self.layer_connectivity_ax, fraction=0.046, pad=0.02
-        )
-        cbar.ax.tick_params(labelsize=6)  # Smaller colorbar ticks
 
         # 2. Cluster distribution
-        visible_node_ids = [node_ids[i] for i in visible_nodes]
-        create_cluster_distribution_chart(
-            self.cluster_distribution_ax,
-            visible_node_ids,
-            node_clusters,
-            small_font,
-            medium_font,
-            data_manager.cluster_colors,
+        self._create_cluster_distribution_chart(
+            self.cluster_distribution_ax, data_manager, small_font, medium_font
         )
 
         # 3. Layer activity chart
-        create_layer_activity_chart(
-            self.layer_activity_ax,
-            visible_links,
-            nodes_per_layer,
-            visible_layers,  # Use visible layers instead of all layers
-            small_font,
-            medium_font,
-            layer_index_map,  # Pass the mapping
+        self._create_layer_activity_chart(
+            self.layer_activity_ax, data_manager, small_font, medium_font
         )
 
         # --- RIGHT COLUMN CHARTS ---
 
         # 1. Betweenness centrality analysis
-        create_betweenness_centrality_chart(
-            self.betweenness_centrality_ax,
-            layer_connections,
-            visible_layers,  # Already filtered list of layers
-            list(range(len(visible_layers))),  # Use sequential indices since data is already filtered
-            small_font,
-            medium_font,
+        self._create_betweenness_centrality_chart(
+            self.betweenness_centrality_ax, data_manager, small_font, medium_font
         )
 
         # 2. Interlayer graph visualization
-        create_interlayer_graph(
-            self.interlayer_graph_ax,
-            layer_connections,
-            visible_layers,  # Already filtered list of layers
-            small_font,
-            medium_font,
-            list(range(len(visible_layers))),  # Use sequential indices since data is already filtered
-            layer_colors,
+        self._create_interlayer_graph(
+            self.interlayer_graph_ax, data_manager, small_font, medium_font
         )
 
         # 3. Layer similarity dendrogram
-        create_layer_similarity_chart(
-            self.layer_similarity_ax,
-            layer_connections,
-            visible_layers,  # Use visible layers instead of all layers
-            small_font,
-            medium_font,
+        self._create_layer_similarity_chart(
+            self.layer_similarity_ax, data_manager, small_font, medium_font
         )
 
         # Apply tight layout to all figures
@@ -207,3 +144,240 @@ class MainStatsPanel(BaseStatsPanel):
         # Draw all canvases
         self.left_canvas.draw()
         self.right_canvas.draw()
+
+    def _create_layer_connectivity_chart(self, ax, data_manager, small_font, medium_font):
+        """Create layer connectivity matrix chart"""
+        # Get layer connections from data manager
+        layer_connections = data_manager.get_layer_connections(filter_to_visible=True)
+        
+        # Get visible layers
+        visible_layer_indices = np.where(data_manager.visible_layers)[0]
+        visible_layers = [data_manager.layers[i] for i in visible_layer_indices]
+        
+        # Create heatmap
+        im = ax.imshow(layer_connections, cmap='viridis')
+        
+        # Set labels
+        ax.set_xticks(np.arange(len(visible_layers)))
+        ax.set_yticks(np.arange(len(visible_layers)))
+        ax.set_xticklabels(visible_layers, **small_font)
+        ax.set_yticklabels(visible_layers, **small_font)
+        
+        # Rotate x labels
+        plt = ax.figure.canvas.manager.canvas.figure.plt
+        plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
+        
+        # Add title
+        ax.set_title("Layer Connectivity Matrix", **medium_font)
+        
+        # Add colorbar
+        cbar = ax.figure.colorbar(im, ax=ax, fraction=0.046, pad=0.02)
+        cbar.ax.tick_params(labelsize=6)
+        
+        return im, layer_connections
+
+    def _create_cluster_distribution_chart(self, ax, data_manager, small_font, medium_font):
+        """Create cluster distribution chart"""
+        # Skip if no clusters
+        if not hasattr(data_manager, 'node_clusters') or data_manager.node_clusters is None:
+            ax.text(0.5, 0.5, "No cluster data available", 
+                   ha='center', va='center', **medium_font)
+            return
+            
+        # Get visible nodes
+        node_mask = data_manager.current_node_mask
+        visible_node_indices = np.where(node_mask)[0]
+        
+        # Count clusters
+        cluster_counts = {}
+        for idx in visible_node_indices:
+            cluster = data_manager.node_clusters[idx]
+            if cluster not in cluster_counts:
+                cluster_counts[cluster] = 0
+            cluster_counts[cluster] += 1
+        
+        # Sort clusters by count
+        sorted_clusters = sorted(cluster_counts.items(), key=lambda x: x[1], reverse=True)
+        clusters = [c[0] for c in sorted_clusters]
+        counts = [c[1] for c in sorted_clusters]
+        
+        # Create bar chart
+        colors = [data_manager.cluster_colors.get(c, "#CCCCCC") for c in clusters]
+        ax.bar(clusters, counts, color=colors)
+        
+        # Set labels
+        ax.set_xlabel("Cluster", **small_font)
+        ax.set_ylabel("Count", **small_font)
+        ax.set_title("Cluster Distribution", **medium_font)
+        
+        # Rotate x labels if many clusters
+        if len(clusters) > 5:
+            plt = ax.figure.canvas.manager.canvas.figure.plt
+            plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
+        
+        ax.tick_params(axis='both', which='major', labelsize=6)
+
+    def _create_layer_activity_chart(self, ax, data_manager, small_font, medium_font):
+        """Create layer activity chart"""
+        # Get layer connections
+        layer_connections = data_manager.get_layer_connections(filter_to_visible=True)
+        
+        # Get visible layers
+        visible_layer_indices = np.where(data_manager.visible_layers)[0]
+        visible_layers = [data_manager.layers[i] for i in visible_layer_indices]
+        
+        # Calculate activity (sum of connections)
+        activity = np.sum(layer_connections, axis=1)
+        
+        # Create bar chart
+        colors = [data_manager.layer_colors.get(layer, "#CCCCCC") for layer in visible_layers]
+        ax.bar(visible_layers, activity, color=colors)
+        
+        # Set labels
+        ax.set_xlabel("Layer", **small_font)
+        ax.set_ylabel("Activity", **small_font)
+        ax.set_title("Layer Activity", **medium_font)
+        
+        # Rotate x labels if many layers
+        if len(visible_layers) > 5:
+            plt = ax.figure.canvas.manager.canvas.figure.plt
+            plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
+        
+        ax.tick_params(axis='both', which='major', labelsize=6)
+
+    def _create_betweenness_centrality_chart(self, ax, data_manager, small_font, medium_font):
+        """Create betweenness centrality chart"""
+        # Get layer connections
+        layer_connections = data_manager.get_layer_connections(filter_to_visible=True)
+        
+        # Get visible layers
+        visible_layer_indices = np.where(data_manager.visible_layers)[0]
+        visible_layers = [data_manager.layers[i] for i in visible_layer_indices]
+        
+        # Calculate betweenness centrality (simplified)
+        n = len(visible_layers)
+        if n < 3:
+            ax.text(0.5, 0.5, "Need at least 3 layers for betweenness centrality", 
+                   ha='center', va='center', **medium_font)
+            return
+            
+        # Simple approximation of betweenness centrality
+        centrality = np.zeros(n)
+        for i in range(n):
+            for j in range(n):
+                if i == j:
+                    continue
+                for k in range(n):
+                    if k == i or k == j:
+                        continue
+                    # Check if i is on a path from j to k
+                    if layer_connections[j, i] > 0 and layer_connections[i, k] > 0:
+                        centrality[i] += 1
+        
+        # Normalize
+        if np.max(centrality) > 0:
+            centrality = centrality / np.max(centrality)
+        
+        # Create bar chart
+        colors = [data_manager.layer_colors.get(layer, "#CCCCCC") for layer in visible_layers]
+        ax.bar(visible_layers, centrality, color=colors)
+        
+        # Set labels
+        ax.set_xlabel("Layer", **small_font)
+        ax.set_ylabel("Centrality", **small_font)
+        ax.set_title("Layer Betweenness Centrality", **medium_font)
+        
+        # Rotate x labels if many layers
+        if len(visible_layers) > 5:
+            plt = ax.figure.canvas.manager.canvas.figure.plt
+            plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
+        
+        ax.tick_params(axis='both', which='major', labelsize=6)
+
+    def _create_interlayer_graph(self, ax, data_manager, small_font, medium_font):
+        """Create interlayer graph visualization"""
+        # Get layer connections
+        layer_connections = data_manager.get_layer_connections(filter_to_visible=True)
+        
+        # Get visible layers
+        visible_layer_indices = np.where(data_manager.visible_layers)[0]
+        visible_layers = [data_manager.layers[i] for i in visible_layer_indices]
+        
+        # Simple network visualization
+        n = len(visible_layers)
+        if n < 2:
+            ax.text(0.5, 0.5, "Need at least 2 layers for interlayer graph", 
+                   ha='center', va='center', **medium_font)
+            return
+        
+        # Create positions in a circle
+        pos = {}
+        for i, layer in enumerate(visible_layers):
+            angle = 2 * np.pi * i / n
+            pos[i] = (np.cos(angle), np.sin(angle))
+        
+        # Draw nodes
+        colors = [data_manager.layer_colors.get(layer, "#CCCCCC") for layer in visible_layers]
+        for i, layer in enumerate(visible_layers):
+            ax.scatter(pos[i][0], pos[i][1], s=100, color=colors[i], edgecolors='black', zorder=2)
+            ax.text(pos[i][0]*1.1, pos[i][1]*1.1, layer, ha='center', va='center', **small_font)
+        
+        # Draw edges
+        for i in range(n):
+            for j in range(i+1, n):
+                if layer_connections[i, j] > 0:
+                    # Scale line width by connection strength
+                    width = 0.5 + 2 * layer_connections[i, j] / np.max(layer_connections)
+                    ax.plot([pos[i][0], pos[j][0]], [pos[i][1], pos[j][1]], 
+                           linewidth=width, color='gray', alpha=0.7, zorder=1)
+        
+        # Set limits and title
+        ax.set_xlim(-1.5, 1.5)
+        ax.set_ylim(-1.5, 1.5)
+        ax.set_title("Interlayer Connections", **medium_font)
+        ax.set_aspect('equal')
+        ax.axis('off')
+
+    def _create_layer_similarity_chart(self, ax, data_manager, small_font, medium_font):
+        """Create layer similarity chart"""
+        # Get layer connections
+        layer_connections = data_manager.get_layer_connections(filter_to_visible=True)
+        
+        # Get visible layers
+        visible_layer_indices = np.where(data_manager.visible_layers)[0]
+        visible_layers = [data_manager.layers[i] for i in visible_layer_indices]
+        
+        n = len(visible_layers)
+        if n < 2:
+            ax.text(0.5, 0.5, "Need at least 2 layers for similarity analysis", 
+                   ha='center', va='center', **medium_font)
+            return
+        
+        # Calculate similarity matrix (normalized connections)
+        similarity = layer_connections.copy().astype(float)
+        row_sums = similarity.sum(axis=1)
+        for i in range(n):
+            if row_sums[i] > 0:
+                similarity[i, :] /= row_sums[i]
+        
+        # Create heatmap
+        im = ax.imshow(similarity, cmap='viridis')
+        
+        # Set labels
+        ax.set_xticks(np.arange(len(visible_layers)))
+        ax.set_yticks(np.arange(len(visible_layers)))
+        ax.set_xticklabels(visible_layers, **small_font)
+        ax.set_yticklabels(visible_layers, **small_font)
+        
+        # Rotate x labels
+        plt = ax.figure.canvas.manager.canvas.figure.plt
+        plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
+        
+        # Add title
+        ax.set_title("Layer Similarity Matrix", **medium_font)
+        
+        # Add colorbar
+        cbar = ax.figure.colorbar(im, ax=ax, fraction=0.046, pad=0.02)
+        cbar.ax.tick_params(labelsize=6)
+        
+        return im

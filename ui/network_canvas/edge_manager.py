@@ -151,6 +151,21 @@ class EdgeManager:
     def _update_edge_visibility(self, edge_mask, show_intralayer):
         """Update the visibility of edges"""
         logger = logging.getLogger(__name__)
+        
+        # Handle case when edge_mask is None
+        if edge_mask is None:
+            logger.warning("Edge mask is None, showing all edges")
+            edge_mask = np.ones(len(self.canvas.link_pairs), dtype=bool)
+        
+        # Ensure edge_mask is a boolean array with the correct length
+        if not isinstance(edge_mask, np.ndarray) or len(edge_mask) != len(self.canvas.link_pairs):
+            logger.warning(f"Invalid edge mask, showing all edges. Mask type: {type(edge_mask)}, length: {len(edge_mask) if hasattr(edge_mask, '__len__') else 'N/A'}")
+            edge_mask = np.ones(len(self.canvas.link_pairs), dtype=bool)
+        
+        # Convert to boolean if not already
+        if edge_mask.dtype != bool:
+            logger.warning(f"Converting edge mask from {edge_mask.dtype} to boolean")
+            edge_mask = edge_mask.astype(bool)
 
         # Separate intralayer and interlayer edges
         intralayer_pos = []
@@ -160,37 +175,44 @@ class EdgeManager:
         intralayer_count = 0
         interlayer_count = 0
 
-        # Process all edges
-        visible_edges = self.canvas.link_pairs[edge_mask]
+        try:
+            # Process all edges
+            visible_indices = np.where(edge_mask)[0]
+            logger.info(f"Visible edge indices: {len(visible_indices)} out of {len(edge_mask)}")
+            
+            for i in visible_indices:
+                start_idx, end_idx = self.canvas.link_pairs[i]
+                
+                # Check if this is a horizontal (intra-layer) edge or interlayer edge
+                start_z = self.canvas.node_positions[start_idx][2]
+                end_z = self.canvas.node_positions[end_idx][2]
+                is_horizontal = abs(start_z - end_z) < 0.001
 
-        for i, (start_idx, end_idx) in enumerate(visible_edges):
-            # Check if this is a horizontal (intra-layer) edge or interlayer edge
-            start_z = self.canvas.node_positions[start_idx][2]
-            end_z = self.canvas.node_positions[end_idx][2]
-            is_horizontal = abs(start_z - end_z) < 0.001
+                if is_horizontal:
+                    intralayer_count += 1
+                    # Only add intralayer edges if they should be shown
+                    if show_intralayer:
+                        self._add_intralayer_edge(
+                            start_idx, end_idx, i, intralayer_pos, intralayer_colors
+                        )
+                else:
+                    interlayer_count += 1
+                    self._add_interlayer_edge(start_idx, end_idx, i, interlayer_edges)
 
-            if is_horizontal:
-                intralayer_count += 1
-                # Only add intralayer edges if they should be shown
-                if show_intralayer:
-                    self._add_intralayer_edge(
-                        start_idx, end_idx, i, intralayer_pos, intralayer_colors
-                    )
-            else:
-                interlayer_count += 1
-                self._add_interlayer_edge(start_idx, end_idx, i, interlayer_edges)
+            logger.info(f"Processed {intralayer_count} intralayer edges and {interlayer_count} interlayer edges")
 
-        logger.info(
-            f"Found {intralayer_count} intralayer edges and {interlayer_count} interlayer edges"
-        )
+            # Process interlayer edges
+            interlayer_pos, interlayer_colors = self._process_interlayer_edges(interlayer_edges)
 
-        # Process interlayer edges with offsets
-        interlayer_pos, interlayer_colors = self._process_interlayer_edges(
-            interlayer_edges
-        )
-
-        # Update intralayer lines
-        self._set_intralayer_lines(intralayer_pos, intralayer_colors)
-
-        # Update interlayer lines
-        self._set_interlayer_lines(interlayer_pos, interlayer_colors)
+            # Update the line visuals
+            self._set_intralayer_lines(intralayer_pos, intralayer_colors)
+            self._set_interlayer_lines(interlayer_pos, interlayer_colors)
+        except Exception as e:
+            logger.error(f"Error updating edge visibility: {str(e)}")
+            logger.error(f"edge_mask type: {type(edge_mask)}, shape: {edge_mask.shape if hasattr(edge_mask, 'shape') else 'N/A'}")
+            logger.error(f"link_pairs shape: {self.canvas.link_pairs.shape if hasattr(self.canvas.link_pairs, 'shape') else 'N/A'}")
+            
+            # Fallback: hide all edges
+            logger.warning("Falling back to hiding all edges")
+            self._set_intralayer_lines([], [])
+            self._set_interlayer_lines([], [])
