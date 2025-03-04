@@ -1,4 +1,4 @@
-V1	V2	ppi.tsv	HP.tsv	coex_HRV.tsv	coex_HRA.tsv	coex_MSG.tsv	coex_WBL.tsv	coex_SMU.tsv	coex_CLT.tsv	coex_STM.tsv	coex_CLS.tsv	coex_ITI.tsv	coex_core.tsv
+V1	V2	ppi.tsv	HP.tsv	coexHRV.tsv	coexHRA.tsv	coexMSG.tsv	coexWBL.tsv	coexSMU.tsv	coexCLT.tsv	coexSTM.tsv	coexCLS.tsv	coexITI.tsv	coexcore.tsv
 SMPX	SRL	0	0	1	1	0	0	0	0	0	0	0	0
 ANO5	SRL	0	0	1	1	0	0	0	0	0	0	0	0
 ANO5	SMPX	0	0	1	1	0	0	0	0	0	0	0	0
