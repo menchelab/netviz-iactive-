@@ -337,6 +337,9 @@ class MultilayerNetworkViz(QWidget):
                     visible_layers, visible_clusters, visible_origins
                 )
 
+            # Get GL state
+            gl_state = self.control_panel.get_gl_state()
+
             # Update network canvas with all settings
             self.network_canvas.update_visibility(
                 show_intralayer=show_intralayer,
@@ -349,7 +352,8 @@ class MultilayerNetworkViz(QWidget):
                 interlayer_opacity=interlayer_opacity,
                 node_size=node_size,
                 node_opacity=node_opacity,
-                antialias=line_antialias
+                antialias=line_antialias,
+                gl_state=gl_state
             )
 
             # Only update statistics panel if filter settings have changed

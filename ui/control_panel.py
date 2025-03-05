@@ -32,6 +32,13 @@ class ControlPanel(QWidget):
         super().__init__(parent)
         self.data_dir = data_dir
 
+        # Add GL state options
+        self.gl_states = {
+            'Opaque': 'opaque',
+            'Translucent': 'translucent',
+            'Additive': 'additive'
+        }
+
         # Initialize empty control lists
         self.layer_checkboxes = []
         self.cluster_checkboxes = {}
@@ -179,6 +186,24 @@ class ControlPanel(QWidget):
         self.line_antialias_checkbox = QCheckBox("Line Antialiasing")
         self.line_antialias_checkbox.setChecked(True)
         display_layout.addWidget(self.line_antialias_checkbox)
+
+        # Add GL state dropdown before the sliders
+        gl_state_container = QWidget()
+        gl_state_layout = QHBoxLayout()
+        gl_state_layout.setContentsMargins(0, 0, 0, 0)
+        
+        gl_state_label = QLabel("Blend Mode:")
+        self.gl_state_combo = QComboBox()
+        for label in self.gl_states:
+            self.gl_state_combo.addItem(label)
+        
+        # Set default to Additive
+        self.gl_state_combo.setCurrentText("Additive")
+        
+        gl_state_layout.addWidget(gl_state_label)
+        gl_state_layout.addWidget(self.gl_state_combo)
+        gl_state_container.setLayout(gl_state_layout)
+        display_layout.addWidget(gl_state_container)
 
         # Add new sliders
         # Intralayer linewidth
@@ -400,6 +425,9 @@ class ControlPanel(QWidget):
         # Connect line antialias checkbox
         self.line_antialias_checkbox.stateChanged.connect(visibility_callback)
 
+        # Connect GL state combo
+        self.gl_state_combo.currentTextChanged.connect(visibility_callback)
+
         # Connect value changed signals for sliders
         self.intralayer_width_slider.valueChanged.connect(visibility_callback)
         self.interlayer_width_slider.valueChanged.connect(visibility_callback)
@@ -479,6 +507,11 @@ class ControlPanel(QWidget):
     def get_node_opacity(self):
         """Get node opacity"""
         return self.node_opacity_slider.value() / 100.0
+
+    def get_gl_state(self):
+        """Get the selected GL state"""
+        current_text = self.gl_state_combo.currentText()
+        return self.gl_states[current_text]
 
     def create_disease_dropdown(self):
         """Create dropdown menu with available disease datasets"""

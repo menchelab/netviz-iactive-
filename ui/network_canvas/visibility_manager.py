@@ -22,6 +22,7 @@ class VisibilityManager:
         node_size=1.0,
         node_opacity=1.0,
         antialias=True,
+        gl_state='additive'
     ):
         """Update the visibility of nodes and edges based on masks and display settings"""
         logger = logging.getLogger(__name__)
@@ -75,6 +76,11 @@ class VisibilityManager:
             interlayer_opacity=interlayer_opacity,
             antialias=antialias
         )
+
+        # Update GL states
+        self.canvas.intralayer_lines.set_gl_state(gl_state)
+        self.canvas.interlayer_lines.set_gl_state(gl_state)
+        self.canvas.scatter.set_gl_state(gl_state)
 
     def _calculate_interlayer_edge_counts(self, edge_mask):
         """Calculate interlayer edge counts for each node"""

@@ -57,7 +57,7 @@ class NetworkCanvas:
         self.animation_manager = AnimationManager(self.view)
 
         # Create visuals
-        self.scatter = Markers()
+        self.scatter = Markers(spherical=True)
         self.view.add(self.scatter)
 
         # Create separate line visuals for intralayer and interlayer edges
@@ -277,6 +277,7 @@ class NetworkCanvas:
         node_size=1.0,
         node_opacity=1.0,
         antialias=True,
+        gl_state='additive',
     ):
         """Update the visibility of nodes and edges based on masks and display settings"""
         return self.visibility_manager.update_visibility(
@@ -294,6 +295,7 @@ class NetworkCanvas:
             node_size=node_size,
             node_opacity=node_opacity,
             antialias=antialias,
+            gl_state=gl_state
         )
 
     def set_projection_mode(self, orthographic=True):
