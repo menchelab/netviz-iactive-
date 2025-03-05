@@ -5,39 +5,41 @@ import logging
 class EdgeManager:
     def __init__(self, canvas):
         self.canvas = canvas
+        self.default_intralayer_opacity = 0.3
+        self.default_interlayer_opacity = 0.1
 
     def _add_intralayer_edge(
-        self, start_idx, end_idx, edge_idx, intralayer_pos, intralayer_colors
+        self, start_idx, end_idx, edge_idx, intralayer_pos, intralayer_colors, opacity_scale=1.0
     ):
         """Add an intralayer edge to the data"""
         # Get the layer for this edge
         layer_idx = start_idx // self.canvas.data_manager.nodes_per_layer
         layer_name = self.canvas.data_manager.layer_names[layer_idx]
 
-        # Use the layer color from the data manager with lower opacity
+        # Use the layer color from the data manager with scaled opacity
         if (
             self.canvas.data_manager.layer_colors_rgba
             and layer_name in self.canvas.data_manager.layer_colors_rgba
         ):
             edge_color = self.canvas.data_manager.layer_colors_rgba[layer_name].copy()
-            edge_color[3] = 0.3  # Set opacity to 30% for horizontal edges
+            edge_color[3] = self.default_intralayer_opacity * opacity_scale
         else:
-            # Use the original color with lower opacity if no mapping is found
+            # Use the original color with scaled opacity if no mapping is found
             edge_color = self.canvas.data_manager.link_colors_rgba[edge_idx].copy()
-            edge_color[3] = 0.3
+            edge_color[3] = self.default_intralayer_opacity * opacity_scale
 
         intralayer_pos.append(self.canvas.data_manager.node_positions[start_idx])
         intralayer_pos.append(self.canvas.data_manager.node_positions[end_idx])
         intralayer_colors.append(edge_color)
         intralayer_colors.append(edge_color)
 
-    def _add_interlayer_edge(self, start_idx, end_idx, edge_idx, interlayer_edges):
+    def _add_interlayer_edge(self, start_idx, end_idx, edge_idx, interlayer_edges, opacity_scale=1.0):
         """Add an interlayer edge to the data"""
-        # Inter-layer edge: use the color of the starting layer with higher opacity
+        # Inter-layer edge: use the color of the starting layer with scaled opacity
         start_layer_idx = start_idx // self.canvas.data_manager.nodes_per_layer
         start_layer_name = self.canvas.data_manager.layer_names[start_layer_idx]
 
-        # Use the layer color from the data manager with higher opacity
+        # Use the layer color from the data manager with scaled opacity
         if (
             self.canvas.data_manager.layer_colors_rgba
             and start_layer_name in self.canvas.data_manager.layer_colors_rgba
@@ -45,11 +47,11 @@ class EdgeManager:
             edge_color = self.canvas.data_manager.layer_colors_rgba[
                 start_layer_name
             ].copy()
-            edge_color[3] = 0.1  # Higher opacity for interlayer edges
+            edge_color[3] = self.default_interlayer_opacity * opacity_scale
         else:
-            # Use the original color with higher opacity if no mapping is found
+            # Use the original color with scaled opacity if no mapping is found
             edge_color = self.canvas.data_manager.link_colors_rgba[edge_idx].copy()
-            edge_color[3] = 0.1
+            edge_color[3] = self.default_interlayer_opacity * opacity_scale
 
         # Store the edge for later processing
         interlayer_edges.append(
@@ -118,38 +120,17 @@ class EdgeManager:
 
         return interlayer_pos, interlayer_colors
 
-    def _set_intralayer_lines(self, intralayer_pos, intralayer_colors):
-        """Update the intralayer lines visual"""
-        if intralayer_pos:
-            self.canvas.intralayer_lines.set_data(
-                pos=np.array(intralayer_pos), color=np.array(intralayer_colors), width=1
-            )
-        else:
-            # Create a dummy point that's invisible
-            self.canvas.intralayer_lines.set_data(
-                pos=np.array([[0, 0, 0], [0, 0, 0]]),
-                color=np.array([[0, 0, 0, 0], [0, 0, 0, 0]]),
-                width=1,
-            )
-
-    def _set_interlayer_lines(self, interlayer_pos, interlayer_colors):
-        """Update the interlayer lines visual"""
-        if interlayer_pos:
-            self.canvas.interlayer_lines.set_data(
-                pos=np.array(interlayer_pos),
-                color=np.array(interlayer_colors),
-                width=1,  # Thicker width for interlayer edges
-            )
-        else:
-            # Create a dummy point that's invisible
-            self.canvas.interlayer_lines.set_data(
-                pos=np.array([[0, 0, 0], [0, 0, 0]]),
-                color=np.array([[0, 0, 0, 0], [0, 0, 0, 0]]),
-                width=1,
-            )
-
-    def _update_edge_visibility(self, edge_mask, show_intralayer):
-        """Update the visibility of edges"""
+    def _update_edge_visibility(
+        self, 
+        edge_mask, 
+        show_intralayer,
+        intralayer_width=1.0,
+        interlayer_width=1.0,
+        intralayer_opacity=1.0,
+        interlayer_opacity=1.0,
+        antialias=True
+    ):
+        """Update the visibility and appearance of edges"""
         logger = logging.getLogger(__name__)
 
         # Separate intralayer and interlayer edges
@@ -174,11 +155,15 @@ class EdgeManager:
                 # Only add intralayer edges if they should be shown
                 if show_intralayer:
                     self._add_intralayer_edge(
-                        start_idx, end_idx, i, intralayer_pos, intralayer_colors
+                        start_idx, end_idx, i, intralayer_pos, intralayer_colors,
+                        opacity_scale=intralayer_opacity
                     )
             else:
                 interlayer_count += 1
-                self._add_interlayer_edge(start_idx, end_idx, i, interlayer_edges)
+                self._add_interlayer_edge(
+                    start_idx, end_idx, i, interlayer_edges,
+                    opacity_scale=interlayer_opacity
+                )
 
         logger.info(
             f"Found {intralayer_count} intralayer edges and {interlayer_count} interlayer edges"
@@ -189,8 +174,36 @@ class EdgeManager:
             interlayer_edges
         )
 
-        # Update intralayer lines
-        self._set_intralayer_lines(intralayer_pos, intralayer_colors)
+        # Update intralayer lines with new width and antialias settings
+        if intralayer_pos:
+            self.canvas.intralayer_lines.set_data(
+                pos=np.array(intralayer_pos),
+                color=np.array(intralayer_colors),
+                width=intralayer_width,
+#                antialias=antialias
+            )
+        else:
+            # Create a dummy point that's invisible
+            self.canvas.intralayer_lines.set_data(
+                pos=np.array([[0, 0, 0], [0, 0, 0]]),
+                color=np.array([[0, 0, 0, 0], [0, 0, 0, 0]]),
+                width=intralayer_width,
+#                antialias=antialias
+            )
 
-        # Update interlayer lines
-        self._set_interlayer_lines(interlayer_pos, interlayer_colors)
+        # Update interlayer lines with new width and antialias settings
+        if interlayer_pos:
+            self.canvas.interlayer_lines.set_data(
+                pos=np.array(interlayer_pos),
+                color=np.array(interlayer_colors),
+                width=interlayer_width,
+#                antialias=antialias
+            )
+        else:
+            # Create a dummy point that's invisible
+            self.canvas.interlayer_lines.set_data(
+                pos=np.array([[0, 0, 0], [0, 0, 0]]),
+                color=np.array([[0, 0, 0, 0], [0, 0, 0, 0]]),
+                width=interlayer_width,
+ #               antialias=antialias
+            )

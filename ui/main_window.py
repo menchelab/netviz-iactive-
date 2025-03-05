@@ -280,6 +280,15 @@ class MultilayerNetworkViz(QWidget):
             show_labels = self.control_panel.show_labels()
             show_stats_bars = self.control_panel.show_stats_bars()
 
+            # Get new display settings
+            intralayer_width = self.control_panel.get_intralayer_width()
+            interlayer_width = self.control_panel.get_interlayer_width()
+            intralayer_opacity = self.control_panel.get_intralayer_opacity()
+            interlayer_opacity = self.control_panel.get_interlayer_opacity()
+            node_size = self.control_panel.get_node_size()
+            node_opacity = self.control_panel.get_node_opacity()
+            line_antialias = self.control_panel.get_line_antialias()
+
             # Track if orthographic setting has changed
             orthographic = self.control_panel.use_orthographic_view()
             if (
@@ -328,12 +337,19 @@ class MultilayerNetworkViz(QWidget):
                     visible_layers, visible_clusters, visible_origins
                 )
 
-            # Update network canvas with visibility settings
+            # Update network canvas with all settings
             self.network_canvas.update_visibility(
                 show_intralayer=show_intralayer,
                 show_nodes=show_nodes,
                 show_labels=show_labels,
                 show_stats_bars=show_stats_bars,
+                intralayer_width=intralayer_width,
+                interlayer_width=interlayer_width,
+                intralayer_opacity=intralayer_opacity,
+                interlayer_opacity=interlayer_opacity,
+                node_size=node_size,
+                node_opacity=node_opacity,
+                antialias=line_antialias
             )
 
             # Only update statistics panel if filter settings have changed

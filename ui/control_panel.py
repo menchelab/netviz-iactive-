@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QCheckBox, QGroupBox, QFrame, QLabel, QComboBox
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QCheckBox, QGroupBox, QFrame, QLabel, QComboBox, QSlider, QDoubleSpinBox, QHBoxLayout
 from PyQt5.QtGui import QColor
 from PyQt5.QtCore import Qt
 import logging
@@ -37,8 +37,74 @@ class ControlPanel(QWidget):
         self.cluster_checkboxes = {}
         self.origin_checkboxes = {}
 
+        # Initialize default values for display settings
+        self.intralayer_linewidth = 1.0
+        self.interlayer_linewidth = 1.0
+        self.intralayer_opacity = 0.5
+        self.interlayer_opacity = 0.5
+        self.node_size = 1.0
+        self.node_opacity = 1.0
+
         # Setup UI
         self.setup_ui()
+
+    def create_labeled_slider(self, label_text, min_val, max_val, default_val, step=0.1, is_float=True):
+        """Helper function to create a labeled slider with value display"""
+        container = QWidget()
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(2)
+        
+        # Label and value display in horizontal layout
+        header_container = QWidget()
+        header_layout = QHBoxLayout()
+        header_layout.setContentsMargins(0, 0, 0, 0)
+        
+        # Label
+        label = QLabel(label_text)
+        header_layout.addWidget(label)
+        
+        # Value display
+        if is_float:
+            value_display = QLabel(f"{default_val:.4f}")
+        else:
+            value_display = QLabel(str(default_val))
+        header_layout.addWidget(value_display, alignment=Qt.AlignRight)
+        
+        header_container.setLayout(header_layout)
+        layout.addWidget(header_container)
+        
+        # Slider
+        slider = QSlider(Qt.Horizontal)
+        if is_float:
+            # For float values, we'll multiply by 100 to get integer steps
+            slider.setMinimum(int(min_val * 100))
+            slider.setMaximum(int(max_val * 100))
+            slider.setValue(int(default_val * 100))
+            slider.setTickInterval(int(step * 100))
+        else:
+            slider.setMinimum(min_val)
+            slider.setMaximum(max_val)
+            slider.setValue(default_val)
+            slider.setTickInterval(step)
+            
+        slider.setTickPosition(QSlider.TicksBelow)
+        layout.addWidget(slider)
+        
+        # Connect slider value changed to update label
+        def update_value():
+            if is_float:
+                val = slider.value() / 100.0
+                value_display.setText(f"{val:.2f}")
+            else:
+                val = slider.value()
+                value_display.setText(str(val))
+            return val
+            
+        slider.valueChanged.connect(update_value)
+        
+        container.setLayout(layout)
+        return container, slider
 
     def setup_ui(self):
         # Create layout
@@ -86,30 +152,70 @@ class ControlPanel(QWidget):
 
         # Add orthographic view checkbox
         self.orthographic_view_checkbox = QCheckBox("Orthographic View")
-        self.orthographic_view_checkbox.setChecked(
-            True
-        )
+        self.orthographic_view_checkbox.setChecked(True)
         display_layout.addWidget(self.orthographic_view_checkbox)
 
         # Add intralayer edges checkbox
         self.intralayer_edges_checkbox = QCheckBox("Intralayer Edges")
-        self.intralayer_edges_checkbox.setChecked(True)  # On by default
+        self.intralayer_edges_checkbox.setChecked(True)
         display_layout.addWidget(self.intralayer_edges_checkbox)
 
         # Add show nodes checkbox
         self.show_nodes_checkbox = QCheckBox("Show Nodes")
-        self.show_nodes_checkbox.setChecked(True)  # On by default
+        self.show_nodes_checkbox.setChecked(True)
         display_layout.addWidget(self.show_nodes_checkbox)
 
         # Add show node labels checkbox
         self.show_labels_checkbox = QCheckBox("Show Node Labels")
-        self.show_labels_checkbox.setChecked(False)  # Off by default
+        self.show_labels_checkbox.setChecked(False)
         display_layout.addWidget(self.show_labels_checkbox)
 
         # Add show stats bars checkbox
         self.show_stats_bars_checkbox = QCheckBox("Show Inter Stats Bars")
-        self.show_stats_bars_checkbox.setChecked(False)  # Off by default
+        self.show_stats_bars_checkbox.setChecked(False)
         display_layout.addWidget(self.show_stats_bars_checkbox)
+
+        # Add line antialias checkbox
+        self.line_antialias_checkbox = QCheckBox("Line Antialiasing")
+        self.line_antialias_checkbox.setChecked(True)
+        display_layout.addWidget(self.line_antialias_checkbox)
+
+        # Add new sliders
+        # Intralayer linewidth
+        self.intralayer_width_container, self.intralayer_width_slider = self.create_labeled_slider(
+            "Intralayer Width:", 0.0001, 2.0, self.intralayer_linewidth
+        )
+        display_layout.addWidget(self.intralayer_width_container)
+
+        # Interlayer linewidth
+        self.interlayer_width_container, self.interlayer_width_slider = self.create_labeled_slider(
+            "Interlayer Width:", 0.0001, 2.0, self.interlayer_linewidth
+        )
+        display_layout.addWidget(self.interlayer_width_container)
+
+        # Intralayer opacity
+        self.intralayer_opacity_container, self.intralayer_opacity_slider = self.create_labeled_slider(
+            "Intralayer Opacity:", 0.0001, 5.0, self.intralayer_opacity, 0.05
+        )
+        display_layout.addWidget(self.intralayer_opacity_container)
+
+        # Interlayer opacity
+        self.interlayer_opacity_container, self.interlayer_opacity_slider = self.create_labeled_slider(
+            "Interlayer Opacity:", 0.0, 5.0, self.interlayer_opacity, 0.05
+        )
+        display_layout.addWidget(self.interlayer_opacity_container)
+
+        # Node size
+        self.node_size_container, self.node_size_slider = self.create_labeled_slider(
+            "Node Size:", 0.1, 10.0, self.node_size
+        )
+        display_layout.addWidget(self.node_size_container)
+
+        # Node opacity
+        self.node_opacity_container, self.node_opacity_slider = self.create_labeled_slider(
+            "Node Opacity:", 0.00, 1.0, self.node_opacity, 0.05
+        )
+        display_layout.addWidget(self.node_opacity_container)
 
         self.display_group.setLayout(display_layout)
         layout.addWidget(self.display_group)
@@ -291,6 +397,17 @@ class ControlPanel(QWidget):
         # Connect show stats bars checkbox
         self.show_stats_bars_checkbox.stateChanged.connect(visibility_callback)
 
+        # Connect line antialias checkbox
+        self.line_antialias_checkbox.stateChanged.connect(visibility_callback)
+
+        # Connect value changed signals for sliders
+        self.intralayer_width_slider.valueChanged.connect(visibility_callback)
+        self.interlayer_width_slider.valueChanged.connect(visibility_callback)
+        self.intralayer_opacity_slider.valueChanged.connect(visibility_callback)
+        self.interlayer_opacity_slider.valueChanged.connect(visibility_callback)
+        self.node_size_slider.valueChanged.connect(visibility_callback)
+        self.node_opacity_slider.valueChanged.connect(visibility_callback)
+
     def clear_layout(self, layout):
         """Clear all widgets from a layout"""
         while layout.count():
@@ -334,6 +451,34 @@ class ControlPanel(QWidget):
     def use_orthographic_view(self):
         """Check if orthographic view should be used"""
         return self.orthographic_view_checkbox.isChecked()
+
+    def get_line_antialias(self):
+        """Check if line antialiasing should be enabled"""
+        return self.line_antialias_checkbox.isChecked()
+
+    def get_intralayer_width(self):
+        """Get intralayer line width"""
+        return self.intralayer_width_slider.value() / 100.0
+
+    def get_interlayer_width(self):
+        """Get interlayer line width"""
+        return self.interlayer_width_slider.value() / 100.0
+
+    def get_intralayer_opacity(self):
+        """Get intralayer line opacity"""
+        return self.intralayer_opacity_slider.value() / 100.0
+
+    def get_interlayer_opacity(self):
+        """Get interlayer line opacity"""
+        return self.interlayer_opacity_slider.value() / 100.0
+
+    def get_node_size(self):
+        """Get node size"""
+        return self.node_size_slider.value() / 100.0
+
+    def get_node_opacity(self):
+        """Get node opacity"""
+        return self.node_opacity_slider.value() / 100.0
 
     def create_disease_dropdown(self):
         """Create dropdown menu with available disease datasets"""

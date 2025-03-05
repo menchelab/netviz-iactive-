@@ -68,7 +68,6 @@ class NetworkCanvas:
             width=1,
             antialias=True,
             method='gl',
-            
         )
         self.view.add(self.intralayer_lines)
 
@@ -84,6 +83,8 @@ class NetworkCanvas:
 
         self.intralayer_lines.set_gl_state('additive')
         self.interlayer_lines.set_gl_state('additive')
+        self.scatter.set_gl_state('additive')
+
 
         # Create text labels for nodes
         self.node_labels = Text(
@@ -269,8 +270,15 @@ class NetworkCanvas:
         show_labels=True,
         bottom_labels_only=True,
         show_stats_bars=False,
+        intralayer_width=1.0,
+        interlayer_width=1.0,
+        intralayer_opacity=1.0,
+        interlayer_opacity=1.0,
+        node_size=1.0,
+        node_opacity=1.0,
+        antialias=True,
     ):
-        """Update the visibility of nodes and edges based on masks"""
+        """Update the visibility of nodes and edges based on masks and display settings"""
         return self.visibility_manager.update_visibility(
             node_mask=node_mask,
             edge_mask=edge_mask,
@@ -279,6 +287,13 @@ class NetworkCanvas:
             show_labels=show_labels,
             bottom_labels_only=bottom_labels_only,
             show_stats_bars=show_stats_bars,
+            intralayer_width=intralayer_width,
+            interlayer_width=interlayer_width,
+            intralayer_opacity=intralayer_opacity,
+            interlayer_opacity=interlayer_opacity,
+            node_size=node_size,
+            node_opacity=node_opacity,
+            antialias=antialias,
         )
 
     def set_projection_mode(self, orthographic=True):

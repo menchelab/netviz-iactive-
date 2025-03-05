@@ -6,6 +6,8 @@ from utils.color_utils import hex_to_rgba
 class NodeManager:
     def __init__(self, canvas):
         self.canvas = canvas
+        self.base_node_size = 3  # Base size for inactive nodes
+        self.active_node_size = 9  # Base size for active nodes
 
     def load_data(
         self,
@@ -44,7 +46,7 @@ class NodeManager:
                     self.canvas.node_colors_rgba[i] = hex_to_rgba(color_hex)
 
             # Initialize node sizes array - default size for all nodes
-            self.canvas.node_sizes = np.ones(len(node_positions)) * 3
+            self.canvas.node_sizes = np.ones(len(node_positions)) * self.base_node_size
 
             # Determine which nodes actually exist in each layer based on edges
             self.canvas.active_nodes = np.zeros(len(node_positions), dtype=bool)
@@ -53,7 +55,7 @@ class NodeManager:
                 self.canvas.active_nodes[end_idx] = True
 
             # Set larger size for active nodes
-            self.canvas.node_sizes[self.canvas.active_nodes] = 9  # 3x larger
+            self.canvas.node_sizes[self.canvas.active_nodes] = self.active_node_size
 
     def _enhance_colors(self, colors):
         """Enhance color saturation and convert hex to RGBA"""
@@ -85,3 +87,29 @@ class NodeManager:
             rgba = hex_to_rgba(color_hex, alpha=0.6)
             self.canvas.layer_colors_rgba[layer_name] = rgba
             logger.debug(f"Layer {layer_name}: {color_hex} -> {rgba}")
+
+    def update_node_display(self, size_scale=1.0, opacity=1.0):
+        """Update node sizes and opacity based on control panel settings"""
+        # Update node sizes
+        base_size = self.base_node_size * size_scale
+        active_size = self.active_node_size * size_scale
+        
+        # Reset sizes based on active status
+        self.canvas.node_sizes = np.where(
+            self.canvas.active_nodes,
+            active_size,
+            base_size
+        )
+        
+        # Update node opacity
+        if self.canvas.node_colors_rgba is not None:
+            self.canvas.node_colors_rgba[:, 3] = opacity
+            
+        # Update the scatter visual
+        if hasattr(self.canvas, 'scatter'):
+            self.canvas.scatter.set_data(
+                pos=self.canvas.node_positions,
+                size=self.canvas.node_sizes,
+                face_color=self.canvas.node_colors_rgba,
+                edge_width=0,
+            )

@@ -15,11 +15,21 @@ class VisibilityManager:
         show_labels=True,
         bottom_labels_only=True,
         show_stats_bars=False,
+        intralayer_width=1.0,
+        interlayer_width=1.0,
+        intralayer_opacity=1.0,
+        interlayer_opacity=1.0,
+        node_size=1.0,
+        node_opacity=1.0,
+        antialias=True,
     ):
-        """Update the visibility of nodes and edges based on masks"""
+        """Update the visibility of nodes and edges based on masks and display settings"""
         logger = logging.getLogger(__name__)
         logger.info(
-            f"Updating visibility with show_intralayer={show_intralayer}, show_nodes={show_nodes}, show_labels={show_labels}, show_stats_bars={show_stats_bars}"
+            f"Updating visibility with show_intralayer={show_intralayer}, show_nodes={show_nodes}, "
+            f"show_labels={show_labels}, show_stats_bars={show_stats_bars}, "
+            f"intralayer_width={intralayer_width}, interlayer_width={interlayer_width}, "
+            f"node_size={node_size}, node_opacity={node_opacity}, antialias={antialias}"
         )
 
         # Use masks from data manager if available and not provided
@@ -40,13 +50,31 @@ class VisibilityManager:
         else:
             interlayer_edge_counts = self._calculate_interlayer_edge_counts(edge_mask)
 
-        self._update_node_visibility(node_mask, show_nodes)
+        # Update node display with size and opacity settings
+        if show_nodes:
+            self.canvas.node_manager.update_node_display(
+                size_scale=node_size,
+                opacity=node_opacity
+            )
+            self.canvas.scatter.visible = True
+        else:
+            self.canvas.scatter.visible = False
 
+        # Update labels and bars
         self.canvas.label_manager._update_labels_and_bars(
             node_mask, interlayer_edge_counts, show_labels, show_stats_bars
         )
 
-        self.canvas.edge_manager._update_edge_visibility(edge_mask, show_intralayer)
+        # Update edge display with width, opacity and antialias settings
+        self.canvas.edge_manager._update_edge_visibility(
+            edge_mask,
+            show_intralayer,
+            intralayer_width=intralayer_width,
+            interlayer_width=interlayer_width,
+            intralayer_opacity=intralayer_opacity,
+            interlayer_opacity=interlayer_opacity,
+            antialias=antialias
+        )
 
     def _calculate_interlayer_edge_counts(self, edge_mask):
         """Calculate interlayer edge counts for each node"""
