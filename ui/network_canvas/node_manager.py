@@ -59,7 +59,7 @@ class NodeManager:
         """Enhance color saturation and convert hex to RGBA"""
         enhanced_colors = []
         for color in colors:
-            rgba = hex_to_rgba(color, alpha=0.9)
+            rgba = hex_to_rgba(color, alpha=0.5)
             max_val = max(rgba[0], rgba[1], rgba[2])
             min_val = min(rgba[0], rgba[1], rgba[2])
 
@@ -82,6 +82,6 @@ class NodeManager:
 
         self.canvas.layer_colors_rgba = {}
         for layer_name, color_hex in layer_colors.items():
-            rgba = hex_to_rgba(color_hex, alpha=1.0)
+            rgba = hex_to_rgba(color_hex, alpha=0.6)
             self.canvas.layer_colors_rgba[layer_name] = rgba
             logger.debug(f"Layer {layer_name}: {color_hex} -> {rgba}")

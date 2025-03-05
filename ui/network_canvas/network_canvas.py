@@ -4,6 +4,10 @@ from vispy.scene.visuals import Markers, Line, Text
 import logging
 import time
 from vispy import app
+from datetime import datetime
+import os
+from vispy.scene import Node
+import imageio.v3 as imageio
 
 from .node_manager import NodeManager
 from .edge_manager import EdgeManager
@@ -12,6 +16,7 @@ from .visibility_manager import VisibilityManager
 from utils.anim.animation_manager import AnimationManager
 
 logger = logging.getLogger(__name__)
+
 
 class NetworkCanvas:
     def __init__(self, parent=None, data_manager=None):
@@ -57,14 +62,28 @@ class NetworkCanvas:
 
         # Create separate line visuals for intralayer and interlayer edges
         self.intralayer_lines = Line(
-            pos=np.zeros((0, 3)), color=np.zeros((0, 4)), connect="segments", width=1
+            pos=np.zeros((0, 3)),
+            color=np.zeros((0, 4)),
+            connect="segments",
+            width=1,
+            antialias=True,
+            method='gl',
+            
         )
         self.view.add(self.intralayer_lines)
 
         self.interlayer_lines = Line(
-            pos=np.zeros((0, 3)), color=np.zeros((0, 4)), connect="segments", width=1
+            pos=np.zeros((0, 3)),
+            color=np.zeros((0, 4)),
+            connect="segments",
+            width=1,
+            antialias=True,
+            method='gl',
         )
         self.view.add(self.interlayer_lines)
+
+        self.intralayer_lines.set_gl_state('additive')
+        self.interlayer_lines.set_gl_state('additive')
 
         # Create text labels for nodes
         self.node_labels = Text(
@@ -122,6 +141,9 @@ class NetworkCanvas:
             self.animation_manager.play_animation(AnimationManager.MATRIX_EFFECT)
         elif event.key == "m":  # Slow Matrix Effect
             self.animation_manager.play_animation(AnimationManager.MATRIX_EFFECT_SLOW)
+        # Screenshot key
+        elif event.key == "v":
+            self._save_screenshot()
         # Arrow keys and WASD for rotation
         elif event.key in ("Left", "a"):
             self._rotate_z(-move_amount)  # Rotate left around z-axis
@@ -266,3 +288,123 @@ class NetworkCanvas:
             self.view.camera.fov = 45
 
         self.canvas.update()
+
+    def _save_screenshot(self):
+        """Save high-resolution screenshots with additive blending and different depth/blend combinations"""
+        import numpy as np
+        from vispy.scene import Node
+        from vispy.gloo import set_state
+        import imageio.v3 as imageio
+        
+        # Store original size and configuration
+        original_size = self.canvas.size
+        
+        # Define combinations to test (all with additive blending)
+        combinations = {
+            'depth_blend': {
+                'depth_test': True, 
+                'blend': True,
+                'blend_func': ('src_alpha', 'one', 'one', 'one'),  # Additive
+                'blend_equation': 'func_add'
+            },
+            'depth_only': {
+                'depth_test': True, 
+                'blend': False,
+                'blend_func': ('src_alpha', 'one', 'one', 'one'),
+                'blend_equation': 'func_add'
+            },
+            'blend_only': {
+                'depth_test': False, 
+                'blend': True,
+                'blend_func': ('src_alpha', 'one', 'one', 'one'),
+                'blend_equation': 'func_add'
+            },
+            'neither': {
+                'depth_test': False, 
+                'blend': False,
+                'blend_func': ('src_alpha', 'one', 'one', 'one'),
+                'blend_equation': 'func_add'
+            }
+        }
+        
+        try:
+            # Calculate high-res dimensions (4x)
+            high_res_width = self.canvas.size[0] * 4
+            high_res_height = self.canvas.size[1] * 4
+            
+            # Create screenshots directory if it doesn't exist
+            os.makedirs('screenshots', exist_ok=True)
+            
+            # Get timestamp for filename
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            
+            # Use a single set of visual parameters
+            line_width = 3.0
+            
+            # Create a temporary parent node
+            temp_parent = Node(parent=self.view.scene)
+            
+            for combo_name, gl_state in combinations.items():
+                # Create temporary line visuals
+                temp_intralayer = Line(
+                    pos=self.intralayer_lines._pos,
+                    color=self.intralayer_lines._color,
+                    connect='segments',
+                    width=line_width,
+                    antialias=True,
+                    parent=temp_parent,
+                    method='gl'
+                )
+                
+                temp_interlayer = Line(
+                    pos=self.interlayer_lines._pos,
+                    color=self.interlayer_lines._color,
+                    connect='segments',
+                    width=line_width,
+                    antialias=True,
+                    parent=temp_parent,
+                    method='gl'
+                )
+                
+                # Apply GL state
+                temp_intralayer.set_gl_state(**gl_state)
+                temp_interlayer.set_gl_state(**gl_state)
+                
+                # Hide original lines
+                self.intralayer_lines.visible = False
+                self.interlayer_lines.visible = False
+                
+                # Set canvas size and background
+                self.canvas.size = (high_res_width, high_res_height)
+                self.canvas.bgcolor = (0, 0, 0, 1)
+                
+                # Update visuals
+                temp_intralayer.update()
+                temp_interlayer.update()
+                self.scatter.update()
+                self.canvas.update()
+                
+                # Render
+                img = self.canvas.render()
+                
+                # Save the image
+                filepath = f'screenshots/export_additive_{combo_name}_{timestamp}.png'
+                imageio.imwrite(filepath, img)
+                print(f"Saved additive {combo_name} to {os.path.abspath(filepath)}")
+                
+                # Clean up current visuals
+                temp_parent.parent = None
+                temp_parent = Node(parent=self.view.scene)
+            
+        except Exception as e:
+            print(f"Error saving screenshots: {str(e)}")
+            import logging
+            logging.getLogger(__name__).error(f"Screenshot error: {str(e)}")
+            
+        finally:
+            # Restore original settings
+            self.canvas.size = original_size
+            self.canvas.bgcolor = (0, 0, 0, 1)
+            self.intralayer_lines.visible = True
+            self.interlayer_lines.visible = True
+            self.canvas.update()

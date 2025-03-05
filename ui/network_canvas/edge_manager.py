@@ -45,11 +45,11 @@ class EdgeManager:
             edge_color = self.canvas.data_manager.layer_colors_rgba[
                 start_layer_name
             ].copy()
-            edge_color[3] = 0.8  # Higher opacity for interlayer edges
+            edge_color[3] = 0.1  # Higher opacity for interlayer edges
         else:
             # Use the original color with higher opacity if no mapping is found
             edge_color = self.canvas.data_manager.link_colors_rgba[edge_idx].copy()
-            edge_color[3] = 0.8
+            edge_color[3] = 0.1
 
         # Store the edge for later processing
         interlayer_edges.append(
