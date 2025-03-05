@@ -1,7 +1,6 @@
 # Proof Of Concept/Test for multilayer visualization
 
-in experimental alpha state :)
-
+in experimental state
 
 # Running
 
@@ -58,6 +57,7 @@ uv run python main.py
 * press `z` for a top view to easily see the aggregated view of layers
 * select algorithm in dropdown at the loader panel at the top and press load button
 * there are some custom algorithms starting with "cluster_" that primarily focus on keeping clusters together
+* use slider in top loader panel to change z offset between layers
 
 ## Mouse & Keyboard Interaction
 
