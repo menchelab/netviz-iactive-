@@ -1,6 +1,6 @@
-# Proof Of Concept/test for multilayer network visualisation -> filtering -> analysis
+# Proof Of Concept/Test for multilayer visualization
 
-in experimental state :)
+in experimental alpha state :)
 
 
 # Running
