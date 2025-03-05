@@ -95,10 +95,10 @@ def analyze_file(filepath):
             )
 
         print(
-            f"\n\033[91mWARNING: multiple definitions of the same interaction-set found in the input file.\033[0m\n"
+            f"\033[1;91mWARNING: {filepath}\033[0m\n"
+            f"\033[91mmultiple definitions of the same interaction-pair found\033[0m\n"
             f"\033[91mThis will result in additional duplicated intralayer edges!!\n"
-            f"\n\033[1;91m{filepath}\033[0m\n"
-            f"\033[91mList of affected combinations and layers\n(duplication, count per layer where layer active):\033[0m\n"
+            f"\033[91mList of affected combinations and layers\n(duplication, count per layer where layer active):\033[0m"
         )
 
         total_width = 3 + max_v1_len + max_v2_len + 8 + 8 + sum(col_widths.values())

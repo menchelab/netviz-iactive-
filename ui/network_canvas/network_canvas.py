@@ -67,7 +67,7 @@ class NetworkCanvas:
             connect="segments",
             width=1,
             antialias=True,
-            method='gl',
+            method="gl",
         )
         self.view.add(self.intralayer_lines)
 
@@ -77,14 +77,13 @@ class NetworkCanvas:
             connect="segments",
             width=1,
             antialias=True,
-            method='gl',
+            method="gl",
         )
         self.view.add(self.interlayer_lines)
 
-        self.intralayer_lines.set_gl_state('additive')
-        self.interlayer_lines.set_gl_state('additive')
-        self.scatter.set_gl_state('additive')
-
+        self.intralayer_lines.set_gl_state("additive")
+        self.interlayer_lines.set_gl_state("additive")
+        self.scatter.set_gl_state("additive")
 
         # Create text labels for nodes
         self.node_labels = Text(
@@ -125,6 +124,8 @@ class NetworkCanvas:
             self._center_view()
         elif event.key == "r":
             self._reset_camera_and_rotation()
+        elif event.key == "b":
+            self._save_simple_screenshot()
         # Camera animation keys
         elif event.key == " ":  # Spacebar - Cosmic Zoom
             self.animation_manager.play_animation(AnimationManager.COSMIC_ZOOM)
@@ -277,7 +278,7 @@ class NetworkCanvas:
         node_size=1.0,
         node_opacity=1.0,
         antialias=True,
-        gl_state='additive',
+        gl_state="additive",
     ):
         """Update the visibility of nodes and edges based on masks and display settings"""
         return self.visibility_manager.update_visibility(
@@ -295,7 +296,7 @@ class NetworkCanvas:
             node_size=node_size,
             node_opacity=node_opacity,
             antialias=antialias,
-            gl_state=gl_state
+            gl_state=gl_state,
         )
 
     def set_projection_mode(self, orthographic=True):
@@ -312,116 +313,146 @@ class NetworkCanvas:
         from vispy.scene import Node
         from vispy.gloo import set_state
         import imageio.v3 as imageio
-        
+
         # Store original size and configuration
         original_size = self.canvas.size
-        
+
         # Define combinations to test (all with additive blending)
         combinations = {
-            'depth_blend': {
-                'depth_test': True, 
-                'blend': True,
-                'blend_func': ('src_alpha', 'one', 'one', 'one'),  # Additive
-                'blend_equation': 'func_add'
+            "depth_blend": {
+                "depth_test": True,
+                "blend": True,
+                "blend_func": ("src_alpha", "one", "one", "one"),  # Additive
+                "blend_equation": "func_add",
             },
-            'depth_only': {
-                'depth_test': True, 
-                'blend': False,
-                'blend_func': ('src_alpha', 'one', 'one', 'one'),
-                'blend_equation': 'func_add'
+            "depth_only": {
+                "depth_test": True,
+                "blend": False,
+                "blend_func": ("src_alpha", "one", "one", "one"),
+                "blend_equation": "func_add",
             },
-            'blend_only': {
-                'depth_test': False, 
-                'blend': True,
-                'blend_func': ('src_alpha', 'one', 'one', 'one'),
-                'blend_equation': 'func_add'
+            "blend_only": {
+                "depth_test": False,
+                "blend": True,
+                "blend_func": ("src_alpha", "one", "one", "one"),
+                "blend_equation": "func_add",
             },
-            'neither': {
-                'depth_test': False, 
-                'blend': False,
-                'blend_func': ('src_alpha', 'one', 'one', 'one'),
-                'blend_equation': 'func_add'
-            }
+            "neither": {
+                "depth_test": False,
+                "blend": False,
+                "blend_func": ("src_alpha", "one", "one", "one"),
+                "blend_equation": "func_add",
+            },
         }
-        
+
         try:
             # Calculate high-res dimensions (4x)
             high_res_width = self.canvas.size[0] * 4
             high_res_height = self.canvas.size[1] * 4
-            
+
             # Create screenshots directory if it doesn't exist
-            os.makedirs('screenshots', exist_ok=True)
-            
+            os.makedirs("screenshots", exist_ok=True)
+
             # Get timestamp for filename
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            
+
             # Use a single set of visual parameters
             line_width = 3.0
-            
+
             # Create a temporary parent node
             temp_parent = Node(parent=self.view.scene)
-            
+
             for combo_name, gl_state in combinations.items():
                 # Create temporary line visuals
                 temp_intralayer = Line(
                     pos=self.intralayer_lines._pos,
                     color=self.intralayer_lines._color,
-                    connect='segments',
+                    connect="segments",
                     width=line_width,
                     antialias=True,
                     parent=temp_parent,
-                    method='gl'
+                    method="gl",
                 )
-                
+
                 temp_interlayer = Line(
                     pos=self.interlayer_lines._pos,
                     color=self.interlayer_lines._color,
-                    connect='segments',
+                    connect="segments",
                     width=line_width,
                     antialias=True,
                     parent=temp_parent,
-                    method='gl'
+                    method="gl",
                 )
-                
+
                 # Apply GL state
                 temp_intralayer.set_gl_state(**gl_state)
                 temp_interlayer.set_gl_state(**gl_state)
-                
+
                 # Hide original lines
                 self.intralayer_lines.visible = False
                 self.interlayer_lines.visible = False
-                
+
                 # Set canvas size and background
                 self.canvas.size = (high_res_width, high_res_height)
                 self.canvas.bgcolor = (0, 0, 0, 1)
-                
+
                 # Update visuals
                 temp_intralayer.update()
                 temp_interlayer.update()
                 self.scatter.update()
                 self.canvas.update()
-                
+
                 # Render
                 img = self.canvas.render()
-                
+
                 # Save the image
-                filepath = f'screenshots/export_additive_{combo_name}_{timestamp}.png'
+                filepath = f"screenshots/export_additive_{combo_name}_{timestamp}.png"
                 imageio.imwrite(filepath, img)
                 print(f"Saved additive {combo_name} to {os.path.abspath(filepath)}")
-                
+
                 # Clean up current visuals
                 temp_parent.parent = None
                 temp_parent = Node(parent=self.view.scene)
-            
+
         except Exception as e:
             print(f"Error saving screenshots: {str(e)}")
             import logging
+
             logging.getLogger(__name__).error(f"Screenshot error: {str(e)}")
-            
+
         finally:
             # Restore original settings
             self.canvas.size = original_size
             self.canvas.bgcolor = (0, 0, 0, 1)
             self.intralayer_lines.visible = True
             self.interlayer_lines.visible = True
+            self.canvas.update()
+
+    def _save_simple_screenshot(self):
+        """Save a simple high-resolution screenshot with 4x resolution"""
+        try:
+            original_size = self.canvas.size
+
+            high_res_width = self.canvas.size[0] * 4
+            high_res_height = self.canvas.size[1] * 4
+
+            os.makedirs("screenshots", exist_ok=True)
+
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+            self.canvas.size = (high_res_width, high_res_height)
+            self.canvas.update()
+
+            # Render and save
+            img = self.canvas.render()
+            filepath = f"screenshots/screenshot_{timestamp}.png"
+            imageio.imwrite(filepath, img)
+            print(f"Saved screenshot to {os.path.abspath(filepath)}")
+
+        except Exception as e:
+            print(f"Error saving screenshot: {str(e)}")
+            logger.error(f"Screenshot error: {str(e)}")
+
+        finally:
+            self.canvas.size = original_size
             self.canvas.update()
