@@ -52,15 +52,17 @@ class VisibilityManager:
         else:
             interlayer_edge_counts = self._calculate_interlayer_edge_counts(edge_mask)
 
+        self._update_node_visibility(node_mask, show_nodes)
+
         # Update node display with size and opacity settings
-        if show_nodes:
-            self.canvas.node_manager.update_node_display(
-                size_scale=node_size,
-                opacity=node_opacity
-            )
-            self.canvas.scatter.visible = True
-        else:
-            self.canvas.scatter.visible = False
+     #   if show_nodes:
+      #      self.canvas.node_manager.update_node_display(
+      #          size_scale=node_size,
+      #          opacity=node_opacity
+      #      )
+      #      self.canvas.scatter.visible = True
+      #  else:
+      #      self.canvas.scatter.visible = False
 
         # Update labels and bars
         self.canvas.label_manager._update_labels_and_bars(
@@ -140,14 +142,14 @@ class VisibilityManager:
         # Update the scatter visual
         if len(visible_positions) > 0:
                         # Create array of random symbols
-            available_symbols = ['disc', 'arrow', 'ring', 'clobber', 'square', 'x', 
-                               'diamond', 'vbar', 'hbar', 'cross', 'tailed_arrow', 
-                               'triangle_up', 'triangle_down', 'star', 'cross_lines']
-            node_symbols = choice(available_symbols, size=len(self.canvas.node_positions))
-            
+            #available_symbols = ['disc', 'arrow', 'ring', 'clobber', 'square', 'x', 
+            #                   'diamond', 'vbar', 'hbar', 'cross', 'tailed_arrow', 
+            #                   'triangle_up', 'triangle_down', 'star', 'cross_lines']
+            #node_symbols = choice(available_symbols, size=len(self.canvas.node_positions))
+
             self.canvas.scatter.set_data(
-                pos=visible_positions, face_color=visible_colors, size=visible_sizes, symbols=node_symbols
-            )
+                pos=visible_positions, face_color=visible_colors, size=visible_sizes)#, symbols=node_symbols
+
         else:
             # Create a dummy point that's invisible
             self.canvas.scatter.set_data(
