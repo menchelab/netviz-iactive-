@@ -57,7 +57,7 @@ class NetworkCanvas:
         self.animation_manager = AnimationManager(self.view)
 
         # Create visuals
-        self.scatter = Markers(spherical=True)
+        self.scatter = Markers(spherical=True, scaling="fixed")
         self.view.add(self.scatter)
 
         # Create separate line visuals for intralayer and interlayer edges

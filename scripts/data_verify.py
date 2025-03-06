@@ -96,9 +96,9 @@ def analyze_file(filepath):
 
         print(
             f"\033[1;91mWARNING: {filepath}\033[0m\n"
-            f"\033[91mmultiple definitions of the same interaction-pair found\033[0m "
+            f"\033[91mmultiple definitions of the same interaction-pair found.\033[0m "
             f"\033[91mThis will result in additional duplicated intralayer edges!!\n"
-            f"\033[91mList of affected combinations and layers (duplication, count per layer where layer active):\033[0m"
+            f"\033[91mList of affected combinations and layers (count of duplicate pairs; count per layer where pair is active):\033[0m"
         )
 
         total_width = 3 + max_v1_len + max_v2_len + 8 + 8 + sum(col_widths.values())

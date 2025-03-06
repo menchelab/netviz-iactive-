@@ -1,6 +1,7 @@
 import numpy as np
 import logging
 from utils.color_utils import hex_to_rgba
+from numpy.random import choice
 
 
 class NodeManager:
@@ -107,9 +108,11 @@ class NodeManager:
             
         # Update the scatter visual
         if hasattr(self.canvas, 'scatter'):
+
             self.canvas.scatter.set_data(
                 pos=self.canvas.node_positions,
                 size=self.canvas.node_sizes,
                 face_color=self.canvas.node_colors_rgba,
                 edge_width=0,
+#                symbol=node_symbols
             )

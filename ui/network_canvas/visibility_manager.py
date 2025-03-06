@@ -1,5 +1,6 @@
 import numpy as np
 import logging
+from numpy.random import choice
 
 
 class VisibilityManager:
@@ -138,8 +139,14 @@ class VisibilityManager:
 
         # Update the scatter visual
         if len(visible_positions) > 0:
+                        # Create array of random symbols
+            available_symbols = ['disc', 'arrow', 'ring', 'clobber', 'square', 'x', 
+                               'diamond', 'vbar', 'hbar', 'cross', 'tailed_arrow', 
+                               'triangle_up', 'triangle_down', 'star', 'cross_lines']
+            node_symbols = choice(available_symbols, size=len(self.canvas.node_positions))
+            
             self.canvas.scatter.set_data(
-                pos=visible_positions, face_color=visible_colors, size=visible_sizes
+                pos=visible_positions, face_color=visible_colors, size=visible_sizes, symbols=node_symbols
             )
         else:
             # Create a dummy point that's invisible
