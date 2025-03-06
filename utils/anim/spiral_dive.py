@@ -6,10 +6,14 @@ from .base_animator import BaseAnimator
 class SpiralDiveAnimator(BaseAnimator):
     """Spiral dive animation that spirals down into the network"""
 
-    def animate(self):
+    def animate(self, duration=None):
         """
-        Spiral dive animation - camera spirals down into the network,
-        creating a tornado-like diving effect.
+        Spiral dive animation - camera spirals down into the network.
+        Creates a dramatic diving effect with continuous rotation.
+
+        Args:
+            duration (float, optional): Duration of the animation in seconds.
+                                      If None, uses the default duration.
         """
         if self._animation_in_progress:
             return
@@ -24,15 +28,15 @@ class SpiralDiveAnimator(BaseAnimator):
         params = {
             "current_state": current_state,
             "is_orthographic": is_orthographic,
-            "total_frames": 60,
-            "spiral_rotations": 1,  # Number of spiral rotations
+            "total_frames": self._duration_to_frames(duration),
+            "spiral_rotations": 2,  # Number of complete rotations
             "current_frame": 0,
-            "restore_original": True,  # Return to original position at end
+            "restore_original": True,
         }
 
         # Start the animation
         self._animation_timer = app.Timer(
-            interval=1 / 60,
+            interval=1 / self.FRAME_RATE,
             connect=lambda _: self._animation_step(**params),
             iterations=1,
         )

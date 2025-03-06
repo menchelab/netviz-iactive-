@@ -6,10 +6,14 @@ from .base_animator import BaseAnimator
 class BounceZoomAnimator(BaseAnimator):
     """Bounce zoom animation that zooms in with a bouncy effect"""
 
-    def animate(self):
+    def animate(self, duration=None):
         """
-        Bounce zoom animation - camera zooms in with a bouncy effect,
-        as if it's bouncing off an elastic surface.
+        Bounce zoom animation - camera zooms in with a bouncy effect.
+        Creates a playful zoom that overshoots and bounces back.
+
+        Args:
+            duration (float, optional): Duration of the animation in seconds.
+                                      If None, uses the default duration.
         """
         if self._animation_in_progress:
             return
@@ -17,19 +21,22 @@ class BounceZoomAnimator(BaseAnimator):
         self._animation_in_progress = True
         current_state = self._store_camera_state()
 
+        # Determine if we're in orthographic mode by checking fov
         is_orthographic = self.view.camera.fov == 0
 
+        # Animation parameters
         params = {
             "current_state": current_state,
             "is_orthographic": is_orthographic,
-            "total_frames": 60,
-            "rotation_amount": 360,
+            "total_frames": self._duration_to_frames(duration),
+            "rotation_amount": 90,  # Total rotation amount in degrees
             "current_frame": 0,
             "restore_original": True,
         }
 
+        # Start the animation
         self._animation_timer = app.Timer(
-            interval=1 / 60,
+            interval=1 / self.FRAME_RATE,
             connect=lambda _: self._animation_step(**params),
             iterations=1,
         )

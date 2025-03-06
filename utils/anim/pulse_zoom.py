@@ -6,10 +6,14 @@ from .base_animator import BaseAnimator
 class PulseZoomAnimator(BaseAnimator):
     """Pulse zoom animation that pulses in and out with a rhythmic motion"""
 
-    def animate(self):
+    def animate(self, duration=None):
         """
-        Pulse zoom animation - camera pulses in and out with a rhythmic motion,
-        creating a breathing effect.
+        Pulse zoom animation - camera pulses in and out while rotating.
+        Creates a rhythmic zooming effect combined with gentle rotation.
+
+        Args:
+            duration (float, optional): Duration of the animation in seconds.
+                                      If None, uses the default duration.
         """
         if self._animation_in_progress:
             return
@@ -24,16 +28,16 @@ class PulseZoomAnimator(BaseAnimator):
         params = {
             "current_state": current_state,
             "is_orthographic": is_orthographic,
-            "total_frames": 60,  # Reduced from 90 to 60 frames
-            "pulse_cycles": 1,  # Single pulse cycle
-            "rotation_amount": 360,  # Full rotation (changed from 90)
+            "total_frames": self._duration_to_frames(duration),
+            "pulse_cycles": 3,  # Number of pulse cycles
+            "rotation_amount": 180,  # Total rotation amount in degrees
             "current_frame": 0,
-            "restore_original": True,  # Return to original position at end
+            "restore_original": True,
         }
 
         # Start the animation
         self._animation_timer = app.Timer(
-            interval=1 / 60,
+            interval=1 / self.FRAME_RATE,
             connect=lambda _: self._animation_step(**params),
             iterations=1,
         )

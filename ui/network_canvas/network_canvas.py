@@ -55,6 +55,12 @@ class NetworkCanvas:
 
         # Initialize animation manager
         self.animation_manager = AnimationManager(self.view)
+        
+        # Auto-animation state
+        self._auto_anim_enabled = False
+        self._auto_anim_timer = None
+        self._auto_anim_duration = 3.0  # Duration of each animation in seconds
+        self._auto_anim_pause = 30.0  # Pause between animations in seconds
 
         # Create visuals
         self.scatter = Markers(spherical=True, scaling="fixed")
@@ -126,6 +132,8 @@ class NetworkCanvas:
             self._reset_camera_and_rotation()
         elif event.key == "b":
             self._save_simple_screenshot()
+        elif event.key == "1":  # Toggle auto-animation mode
+            self._toggle_auto_animation()
         # Camera animation keys
         elif event.key == " ":  # Spacebar - Cosmic Zoom
             self.animation_manager.play_animation(AnimationManager.COSMIC_ZOOM)
@@ -456,3 +464,45 @@ class NetworkCanvas:
         finally:
             self.canvas.size = original_size
             self.canvas.update()
+
+    def _toggle_auto_animation(self):
+        """Toggle auto-animation mode on/off"""
+        self._auto_anim_enabled = not self._auto_anim_enabled
+        
+        if self._auto_anim_enabled:
+            logger.info("Auto-animation mode enabled")
+            # Start the auto-animation cycle
+            self._start_auto_animation_cycle()
+        else:
+            logger.info("Auto-animation mode disabled")
+            # Cancel any pending timers
+            if self._auto_anim_timer:
+                self._auto_anim_timer.stop()
+                self._auto_anim_timer = None
+
+    def _start_auto_animation_cycle(self):
+        """Start a new auto-animation cycle"""
+        # Only start if auto-animation is enabled and no animation is currently playing
+        if not self._auto_anim_enabled or self.animation_manager.is_animating():
+            return
+
+        # Play a random animation with the configured duration
+        success = self.animation_manager.play_random_animation_by_chance(1.0, duration=self._auto_anim_duration)
+        
+        if success:
+            # Schedule the next cycle after animation + pause duration
+            total_duration = self._auto_anim_duration + self._auto_anim_pause
+            self._auto_anim_timer = app.Timer(
+                interval=total_duration,
+                connect=lambda _: self._start_auto_animation_cycle(),
+                iterations=1,
+            )
+            self._auto_anim_timer.start()
+        else:
+            # If animation failed to start, try again shortly
+            self._auto_anim_timer = app.Timer(
+                interval=0.5,  # Try again in 0.5 seconds
+                connect=lambda _: self._start_auto_animation_cycle(),
+                iterations=1,
+            )
+            self._auto_anim_timer.start()

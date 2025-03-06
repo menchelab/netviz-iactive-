@@ -156,11 +156,11 @@ def build_multilayer_network(
             
             # Set z_offset so that total height is 2 * network_extent
             # This makes the vertical spacing proportional to the network width
-            z_offset = (2.0 * network_extent) / (len(layers) - 1) if len(layers) > 1 else network_extent
+            z_offset = (1.3 * network_extent) / (len(layers) - 1) if len(layers) > 1 else network_extent
             logger.info(f"Auto z_offset: {z_offset:.2f} (based on network extent: {network_extent:.2f})")
         else:
             # Fallback if no positions found
-            z_offset = 2.0 / (len(layers) - 1) if len(layers) > 1 else 0.5
+            z_offset = 1.3 / (len(layers) - 1) if len(layers) > 1 else 0.5
             logger.info(f"Auto z_offset fallback: {z_offset:.2f}")
     
     # Create node positions for all layers

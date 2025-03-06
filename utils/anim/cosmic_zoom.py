@@ -6,10 +6,14 @@ from .base_animator import BaseAnimator
 class CosmicZoomAnimator(BaseAnimator):
     """Cosmic zoom animation that starts from far away and zooms in with rotation"""
 
-    def animate(self):
+    def animate(self, duration=None):
         """
         Cosmic zoom animation - starts from very far away and zooms in with rotation.
         Gives a sense of diving into the network from outer space.
+
+        Args:
+            duration (float, optional): Duration of the animation in seconds.
+                                      If None, uses the default duration.
         """
         if self._animation_in_progress:
             return
@@ -24,7 +28,7 @@ class CosmicZoomAnimator(BaseAnimator):
         params = {
             "current_state": current_state,
             "is_orthographic": is_orthographic,
-            "total_frames": 60,
+            "total_frames": self._duration_to_frames(duration),
             "rotation_amount": 360,
             "elevation_change": 60,
             "current_frame": 0,
@@ -33,7 +37,7 @@ class CosmicZoomAnimator(BaseAnimator):
 
         # Start the animation
         self._animation_timer = app.Timer(
-            interval=1 / 60,
+            interval=1 / self.FRAME_RATE,
             connect=lambda _: self._animation_step(**params),
             iterations=1,
         )

@@ -47,8 +47,17 @@ class AnimationManager:
         """Get list of available animation names"""
         return list(self.animators.keys())
 
-    def play_animation(self, animation_name):
-        """Play a specific animation by name"""
+    def play_animation(self, animation_name, duration=None):
+        """Play a specific animation by name
+
+        Args:
+            animation_name (str): Name of the animation to play
+            duration (float, optional): Duration of the animation in seconds.
+                                      If None, uses the default duration.
+
+        Returns:
+            bool: True if animation started successfully, False otherwise
+        """
         if animation_name not in self.animators:
             logger.warning(f"Animation {animation_name} not found")
             return False
@@ -59,14 +68,16 @@ class AnimationManager:
             return False
 
         logger.debug(f"Playing animation: {animation_name}")
-        animator.animate()
+        animator.animate(duration=duration)
         return True
 
-    def play_random_animation_by_chance(self, chance=1.0):
+    def play_random_animation_by_chance(self, chance=1.0, duration=None):
         """Play a random animation with a given chance (0.0 to 1.0)
 
         Args:
             chance (float): Probability of playing an animation (0.0 to 1.0)
+            duration (float, optional): Duration of the animation in seconds.
+                                      If None, uses the default duration.
 
         Returns:
             bool: True if animation was played, False otherwise
@@ -87,7 +98,7 @@ class AnimationManager:
         self._last_random_anim = selected_anim
 
         logger.debug(f"Playing random animation: {selected_anim}")
-        return self.play_animation(selected_anim)
+        return self.play_animation(selected_anim, duration=duration)
 
     def is_animating(self):
         """Check if any animation is currently playing"""

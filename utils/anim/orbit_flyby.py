@@ -6,10 +6,14 @@ from .base_animator import BaseAnimator
 class OrbitFlybyAnimator(BaseAnimator):
     """Orbit flyby animation that flies around the network in an elliptical orbit"""
 
-    def animate(self):
+    def animate(self, duration=None):
         """
-        Orbit flyby animation - camera flies around the network in an elliptical orbit,
-        changing elevation to create a dynamic flyby effect.
+        Orbit flyby animation - camera orbits around the network while changing elevation.
+        Creates a dynamic view that shows the network from multiple angles.
+
+        Args:
+            duration (float, optional): Duration of the animation in seconds.
+                                      If None, uses the default duration.
         """
         if self._animation_in_progress:
             return
@@ -24,17 +28,17 @@ class OrbitFlybyAnimator(BaseAnimator):
         params = {
             "current_state": current_state,
             "is_orthographic": is_orthographic,
-            "total_frames": 60,  # Reduced to 60 frames
-            "orbit_cycles": 1.0,  # Exactly one full orbit
+            "total_frames": self._duration_to_frames(duration),
+            "orbit_cycles": 2,  # Number of complete orbits
             "elevation_amplitude": 30,  # Maximum elevation change
-            "distance_factor": 1.2,  # Increase distance slightly for better view
+            "distance_factor": 1.2,  # Maximum distance multiplier
             "current_frame": 0,
-            "restore_original": True,  # Return to original position at end
+            "restore_original": True,
         }
 
         # Start the animation
         self._animation_timer = app.Timer(
-            interval=1 / 60,
+            interval=1 / self.FRAME_RATE,
             connect=lambda _: self._animation_step(**params),
             iterations=1,
         )

@@ -8,10 +8,21 @@ logger = logging.getLogger(__name__)
 class BaseAnimator:
     """Base class for camera animations"""
 
+    # Default animation duration in seconds
+    DEFAULT_DURATION = 1.0
+    # Frame rate for animations
+    FRAME_RATE = 60
+
     def __init__(self, view):
         self.view = view
         self._animation_timer = None
         self._animation_in_progress = False
+
+    def _duration_to_frames(self, duration=None):
+        """Convert duration in seconds to total frames"""
+        if duration is None:
+            duration = self.DEFAULT_DURATION
+        return int(duration * self.FRAME_RATE)
 
     def is_animating(self):
         """Check if an animation is currently in progress"""

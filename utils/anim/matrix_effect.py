@@ -6,10 +6,14 @@ from .base_animator import BaseAnimator
 class MatrixEffectAnimator(BaseAnimator):
     """Matrix-style camera effect with rapid perspective changes"""
 
-    def animate(self):
+    def animate(self, duration=None):
         """
         Matrix-style camera effect - rapidly changing perspectives with a digital feel.
         Creates a dramatic sequence of camera movements like in the movie "The Matrix".
+
+        Args:
+            duration (float, optional): Duration of the animation in seconds.
+                                      If None, uses the default duration.
         """
         if self._animation_in_progress:
             return
@@ -24,7 +28,7 @@ class MatrixEffectAnimator(BaseAnimator):
         params = {
             "current_state": current_state,
             "is_orthographic": is_orthographic,
-            "total_frames": 150,  # Half as long (was 300)
+            "total_frames": self._duration_to_frames(duration),
             "num_glitches": 6,  # Fewer glitches for shorter animation
             "max_scale_change": 1.0,  # Maximum scale factor change
             "max_elevation_change": 70,  # Maximum elevation change
@@ -145,11 +149,15 @@ class MatrixEffectAnimator(BaseAnimator):
 class MatrixEffectSlowAnimator(BaseAnimator):
     """A slower variant of the matrix effect with continuous rotation"""
 
-    def animate(self):
+    def animate(self, duration=None):
         """
         A slower variant of the matrix effect with continuous 360° rotation and
         dramatic perspective changes. Features extended holds at key viewpoints.
         Includes minimum 8-frame holds at top and side views.
+
+        Args:
+            duration (float, optional): Duration of the animation in seconds.
+                                      If None, uses the default duration.
         """
         if self._animation_in_progress:
             return
@@ -164,7 +172,7 @@ class MatrixEffectSlowAnimator(BaseAnimator):
         params = {
             "current_state": current_state,
             "is_orthographic": is_orthographic,
-            "total_frames": 60,
+            "total_frames": self._duration_to_frames(duration),
             "num_scenes": 4,  # Four distinct scenes including holds
             "current_frame": 0,
             "restore_original": True,
