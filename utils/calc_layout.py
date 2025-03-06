@@ -437,13 +437,13 @@ def calc_cluster_force_directed_layout(G):
         G_augmented.add_node(center_node)
         for node in nodes:
             G_augmented.add_edge(
-                center_node, node, weight=150.0
+                center_node, node, weight=450.0
             )  # Strong attraction to center
 
     # Calculate layout with the augmented graph
     pos_augmented = nx.spring_layout(
         G_augmented,
-        k=2.0,  # Increase node spacing
+        k=0.1,  # Increase node spacing
         iterations=100,
         seed=42,
     )

@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QIcon
 from ui.main_window import MultilayerNetworkViz
 from utils.logging_setup import setup_logging
 from utils.theme import enable_dark_mode
@@ -8,6 +9,9 @@ from datetime import datetime
 def main():
     app = QApplication([])
     enable_dark_mode(app)
+    
+    # Set application icon (visible in dock)
+    app.setWindowIcon(QIcon('assets/icon.png'))
 
     logger = setup_logging()
     start_time = datetime.now()

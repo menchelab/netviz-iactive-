@@ -94,25 +94,44 @@ class NodeManager:
         # Update node sizes
         base_size = self.base_node_size * size_scale
         active_size = self.active_node_size * size_scale
-        
+
         # Reset sizes based on active status
         self.canvas.node_sizes = np.where(
-            self.canvas.active_nodes,
-            active_size,
-            base_size
+            self.canvas.active_nodes, active_size, base_size
         )
-        
+
         # Update node opacity
         if self.canvas.node_colors_rgba is not None:
             self.canvas.node_colors_rgba[:, 3] = opacity
-            
+
         # Update the scatter visual
-        if hasattr(self.canvas, 'scatter'):
+        if hasattr(self.canvas, "scatter"):
+            # Create array of random symbols
+            available_symbols = [
+                "disc",
+                "arrow",
+                "ring",
+                "clobber",
+                "square",
+                "x",
+                "diamond",
+                "vbar",
+                "hbar",
+                "cross",
+                "tailed_arrow",
+                "triangle_up",
+                "triangle_down",
+                "star",
+                "cross_lines",
+            ]
+            node_symbols = choice(
+                available_symbols, size=len(self.canvas.node_positions)
+            )
 
             self.canvas.scatter.set_data(
                 pos=self.canvas.node_positions,
                 size=self.canvas.node_sizes,
                 face_color=self.canvas.node_colors_rgba,
                 edge_width=0,
-#                symbol=node_symbols
+                symbol=node_symbols,
             )

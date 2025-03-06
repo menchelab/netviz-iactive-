@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import (
     QSplitter,
 )
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QIcon
 import logging
 import numpy as np
 from vispy import app
@@ -32,6 +33,9 @@ class MultilayerNetworkViz(QWidget):
         super().__init__()
         logger = logging.getLogger(__name__)
         logger.info("Initializing visualization...")
+
+        # Set window icon
+        self.setWindowIcon(QIcon('assets/icon.png'))
 
         # Store the data directory
         self.data_dir = data_dir
