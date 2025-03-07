@@ -1,7 +1,8 @@
 import networkx as nx
 import numpy as np
 from fa2_modified import ForceAtlas2
-import graph_tool.all as gt
+
+
 
 # List of available layout algorithms
 AVAILABLE_LAYOUTS = [
@@ -35,6 +36,19 @@ AVAILABLE_LAYOUTS_LOADER = [
     "cluster_hierarchical",
     "cluster_force_directed",
 ]
+
+# Check if graph-tool is available
+try:
+    import graph_tool as gt
+    GRAPH_TOOL_AVAILABLE = True
+except ImportError:
+    GRAPH_TOOL_AVAILABLE = False
+    # Remove sfdp from available layouts if graph-tool is not available
+    if "sfdp" in AVAILABLE_LAYOUTS:
+        AVAILABLE_LAYOUTS.remove("sfdp")
+    if "sfdp" in AVAILABLE_LAYOUTS_LOADER:
+        AVAILABLE_LAYOUTS_LOADER.remove("sfdp")
+    print("graph-tool not available, sfdp layout disabled")
 
 
 def calc_spring_layout(G):
@@ -481,6 +495,10 @@ def calc_sfdp_layout(G):
     Scalable Force-Directed Placement layout using graph-tool.
     Much faster than spring layout for large graphs.
     """
+    if not GRAPH_TOOL_AVAILABLE:
+        print("graph-tool not available, falling back to spring_fast layout")
+        return calc_spring_fast_layout(G)
+        
     try:
         # Create mapping between node labels and numeric indices
         node_to_index = {node: i for i, node in enumerate(G.nodes())}

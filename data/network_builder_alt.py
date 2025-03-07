@@ -3,7 +3,7 @@ import numpy as np
 import networkx as nx
 import logging
 from tqdm import tqdm
-from utils.color_utils import generate_distinct_colors
+from utils.color_utils import generate_distinct_colors, generate_colors_for_dark_background
 from utils.calc_layout import get_layout_position
 
 
@@ -22,7 +22,7 @@ def build_multilayer_network(
     z_offset=2.0,
 ):
     logger = logging.getLogger(__name__)
-    logger.info(f"Building multilayer network from Hetionet files")
+    logger.info("Building multilayer network from Hetionet files")
 
     # Read the node metadata and edge list
     node_metadata = pd.read_table(node_file_path, sep="\t")
@@ -64,9 +64,9 @@ def build_multilayer_network(
         return positions, max_y * 2, max_z * 2
 
     # Generate colors
-    kind_colors = {kind: color for kind, color in zip(layers, generate_distinct_colors(len(layers)))}
+    kind_colors = {kind: color for kind, color in zip(layers, generate_colors_for_dark_background(len(layers)))}
     edge_colors = {edge_type: color for edge_type, color in 
-                  zip(edgelist["metaedge"].unique(), generate_distinct_colors(len(edgelist["metaedge"].unique())))}
+                  zip(edgelist["metaedge"].unique(), generate_colors_for_dark_background(len(edgelist["metaedge"].unique())))}
 
     # Create node positions and metadata
     node_positions = []

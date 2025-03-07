@@ -3,7 +3,7 @@ import numpy as np
 import networkx as nx
 import logging
 from tqdm import tqdm
-from utils.color_utils import generate_distinct_colors
+from utils.color_utils import generate_distinct_colors, generate_colors_for_dark_background
 from utils.calc_layout import get_layout_position
 
 
@@ -109,60 +109,113 @@ def build_multilayer_network(
 
     # Calculate layout
     logger.info("Calculating layout...")
+    # Create an aggregated graph with all nodes and edges from all layers
+    G_aggregated = nx.Graph()
+
+    # Add all nodes
+    for base_node in unique_base_nodes:
+        cluster = "Unknown"
+        if base_node in node_metadata["Node"].values:
+            node_data = node_metadata[node_metadata["Node"] == base_node].iloc[0]
+            cluster = node_data["cluster"]
+        G_aggregated.add_node(base_node, cluster=cluster)
+
+    # Add all edges from all layers
+    for layer in layers:
+        layer_edges = edgelist_with_att[edgelist_with_att[layer] == 1][
+            ["V1", "V2"]
+        ].values
+        for edge in layer_edges:
+            source = edge[0].split("_")[0]
+            target = edge[1].split("_")[0]
+            G_aggregated.add_edge(source, target)
+
+    # Calculate layout once for the aggregated network
+    aggregated_layout = get_layout_position(
+        G_aggregated, layout_algorithm=layout_algorithm
+    )
+
+    # Use the same x,y coordinates for each node across all layers
+    positions = {}
+
+    # If using multilayer layout, apply scaling to layers
     if use_ml_layout:
-        positions = {}
-        for layer in layers:
-            # Get nodes in this layer from edge list
-            layer_nodes = set(
-                edgelist_with_att[edgelist_with_att[layer] == 1]["V1"].tolist()
-                + edgelist_with_att[edgelist_with_att[layer] == 1]["V2"].tolist()
-            )
-            layer_pos = calculate_layer_layout(G_base, layer_nodes, layout_algorithm)
-            # Map positions to layer-specific nodes
+        # Find center layer index
+        center_layer_idx = len(layers) // 2
+
+        # Calculate center point of the layout
+        all_x = [pos[0] for pos in aggregated_layout.values()]
+        all_y = [pos[1] for pos in aggregated_layout.values()]
+        center_x = sum(all_x) / len(all_x) if all_x else 0
+        center_y = sum(all_y) / len(all_y) if all_y else 0
+
+        logger.info(
+            f"Using multilayer layout with center at ({center_x:.2f}, {center_y:.2f})"
+        )
+
+        # Apply scaling to each layer
+        for layer_idx, layer in enumerate(layers):
+            # Calculate distance from center layer
+            distance = abs(layer_idx - center_layer_idx)
+            # Scale factor increases by 10% for each layer away from center
+            scale_factor = 1.0 + (distance * 0.3)
+
             for node in unique_base_nodes:
                 node_id = f"{node}_{layer}"
-                positions[node_id] = (
-                    layer_pos[node]
-                    if node in layer_pos
-                    else positions.get(f"{node}_{first_layer}", (0, 0))
+                x, y = aggregated_layout.get(node, (0, 0))
+
+                # Scale coordinates while preserving center
+                scaled_x = center_x + (x - center_x) * scale_factor
+                scaled_y = center_y + (y - center_y) * scale_factor
+
+                positions[node_id] = (scaled_x, scaled_y)
+
+            if distance > 0:
+                logger.info(
+                    f"Layer {layer} (distance {distance}): scaled by {scale_factor:.2f}x"
                 )
     else:
-        # Calculate single layout using first layer nodes
-        base_layout = calculate_layer_layout(
-            G_base, unique_base_nodes, layout_algorithm
-        )
-        positions = {}
-        # Map base node positions to all layer nodes
+        # Original behavior - use same coordinates for all layers
         for layer in layers:
             for node in unique_base_nodes:
-                positions[f"{node}_{layer}"] = base_layout[node]
+                node_id = f"{node}_{layer}"
+                positions[node_id] = aggregated_layout.get(node, (0, 0))
 
     # Calculate network width if auto z_offset (0)
     if z_offset == 0 and positions:
         # Get all x,y positions from the first layer to calculate width
-        first_layer_positions = [positions[f"{node}_{first_layer}"] for node in unique_base_nodes 
-                                if f"{node}_{first_layer}" in positions]
-        
+        first_layer_positions = [
+            positions[f"{node}_{first_layer}"]
+            for node in unique_base_nodes
+            if f"{node}_{first_layer}" in positions
+        ]
+
         if first_layer_positions:
             # Calculate the width (max x - min x) and height (max y - min y)
             x_values = [pos[0] for pos in first_layer_positions]
             y_values = [pos[1] for pos in first_layer_positions]
-            
+
             width = max(x_values) - min(x_values) if x_values else 1.0
             height = max(y_values) - min(y_values) if y_values else 1.0
-            
+
             # Use the larger of width or height as the network extent
             network_extent = max(width, height)
-            
+
             # Set z_offset so that total height is 2 * network_extent
             # This makes the vertical spacing proportional to the network width
-            z_offset = (1.3 * network_extent) / (len(layers) - 1) if len(layers) > 1 else network_extent
-            logger.info(f"Auto z_offset: {z_offset:.2f} (based on network extent: {network_extent:.2f})")
+            z_offset = (
+                (1.3 * network_extent) / (len(layers) - 1)
+                if len(layers) > 1
+                else network_extent
+            )
+            logger.info(
+                f"Auto z_offset: {z_offset:.2f} (based on network extent: {network_extent:.2f})"
+            )
         else:
             # Fallback if no positions found
             z_offset = 1.3 / (len(layers) - 1) if len(layers) > 1 else 0.5
             logger.info(f"Auto z_offset fallback: {z_offset:.2f}")
-    
+
     # Create node positions for all layers
     node_positions = []
     node_ids = []
@@ -203,7 +256,7 @@ def build_multilayer_network(
     # Generate distinct colors for each layer using our palette
     layer_colors = {
         layer: color
-        for layer, color in zip(layers, generate_distinct_colors(len(layers)))
+        for layer, color in zip(layers, generate_colors_for_dark_background(len(layers)))
     }
 
     # Add intra-layer edges
