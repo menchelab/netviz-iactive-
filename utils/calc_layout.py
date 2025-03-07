@@ -1,6 +1,7 @@
 import networkx as nx
 import numpy as np
 from fa2_modified import ForceAtlas2
+import graph_tool.all as gt
 
 # List of available layout algorithms
 AVAILABLE_LAYOUTS = [
@@ -15,11 +16,15 @@ AVAILABLE_LAYOUTS = [
     "radial",
     "weighted_spectral",
     "pagerank_centric",
+    "sfdp",
 ]
 
 AVAILABLE_LAYOUTS_LOADER = [
     "hierarchical_betweeness_centrality",
     "spring",
+    "spring_fast",
+    "sfdp",
+    "spectral",
     "circular",
     "kamada_kawai",
     "spiral",
@@ -35,6 +40,16 @@ AVAILABLE_LAYOUTS_LOADER = [
 def calc_spring_layout(G):
     """Basic spring layout with weight influence"""
     return nx.spring_layout(G, seed=42, weight="weight", k=0.3)
+
+
+def calc_spring_fast_layout(G):
+    return nx.spring_layout(
+        G,
+        seed=42,
+        k=None,  # Auto-scale for large graphs
+        iterations=50,  # Reduce from default (default is 50, lower if slow)
+        threshold=1e-4,  # Convergence threshold (default is 1e-4)
+    )
 
 
 def calc_circular_layout(G):
@@ -461,13 +476,76 @@ def calc_cluster_force_directed_layout(G):
     return pos
 
 
+def calc_sfdp_layout(G):
+    """
+    Scalable Force-Directed Placement layout using graph-tool.
+    Much faster than spring layout for large graphs.
+    """
+    try:
+        # Create mapping between node labels and numeric indices
+        node_to_index = {node: i for i, node in enumerate(G.nodes())}
+        index_to_node = {i: node for node, i in node_to_index.items()}
+
+        # Convert NetworkX graph to Graph-Tool
+        gt_G = gt.Graph(directed=False)
+        gt_G.add_vertex(len(node_to_index))  # Add vertices first
+
+        # Create edge property map for weights
+        edge_weights = gt_G.new_edge_property("double")
+
+        # Add edges and weights using numeric indices
+        edge_list = []
+        weights = []
+        for u, v, data in G.edges(data=True):
+            edge_list.append((node_to_index[u], node_to_index[v]))
+            weights.append(data.get("weight", 1.0))
+
+        gt_G.add_edge_list(edge_list)
+        edge_weights.a = weights
+
+        # Compute layout with graph-tool's SFDP
+        pos = gt.sfdp_layout(
+            gt_G,
+            p=2.0,  # repulsive force (higher = more spread out)
+            eweight=edge_weights,
+            K=None,  # preferred edge length (None = auto)
+            max_iter=1000,
+            cooling_step=0.95,
+            epsilon=1e-2,
+        )
+
+        # Convert positions back to NetworkX format using original node labels
+        positions = {}
+        for idx in range(gt_G.num_vertices()):
+            node = index_to_node[idx]
+            positions[node] = np.array([pos[gt_G.vertex(idx)][0], pos[gt_G.vertex(idx)][1]])
+
+        # Scale positions to [-1, 1] range
+        x_values = [p[0] for p in positions.values()]
+        y_values = [p[1] for p in positions.values()]
+        x_min, x_max = min(x_values), max(x_values)
+        y_min, y_max = min(y_values), max(y_values)
+
+        for k in positions:
+            positions[k][0] = (positions[k][0] - x_min) / (x_max - x_min) if x_max > x_min else 0.5
+            positions[k][1] = (positions[k][1] - y_min) / (y_max - y_min) if y_max > y_min else 0.5
+            positions[k] = positions[k] * 2 - 1  # Scale to [-1, 1]
+
+        return positions
+
+    except Exception as e:
+        print(f"SFDP layout failed: {e}. Falling back to spring_fast layout.")
+        return calc_spring_fast_layout(G)
+
+
 def get_layout_position(G, layout_algorithm="spring"):
     """Get node positions based on specified layout algorithm"""
     layout_functions = {
         "spring": calc_spring_layout,
+        "spring_fast": calc_spring_fast_layout,
+        "spectral": calc_spectral_layout,
         "circular": calc_circular_layout,
         "kamada_kawai": calc_kamada_kawai_layout,
-        "spectral": calc_spectral_layout,
         "shell": calc_shell_layout,
         "spiral": calc_spiral_layout,
         "force_atlas2": calc_force_atlas2_layout,
@@ -481,6 +559,7 @@ def get_layout_position(G, layout_algorithm="spring"):
         "cluster_grid": calc_cluster_grid_layout,
         "cluster_hierarchical": calc_cluster_hierarchical_layout,
         "cluster_force_directed": calc_cluster_force_directed_layout,
+        "sfdp": calc_sfdp_layout,
     }
 
     layout_func = layout_functions.get(layout_algorithm, calc_spring_layout)

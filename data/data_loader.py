@@ -2,6 +2,7 @@ import os
 import logging
 import networkx as nx
 from data.network_builder import build_multilayer_network
+from data.network_builder_alt import build_multilayer_network as build_hetionet_network
 from utils.calc_layout import get_layout_position
 
 
@@ -13,53 +14,60 @@ def calculate_layer_layout(G, layer_nodes, layout_algorithm="kamada_kawai"):
     return get_layout_position(subgraph, layout_algorithm=layout_algorithm)
 
 
-def get_available_diseases(data_dir):
-    """Get list of available disease datasets from the data directory"""
-    diseases = set()
+def get_available_datasets(data_dir):
+    """Get list of available datasets from the data directory"""
+    datasets = []
+    
+    # Check for Hetionet files
+    if (os.path.exists(os.path.join(data_dir, "hetionet-v1.0-nodes.tsv")) and 
+        os.path.exists(os.path.join(data_dir, "hetionet-v1.0-edges.sif"))):
+        datasets.append("Hetionet")
+    
+    # Check for disease datasets (original format)
     for filename in os.listdir(data_dir):
         if filename.endswith("_Multiplex_Network.tsv"):
             disease_name = filename.replace("_Multiplex_Network.tsv", "")
-            diseases.add(disease_name)
-    return sorted(diseases)
-
-
-def load_disease_data(data_dir, disease_name, use_ml_layout=False, layout_algorithm="kamada_kawai", z_offset=0.5):
-    """
-    Load the selected disease dataset
+            datasets.append(disease_name)
     
-    Parameters:
-    -----------
-    data_dir : str
-        Path to data directory
-    disease_name : str
-        Name of disease dataset to load
-    use_ml_layout : bool
-        If True, calculate separate layout for each layer
-    layout_algorithm : str
-        The layout algorithm to use for node positioning
-    z_offset : float
-        The vertical offset between network layers (default: 0.5)
-    """
+    return sorted(datasets)
+
+
+def load_dataset(data_dir, dataset_name, use_ml_layout=False, layout_algorithm="kamada_kawai", z_offset=0.5):
+    """Load the selected dataset"""
     logger = logging.getLogger(__name__)
-    logger.info(f"Loading disease: {disease_name}")
+    logger.info(f"Loading dataset: {dataset_name}")
 
-    edge_list_path = os.path.join(data_dir, f"{disease_name}_Multiplex_Network.tsv")
-    node_metadata_path = os.path.join(
-        data_dir, f"{disease_name}_Multiplex_Metadata.tsv"
-    )
+    if dataset_name == "Hetionet":
+        # Load Hetionet format
+        node_file = os.path.join(data_dir, "hetionet-v1.0-nodes.tsv")
+        edge_file = os.path.join(data_dir, "hetionet-v1.0-edges.sif")
+        
+        if not os.path.exists(node_file) or not os.path.exists(edge_file):
+            logger.error("Hetionet files not found")
+            return None
+            
+        return build_hetionet_network(
+            node_file,
+            edge_file,
+            add_interlayer_edges=True,
+            use_ml_layout=use_ml_layout,
+            layout_algorithm=layout_algorithm,
+            z_offset=z_offset
+        )
+    else:
+        # Load original disease format
+        edge_list_path = os.path.join(data_dir, f"{dataset_name}_Multiplex_Network.tsv")
+        node_metadata_path = os.path.join(data_dir, f"{dataset_name}_Multiplex_Metadata.tsv")
 
-    print(edge_list_path)
+        if not os.path.exists(edge_list_path) or not os.path.exists(node_metadata_path):
+            logger.error(f"Data files for {dataset_name} not found")
+            return None
 
-    if not os.path.exists(edge_list_path) or not os.path.exists(node_metadata_path):
-        logger.error(f"Data files for {disease_name} not found")
-        return None
-
-    # Build network with layout preference
-    return build_multilayer_network(
-        edge_list_path, 
-        node_metadata_path, 
-        add_interlayer_edges=True,
-        use_ml_layout=use_ml_layout,
-        layout_algorithm=layout_algorithm,
-        z_offset=z_offset
-    )
+        return build_multilayer_network(
+            edge_list_path,
+            node_metadata_path,
+            add_interlayer_edges=True,
+            use_ml_layout=use_ml_layout,
+            layout_algorithm=layout_algorithm,
+            z_offset=z_offset
+        )

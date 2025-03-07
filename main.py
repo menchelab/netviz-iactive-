@@ -16,7 +16,8 @@ def main():
     logger = setup_logging()
     start_time = datetime.now()
 
-    data_dir = "Multiplex_DataDiVR/Multiplex_Net_Files"
+    # Change data directory to inputdata
+    data_dir = "inputdata"
 
     main_widget = MultilayerNetworkViz(data_dir=data_dir)
 

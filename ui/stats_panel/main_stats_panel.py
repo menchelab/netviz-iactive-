@@ -24,7 +24,7 @@ class MainStatsPanel(BaseStatsPanel):
         controls_layout = QHBoxLayout()
         controls_layout.setContentsMargins(5, 5, 5, 0)
         self.enable_checkbox = QCheckBox("Enable Charts")
-        self.enable_checkbox.setChecked(True)
+        self.enable_checkbox.setChecked(False)
         self.enable_checkbox.stateChanged.connect(self.on_state_changed)
         controls_layout.addWidget(self.enable_checkbox)
         controls_layout.addStretch()

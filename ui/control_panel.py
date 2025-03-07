@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QCheckBox, QGroupBox, QFrame, 
 from PyQt5.QtGui import QColor
 from PyQt5.QtCore import Qt
 import logging
-from data.data_loader import get_available_diseases
+from data.data_loader import get_available_datasets
 
 
 class ShiftClickCheckBox(QCheckBox):
@@ -517,7 +517,7 @@ class ControlPanel(QWidget):
         """Create dropdown menu with available disease datasets"""
         combo = QComboBox()
         
-        diseases = get_available_diseases(self.data_dir)
+        diseases = get_available_datasets(self.data_dir)
         
         for disease in diseases:
             combo.addItem(disease)

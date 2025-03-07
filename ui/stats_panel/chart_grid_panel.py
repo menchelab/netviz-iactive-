@@ -28,7 +28,7 @@ import logging
 import sys
 
 from .base_panel import BaseStatsPanel
-from data.data_loader import get_available_diseases, load_disease_data
+from data.data_loader import get_available_datasets, load_dataset
 from utils.calc_layout import (
     get_layout_position,
 )  # Explicit import since it's used through network_builder
@@ -412,7 +412,7 @@ class ChartGridPanel(BaseStatsPanel):
             return
 
         print(f"Using data directory: {data_dir}")
-        datasets = get_available_diseases(data_dir)
+        datasets = get_available_datasets(data_dir)
         if not datasets:
             print("No datasets found")
             logging.warning("No datasets found")
@@ -466,7 +466,7 @@ class ChartGridPanel(BaseStatsPanel):
             if dataset not in self._datasets_cache:
                 try:
                     print(f"Loading dataset: {dataset}")
-                    dataset_data = load_disease_data(data_dir, dataset)
+                    dataset_data = load_dataset(data_dir, dataset)
 
                     # Check if we got all the expected data
                     if dataset_data and len(dataset_data) >= 7:  # XXX

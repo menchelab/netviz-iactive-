@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (
     QLabel,
 )
 from PyQt5.QtCore import Qt
-from data.data_loader import get_available_diseases
+from data.data_loader import get_available_datasets
 from utils.calc_layout import AVAILABLE_LAYOUTS_LOADER
 
 
@@ -24,9 +24,9 @@ class LoaderPanel(QWidget):
         layout.setContentsMargins(5, 2, 5, 2)  # Reduced top/bottom padding
         layout.setSpacing(10)
 
-        self.disease_combo = self.create_disease_dropdown()
-        self.disease_combo.setMinimumWidth(200)  # Ensure dropdown has reasonable width
-        layout.addWidget(self.disease_combo)
+        self.dataset_combo = self.create_dataset_dropdown()
+        self.dataset_combo.setMinimumWidth(200)  # Ensure dropdown has reasonable width
+        layout.addWidget(self.dataset_combo)
 
         self.ml_layout_checkbox = QCheckBox("ML Layout")
         self.ml_layout_checkbox.setChecked(False)
@@ -68,12 +68,12 @@ class LoaderPanel(QWidget):
             return 0.0  # Auto mode
         return value / 10.0
 
-    def create_disease_dropdown(self):
+    def create_dataset_dropdown(self):
         combo = QComboBox()
         if self.data_dir:
-            diseases = get_available_diseases(self.data_dir)
-            for disease in diseases:
-                combo.addItem(disease)
+            datasets = get_available_datasets(self.data_dir)
+            for dataset in datasets:
+                combo.addItem(dataset)
         return combo
 
     def create_layout_dropdown(self):

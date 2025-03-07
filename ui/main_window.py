@@ -12,7 +12,7 @@ from vispy import app
 from ui.network_canvas import NetworkCanvas
 from ui.stats_panel import NetworkStatsPanel
 from ui.control_panel import ControlPanel
-from data.data_loader import load_disease_data
+from data.data_loader import load_dataset
 from data.network_data_manager import NetworkDataManager
 from ui.loader_panel import LoaderPanel
 from utils.anim.animation_manager import AnimationManager
@@ -51,7 +51,7 @@ class MultilayerNetworkViz(QWidget):
 
         # Create and add loader panel at the top
         self.loader_panel = LoaderPanel(data_dir=data_dir)
-        self.loader_panel.load_button.clicked.connect(self.load_selected_disease)
+        self.loader_panel.load_button.clicked.connect(self.load_selected_dataset)
         main_layout.addWidget(self.loader_panel)
 
         # Create the main content area with splitters
@@ -107,7 +107,7 @@ class MultilayerNetworkViz(QWidget):
                 unique_clusters,
             )
         # Load first dataset if available
-        elif self.data_dir and self.loader_panel.disease_combo.count() > 0:
+        elif self.data_dir and self.loader_panel.dataset_combo.count() > 0:
             # Don't automatically load - wait for user to click load button
             pass
 
@@ -116,10 +116,10 @@ class MultilayerNetworkViz(QWidget):
         self.resize(1200, 768)
         self.show()
 
-    def load_selected_disease(self):
-        """Load the currently selected disease when load button is clicked"""
-        disease_name = self.loader_panel.disease_combo.currentText()
-        if not disease_name:
+    def load_selected_dataset(self):
+        """Load the currently selected dataset when load button is clicked"""
+        dataset_name = self.loader_panel.dataset_combo.currentText()
+        if not dataset_name:
             return
 
         # Get ML layout preference and layout algorithm from loader panel
@@ -127,8 +127,8 @@ class MultilayerNetworkViz(QWidget):
         layout_algorithm = self.loader_panel.layout_combo.currentText()
         z_offset = self.loader_panel.get_z_offset()
 
-        data = load_disease_data(
-            self.data_dir, disease_name, use_ml_layout, layout_algorithm, z_offset
+        data = load_dataset(
+            self.data_dir, dataset_name, use_ml_layout, layout_algorithm, z_offset
         )
         if data:
             (
@@ -162,9 +162,9 @@ class MultilayerNetworkViz(QWidget):
             # Show the canvas after data is loaded
             self.network_canvas.canvas.native.show()
 
-    def load_disease(self, disease_name):
-        """Load a disease dataset"""
-        if not disease_name:
+    def load_dataset(self, dataset_name):
+        """Load a dataset"""
+        if not dataset_name:
             return
 
         # Get ML layout preference and layout algorithm from loader panel
@@ -172,8 +172,8 @@ class MultilayerNetworkViz(QWidget):
         layout_algorithm = self.loader_panel.layout_combo.currentText()
         z_offset = self.loader_panel.get_z_offset()
 
-        data = load_disease_data(
-            self.data_dir, disease_name, use_ml_layout, layout_algorithm, z_offset
+        data = load_dataset(
+            self.data_dir, dataset_name, use_ml_layout, layout_algorithm, z_offset
         )
         if data:
             (
