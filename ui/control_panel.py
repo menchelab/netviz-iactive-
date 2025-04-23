@@ -1,4 +1,15 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QCheckBox, QGroupBox, QFrame, QLabel, QComboBox, QSlider, QDoubleSpinBox, QHBoxLayout
+from PyQt5.QtWidgets import (
+    QWidget,
+    QVBoxLayout,
+    QCheckBox,
+    QGroupBox,
+    QFrame,
+    QLabel,
+    QComboBox,
+    QSlider,
+    QDoubleSpinBox,
+    QHBoxLayout,
+)
 from PyQt5.QtGui import QColor
 from PyQt5.QtCore import Qt
 import logging
@@ -34,9 +45,9 @@ class ControlPanel(QWidget):
 
         # Add GL state options
         self.gl_states = {
-            'Opaque': 'opaque',
-            'Translucent': 'translucent',
-            'Additive': 'additive'
+            "Opaque": "opaque",
+            "Translucent": "translucent",
+            "Additive": "additive",
         }
 
         # Initialize empty control lists
@@ -55,32 +66,34 @@ class ControlPanel(QWidget):
         # Setup UI
         self.setup_ui()
 
-    def create_labeled_slider(self, label_text, min_val, max_val, default_val, step=0.1, is_float=True):
+    def create_labeled_slider(
+        self, label_text, min_val, max_val, default_val, attribute_name, step=0.1, is_float=True
+    ):
         """Helper function to create a labeled slider with value display"""
         container = QWidget()
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(2)
-        
+
         # Label and value display in horizontal layout
         header_container = QWidget()
         header_layout = QHBoxLayout()
         header_layout.setContentsMargins(0, 0, 0, 0)
-        
+
         # Label
         label = QLabel(label_text)
         header_layout.addWidget(label)
-        
+
         # Value display
         if is_float:
             value_display = QLabel(f"{default_val:.4f}")
         else:
             value_display = QLabel(str(default_val))
         header_layout.addWidget(value_display, alignment=Qt.AlignRight)
-        
+
         header_container.setLayout(header_layout)
         layout.addWidget(header_container)
-        
+
         # Slider
         slider = QSlider(Qt.Horizontal)
         if is_float:
@@ -94,10 +107,10 @@ class ControlPanel(QWidget):
             slider.setMaximum(max_val)
             slider.setValue(default_val)
             slider.setTickInterval(step)
-            
+
         slider.setTickPosition(QSlider.TicksBelow)
         layout.addWidget(slider)
-        
+
         # Connect slider value changed to update label
         def update_value():
             if is_float:
@@ -107,9 +120,17 @@ class ControlPanel(QWidget):
                 val = slider.value()
                 value_display.setText(str(val))
             return val
-            
-        slider.valueChanged.connect(update_value)
-        
+
+        # Connect slider value changed to update label AND the internal attribute
+        def update_internal_value():
+            val = update_value() # Updates label and gets value
+            setattr(self, attribute_name, val) # Store the value internally
+
+        slider.valueChanged.connect(update_internal_value)
+
+        # Set the initial value of the attribute
+        setattr(self, attribute_name, default_val)
+
         container.setLayout(layout)
         return container, slider
 
@@ -191,15 +212,15 @@ class ControlPanel(QWidget):
         gl_state_container = QWidget()
         gl_state_layout = QHBoxLayout()
         gl_state_layout.setContentsMargins(0, 0, 0, 0)
-        
+
         gl_state_label = QLabel("Blend Mode:")
         self.gl_state_combo = QComboBox()
         for label in self.gl_states:
             self.gl_state_combo.addItem(label)
-        
+
         # Set default to Additive
         self.gl_state_combo.setCurrentText("Additive")
-        
+
         gl_state_layout.addWidget(gl_state_label)
         gl_state_layout.addWidget(self.gl_state_combo)
         gl_state_container.setLayout(gl_state_layout)
@@ -207,38 +228,48 @@ class ControlPanel(QWidget):
 
         # Add new sliders
         # Intralayer linewidth
-        self.intralayer_width_container, self.intralayer_width_slider = self.create_labeled_slider(
-            "Intralayer Width:", 0.0001, 2.0, self.intralayer_linewidth
+        self.intralayer_width_container, self.intralayer_width_slider = (
+            self.create_labeled_slider(
+                "Intralayer Width:", 0.0001, 10.0, self.intralayer_linewidth, "intralayer_linewidth"
+            )
         )
         display_layout.addWidget(self.intralayer_width_container)
 
         # Interlayer linewidth
-        self.interlayer_width_container, self.interlayer_width_slider = self.create_labeled_slider(
-            "Interlayer Width:", 0.0001, 2.0, self.interlayer_linewidth
+        self.interlayer_width_container, self.interlayer_width_slider = (
+            self.create_labeled_slider(
+                "Interlayer Width:", 0.0001, 10.0, self.interlayer_linewidth, "interlayer_linewidth"
+            )
         )
         display_layout.addWidget(self.interlayer_width_container)
 
         # Intralayer opacity
-        self.intralayer_opacity_container, self.intralayer_opacity_slider = self.create_labeled_slider(
-            "Intralayer Opacity:", 0.0001, 5.0, self.intralayer_opacity, 0.05
+        self.intralayer_opacity_container, self.intralayer_opacity_slider = (
+            self.create_labeled_slider(
+                "Intralayer Opacity:", 0.0001, 5.0, self.intralayer_opacity, "intralayer_opacity", 0.05
+            )
         )
         display_layout.addWidget(self.intralayer_opacity_container)
 
         # Interlayer opacity
-        self.interlayer_opacity_container, self.interlayer_opacity_slider = self.create_labeled_slider(
-            "Interlayer Opacity:", 0.0, 5.0, self.interlayer_opacity, 0.05
+        self.interlayer_opacity_container, self.interlayer_opacity_slider = (
+            self.create_labeled_slider(
+                "Interlayer Opacity:", 0.0, 5.0, self.interlayer_opacity, "interlayer_opacity", 0.05
+            )
         )
         display_layout.addWidget(self.interlayer_opacity_container)
 
         # Node size
         self.node_size_container, self.node_size_slider = self.create_labeled_slider(
-            "Node Size:", 0.1, 10.0, self.node_size
+            "Node Size:", 0.1, 10.0, self.node_size, "node_size"
         )
         display_layout.addWidget(self.node_size_container)
 
         # Node opacity
-        self.node_opacity_container, self.node_opacity_slider = self.create_labeled_slider(
-            "Node Opacity:", 0.00, 1.0, self.node_opacity, 0.05
+        self.node_opacity_container, self.node_opacity_slider = (
+            self.create_labeled_slider(
+                "Node Opacity:", 0.00, 1.0, self.node_opacity, "node_opacity", 0.05
+            )
         )
         display_layout.addWidget(self.node_opacity_container)
 
@@ -428,7 +459,8 @@ class ControlPanel(QWidget):
         # Connect GL state combo
         self.gl_state_combo.currentTextChanged.connect(visibility_callback)
 
-        # Connect value changed signals for sliders
+        # Connect value changed signals for sliders to update labels (already done in create_labeled_slider)
+        # Connect slider value changed signals to trigger the main visibility callback for real-time updates
         self.intralayer_width_slider.valueChanged.connect(visibility_callback)
         self.interlayer_width_slider.valueChanged.connect(visibility_callback)
         self.intralayer_opacity_slider.valueChanged.connect(visibility_callback)
@@ -486,27 +518,27 @@ class ControlPanel(QWidget):
 
     def get_intralayer_width(self):
         """Get intralayer line width"""
-        return self.intralayer_width_slider.value() / 100.0
+        return self.intralayer_linewidth
 
     def get_interlayer_width(self):
         """Get interlayer line width"""
-        return self.interlayer_width_slider.value() / 100.0
+        return self.interlayer_linewidth
 
     def get_intralayer_opacity(self):
         """Get intralayer line opacity"""
-        return self.intralayer_opacity_slider.value() / 100.0
+        return self.intralayer_opacity
 
     def get_interlayer_opacity(self):
         """Get interlayer line opacity"""
-        return self.interlayer_opacity_slider.value() / 100.0
+        return self.interlayer_opacity
 
     def get_node_size(self):
         """Get node size"""
-        return self.node_size_slider.value() / 100.0
+        return self.node_size
 
     def get_node_opacity(self):
         """Get node opacity"""
-        return self.node_opacity_slider.value() / 100.0
+        return self.node_opacity
 
     def get_gl_state(self):
         """Get the selected GL state"""
@@ -516,10 +548,10 @@ class ControlPanel(QWidget):
     def create_disease_dropdown(self):
         """Create dropdown menu with available disease datasets"""
         combo = QComboBox()
-        
+
         diseases = get_available_datasets(self.data_dir)
-        
+
         for disease in diseases:
             combo.addItem(disease)
-            
+
         return combo

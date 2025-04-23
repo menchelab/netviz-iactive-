@@ -32,7 +32,7 @@ def get_available_datasets(data_dir):
     return sorted(datasets)
 
 
-def load_dataset(data_dir, dataset_name, use_ml_layout=False, layout_algorithm="kamada_kawai", z_offset=0.5):
+def load_dataset(data_dir, dataset_name, use_ml_layout=False, layout_algorithm="kamada_kawai", z_offset=0.5, use_per_layer_layout=False):
     """Load the selected dataset"""
     logger = logging.getLogger(__name__)
     logger.info(f"Loading dataset: {dataset_name}")
@@ -52,7 +52,8 @@ def load_dataset(data_dir, dataset_name, use_ml_layout=False, layout_algorithm="
             add_interlayer_edges=True,
             use_ml_layout=use_ml_layout,
             layout_algorithm=layout_algorithm,
-            z_offset=z_offset
+            z_offset=z_offset,
+            use_per_layer_layout=use_per_layer_layout
         )
     else:
         # Load original disease format
@@ -69,5 +70,6 @@ def load_dataset(data_dir, dataset_name, use_ml_layout=False, layout_algorithm="
             add_interlayer_edges=True,
             use_ml_layout=use_ml_layout,
             layout_algorithm=layout_algorithm,
-            z_offset=z_offset
+            z_offset=z_offset,
+            use_per_layer_layout=use_per_layer_layout
         )
