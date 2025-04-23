@@ -36,10 +36,6 @@ class LoaderPanel(QWidget):
         self.layout_combo.setMinimumWidth(150)  # Ensure dropdown has reasonable width
         layout.addWidget(self.layout_combo)
 
-        self.per_layer_layout_checkbox = QCheckBox("Per-Layer Layout")
-        self.per_layer_layout_checkbox.setChecked(False)
-        layout.addWidget(self.per_layer_layout_checkbox)
-
         self.z_offset_label = QLabel("Z+= Auto")
         layout.addWidget(self.z_offset_label)
 

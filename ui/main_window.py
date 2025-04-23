@@ -124,12 +124,11 @@ class MultilayerNetworkViz(QWidget):
 
         # Get ML layout preference and layout algorithm from loader panel
         use_ml_layout = self.loader_panel.ml_layout_checkbox.isChecked()
-        use_per_layer_layout = self.loader_panel.per_layer_layout_checkbox.isChecked()
         layout_algorithm = self.loader_panel.layout_combo.currentText()
         z_offset = self.loader_panel.get_z_offset()
 
         data = load_dataset(
-            self.data_dir, dataset_name, use_ml_layout, layout_algorithm, z_offset, use_per_layer_layout
+            self.data_dir, dataset_name, use_ml_layout, layout_algorithm, z_offset
         )
         if data:
             (
@@ -170,12 +169,11 @@ class MultilayerNetworkViz(QWidget):
 
         # Get ML layout preference and layout algorithm from loader panel
         use_ml_layout = self.loader_panel.ml_layout_checkbox.isChecked()
-        use_per_layer_layout = self.loader_panel.per_layer_layout_checkbox.isChecked()
         layout_algorithm = self.loader_panel.layout_combo.currentText()
         z_offset = self.loader_panel.get_z_offset()
 
         data = load_dataset(
-            self.data_dir, dataset_name, use_ml_layout, layout_algorithm, z_offset, use_per_layer_layout
+            self.data_dir, dataset_name, use_ml_layout, layout_algorithm, z_offset
         )
         if data:
             (

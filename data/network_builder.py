@@ -158,7 +158,7 @@ def build_multilayer_network(
             # Calculate distance from center layer
             distance = abs(layer_idx - center_layer_idx)
             # Scale factor increases by 10% for each layer away from center
-            scale_factor = 1.0 # + (distance * 0.3)
+            scale_factor = 1.0 + (distance * 0.3)
 
             for node in unique_base_nodes:
                 node_id = f"{node}_{layer}"
