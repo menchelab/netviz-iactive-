@@ -208,13 +208,13 @@ class ControlPanel(QWidget):
         # Add new sliders
         # Intralayer linewidth
         self.intralayer_width_container, self.intralayer_width_slider = self.create_labeled_slider(
-            "Intralayer Width:", 0.0001, 2.0, self.intralayer_linewidth
+            "Intralayer Width:", 0.0001, 10.0, self.intralayer_linewidth
         )
         display_layout.addWidget(self.intralayer_width_container)
 
         # Interlayer linewidth
         self.interlayer_width_container, self.interlayer_width_slider = self.create_labeled_slider(
-            "Interlayer Width:", 0.0001, 2.0, self.interlayer_linewidth
+            "Interlayer Width:", 0.0001, 10.0, self.interlayer_linewidth
         )
         display_layout.addWidget(self.interlayer_width_container)
 
